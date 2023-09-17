@@ -5,6 +5,13 @@ module.exports = {
   proseWrap: 'never',
   singleQuote: true,
   trailingComma: 'all',
+  semi: false,
+  bracketSpacing: false,
+  arrowParens: 'avoid',
+  insertPragma: false,
+  tabWidth: 2,
+  useTabs: false,
+  endOfLine: 'auto',
   overrides: [
     {
       files: '*.md',
@@ -13,4 +20,4 @@ module.exports = {
       },
     },
   ],
-};
+}

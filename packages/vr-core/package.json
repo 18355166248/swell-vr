@@ -1,9 +1,22 @@
 {
-  "name": "vr-core",
+  "name": "@swellvr/vr-core",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {},
+  "main": "./dist/index.cjs",
+  "scripts": {
+    "unbuild": "unbuild"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -12,5 +25,8 @@
     "three": "^0.156.1",
     "vite": "^4.4.9",
     "vitest": "^0.34.4"
+  },
+  "devDependencies": {
+    "unbuild": "^2.0.0"
   }
 }
