@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "pnpm type-check && esno ./scripts/build.ts",
+    "build:watch": "cross-env WATCH=true pnpm build",
+    "type-check": "tsc -noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@swellvr/vr-core": "workspace:^",
+    "esno": "^0.17.0",
     "vite": "^4.4.9"
   }
 }
