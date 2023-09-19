@@ -2,7 +2,7 @@ import {buildUtils} from '@swellvr/vr-core'
 import {defineConfig} from 'vite'
 import type {UserConfig} from 'vite'
 
-const pkgPath = __dirname
+export const pkgPath = __dirname
 
 type CreateViteConfigProps = {
   minify?: boolean
@@ -17,6 +17,7 @@ const createViteConfig = (option: CreateViteConfigProps = {}): UserConfig => {
   })
 }
 
-const unMinifyConfig = createViteConfig({minify: false})
+export const minifyConfig = createViteConfig({minify: true})
+export const unMinifyConfig = createViteConfig({minify: false})
 
 export default defineConfig(unMinifyConfig)

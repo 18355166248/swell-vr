@@ -1,1 +1,7 @@
-"use strict";const n=require("path");function _interopDefaultCompat(t){return t&&typeof t=="object"&&"default"in t?t.default:t}const n__default=_interopDefaultCompat(n),createViteConfig=({packagePath:t,minify:o})=>{const e=(...r)=>n__default.resolve(t,...r),i=require(e("./package.json"));return console.log("\u{1F680} ~ file: vite.ts:20 ~ pkg:",i),{root:e("./"),build:{outDir:e("./dist"),lib:{entry:e("src/index.ts")},rollupOptions:{output:{chunkFileNames:()=>"[format]/[name].[format].js"}},sourcemap:!0,minify:o}}},index={__proto__:null,createViteConfig};exports.buildUtils=index;
+module.exports = require("F:/FrontEnd/Code/swell-vr/node_modules/.pnpm/jiti@1.20.0/node_modules/jiti/lib/index.js")(null, {
+  "esmResolve": true,
+  "interopDefault": true,
+  "alias": {
+    "@swellvr/vr-core": "F:/FrontEnd/Code/swell-vr/packages/vr-core"
+  }
+})("F:/FrontEnd/Code/swell-vr/packages/vr-core/src/index.ts")
