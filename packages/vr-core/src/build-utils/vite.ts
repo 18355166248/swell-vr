@@ -6,6 +6,12 @@ export type CreateViteConfigProps = {
   minify?: boolean
 }
 
+export const pascalCase = (str: string) =>
+  str
+    .split('-')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('')
+
 export const createViteConfig = ({
   packagePath,
   minify,
@@ -17,8 +23,8 @@ export const createViteConfig = ({
     string,
     string | object
   >
-  const {name: pkgName} = pkg
-  console.log('🚀 ~ file: vite.ts:20 ~ pkg:', pkg)
+  const {name} = pkg
+  const pkgName = name as string
 
   return {
     root: pathResolve('./'),
@@ -26,6 +32,7 @@ export const createViteConfig = ({
       outDir: pathResolve('./dist'),
       lib: {
         entry: pathResolve('src/index.ts'),
+        name: pascalCase(pkgName.split('/').pop() as string),
       },
       rollupOptions: {
         output: {

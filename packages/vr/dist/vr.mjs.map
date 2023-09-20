@@ -1,0 +1,1 @@
+{"version":3,"file":"vr.mjs","sources":["../src/vr360.ts"],"sourcesContent":["export class Vr360 {}\r\n"],"names":[],"mappings":"AAAO,MAAM,MAAM;AAAC;"}

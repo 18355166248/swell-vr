@@ -29,6 +29,7 @@
     "vitest": "^0.34.4"
   },
   "devDependencies": {
+    "rimraf": "^5.0.1",
     "unbuild": "^2.0.0"
   }
 }

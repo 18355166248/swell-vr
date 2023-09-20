@@ -1,7 +1,7 @@
 import type {UserConfig, InlineConfig} from 'vite'
 import {build as viteBuild} from 'vite'
 import path from 'path'
-import rimraf from 'rimraf'
+import {sync} from 'rimraf'
 
 const WATCH = Boolean(process.env.WATCH)
 
@@ -54,7 +54,7 @@ export async function build(config: BuildOptionsProps) {
     path.resolve(packagePath, ..._path)
 
   // clear dist
-  rimraf.sync(pathResolve('./dist/**/*'))
+  sync(pathResolve('./dist'))
 
   if (!WATCH) {
     await viteBuild(
