@@ -1,1 +1,1 @@
-{"version":3,"file":"vr.umd.js","sources":["../src/vr360.ts"],"sourcesContent":["export class Vr360 {}\r\n"],"names":[],"mappings":";;;;EAAO,MAAM,MAAM;AAAA,EAAC;;;;"}
+{"version":3,"file":"vr.umd.js","sources":["../src/vr360.ts"],"sourcesContent":["export class Vr360 { }\r\n\r\nconsole.log(231113)\r\n"],"names":[],"mappings":";;;;EAAO,MAAM,MAAM;AAAA,EAAE;AAErB,UAAQ,IAAI,MAAM;;;;"}

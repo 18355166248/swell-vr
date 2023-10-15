@@ -9,6 +9,7 @@
 })(this, function (exports2) {
   'use strict'
   class Vr360 {}
+  console.log(231113)
   exports2.Vr360 = Vr360
   Object.defineProperty(exports2, Symbol.toStringTag, {value: 'Module'})
 })
