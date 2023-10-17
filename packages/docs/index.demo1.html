@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>threejs Demo1</title>
   <link rel="stylesheet" href="./assets/common.css">
+  <link rel="stylesheet" href="./assets/demo.css">
   <!-- 引入 threejs -->
   <script src="./assets/three.min.js"></script>
 
@@ -13,30 +14,40 @@
 </head>
 
 <body>
-  <div class="demo"></div>
+  <div class="demo">
+    <div class="demo-container"></div>
+  </div>
 
   <script>
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const { Vr360 } = Vr
+    const container = document.querySelector('.demo-container') // 360全景容器
 
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    const vr360 = new Vr360({
+      container
+    })
 
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    var cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    vr360.render()
+    // var scene = new THREE.Scene();
+    // var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    camera.position.z = 5;
+    // var renderer = new THREE.WebGLRenderer();
+    // renderer.setSize(window.innerWidth, window.innerHeight);
+    // document.body.appendChild(renderer.domElement);
 
-    function render () {
-      requestAnimationFrame(render);
-      cube.rotation.x += 0.1;
-      cube.rotation.y += 0.1;
-      renderer.render(scene, camera);
-    }
-    render();
+    // var geometry = new THREE.BoxGeometry(1, 1, 1);
+    // var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    // var cube = new THREE.Mesh(geometry, material);
+    // scene.add(cube);
+
+    // camera.position.z = 5;
+
+    // function render () {
+    //   requestAnimationFrame(render);
+    //   cube.rotation.x += 0.1;
+    //   cube.rotation.y += 0.1;
+    //   renderer.render(scene, camera);
+    // }
+    // render();
   </script>
 </body>
 
