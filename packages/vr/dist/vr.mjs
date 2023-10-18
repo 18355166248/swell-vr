@@ -17969,7 +17969,12 @@ class Vr360 extends EventEmitter {
     return scene;
   }
   createCamera() {
-    const camera = new PerspectiveCamera(75, this.containerWidth / this.containerHeigh, 0.1, 1e4);
+    const camera = new PerspectiveCamera(
+      75,
+      this.containerWidth / this.containerHeigh,
+      0.1,
+      1e4
+    );
     return camera;
   }
   createRenderer() {
@@ -17978,8 +17983,8 @@ class Vr360 extends EventEmitter {
     return renderer;
   }
   /**
-  * 渲染
-  */
+   * 渲染
+   */
   render() {
     requestAnimationFrame(this.render.bind(this));
     this.handleUpdate();

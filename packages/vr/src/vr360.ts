@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import EventEmitter from 'EventEmitter3'
-import {VROptions} from './types'
+import {SpaceConfig, VROptions} from './types'
+import {SpaceManager} from './space'
 
 export class Vr360 extends EventEmitter {
   // 容器
@@ -11,6 +12,10 @@ export class Vr360 extends EventEmitter {
   public camera: THREE.Camera
   // 渲染器
   public renderer: THREE.Renderer
+  // 空间管理器
+  public spaceManager: SpaceManager
+  // 空间配置
+  public spaceConfig: SpaceConfig[]
 
   public get containerWidth() {
     return this.container.clientWidth
@@ -22,16 +27,21 @@ export class Vr360 extends EventEmitter {
   constructor(options: VROptions) {
     super()
 
-    const {container} = options
+    const {container, spacesConfig} = options
 
     this.container = container
     this.scene = this.createScene()
     this.camera = this.createCamera()
     this.renderer = this.createRenderer()
 
+    this.spaceConfig = [...spacesConfig]
+
     this.container.appendChild(this.renderer.domElement)
 
-    this.camera.position.z = 5
+    // 创建空间管理器
+    this.spaceManager = this.createSpaceManager()
+    // 实例化空间
+    this.updateSpacesConfig(this.spaceConfig)
   }
 
   createScene() {
@@ -56,6 +66,14 @@ export class Vr360 extends EventEmitter {
     renderer.setSize(this.containerWidth, this.containerHeigh)
     return renderer
   }
+
+  createSpaceManager() {
+    const spaceManage = new SpaceManager()
+
+    return spaceManage
+  }
+
+  updateSpacesConfig(newSpaceConfig: SpaceConfig[]) {}
 
   /**
    * 渲染
