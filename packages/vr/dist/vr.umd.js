@@ -21596,6 +21596,204 @@
       return data
     }
   }
+  const Cache = {
+    enabled: false,
+    files: {},
+    add: function (key, file) {
+      if (this.enabled === false) return
+      this.files[key] = file
+    },
+    get: function (key) {
+      if (this.enabled === false) return
+      return this.files[key]
+    },
+    remove: function (key) {
+      delete this.files[key]
+    },
+    clear: function () {
+      this.files = {}
+    },
+  }
+  class LoadingManager {
+    constructor(onLoad, onProgress, onError) {
+      const scope = this
+      let isLoading = false
+      let itemsLoaded = 0
+      let itemsTotal = 0
+      let urlModifier = void 0
+      const handlers = []
+      this.onStart = void 0
+      this.onLoad = onLoad
+      this.onProgress = onProgress
+      this.onError = onError
+      this.itemStart = function (url) {
+        itemsTotal++
+        if (isLoading === false) {
+          if (scope.onStart !== void 0) {
+            scope.onStart(url, itemsLoaded, itemsTotal)
+          }
+        }
+        isLoading = true
+      }
+      this.itemEnd = function (url) {
+        itemsLoaded++
+        if (scope.onProgress !== void 0) {
+          scope.onProgress(url, itemsLoaded, itemsTotal)
+        }
+        if (itemsLoaded === itemsTotal) {
+          isLoading = false
+          if (scope.onLoad !== void 0) {
+            scope.onLoad()
+          }
+        }
+      }
+      this.itemError = function (url) {
+        if (scope.onError !== void 0) {
+          scope.onError(url)
+        }
+      }
+      this.resolveURL = function (url) {
+        if (urlModifier) {
+          return urlModifier(url)
+        }
+        return url
+      }
+      this.setURLModifier = function (transform) {
+        urlModifier = transform
+        return this
+      }
+      this.addHandler = function (regex, loader) {
+        handlers.push(regex, loader)
+        return this
+      }
+      this.removeHandler = function (regex) {
+        const index = handlers.indexOf(regex)
+        if (index !== -1) {
+          handlers.splice(index, 2)
+        }
+        return this
+      }
+      this.getHandler = function (file) {
+        for (let i = 0, l = handlers.length; i < l; i += 2) {
+          const regex = handlers[i]
+          const loader = handlers[i + 1]
+          if (regex.global) regex.lastIndex = 0
+          if (regex.test(file)) {
+            return loader
+          }
+        }
+        return null
+      }
+    }
+  }
+  const DefaultLoadingManager = /* @__PURE__ */ new LoadingManager()
+  class Loader {
+    constructor(manager) {
+      this.manager = manager !== void 0 ? manager : DefaultLoadingManager
+      this.crossOrigin = 'anonymous'
+      this.withCredentials = false
+      this.path = ''
+      this.resourcePath = ''
+      this.requestHeader = {}
+    }
+    load() {}
+    loadAsync(url, onProgress) {
+      const scope = this
+      return new Promise(function (resolve, reject) {
+        scope.load(url, resolve, onProgress, reject)
+      })
+    }
+    parse() {}
+    setCrossOrigin(crossOrigin) {
+      this.crossOrigin = crossOrigin
+      return this
+    }
+    setWithCredentials(value) {
+      this.withCredentials = value
+      return this
+    }
+    setPath(path) {
+      this.path = path
+      return this
+    }
+    setResourcePath(resourcePath) {
+      this.resourcePath = resourcePath
+      return this
+    }
+    setRequestHeader(requestHeader) {
+      this.requestHeader = requestHeader
+      return this
+    }
+  }
+  Loader.DEFAULT_MATERIAL_NAME = '__DEFAULT'
+  class ImageLoader extends Loader {
+    constructor(manager) {
+      super(manager)
+    }
+    load(url, onLoad, onProgress, onError) {
+      if (this.path !== void 0) url = this.path + url
+      url = this.manager.resolveURL(url)
+      const scope = this
+      const cached = Cache.get(url)
+      if (cached !== void 0) {
+        scope.manager.itemStart(url)
+        setTimeout(function () {
+          if (onLoad) onLoad(cached)
+          scope.manager.itemEnd(url)
+        }, 0)
+        return cached
+      }
+      const image = createElementNS('img')
+      function onImageLoad() {
+        removeEventListeners()
+        Cache.add(url, this)
+        if (onLoad) onLoad(this)
+        scope.manager.itemEnd(url)
+      }
+      function onImageError(event) {
+        removeEventListeners()
+        if (onError) onError(event)
+        scope.manager.itemError(url)
+        scope.manager.itemEnd(url)
+      }
+      function removeEventListeners() {
+        image.removeEventListener('load', onImageLoad, false)
+        image.removeEventListener('error', onImageError, false)
+      }
+      image.addEventListener('load', onImageLoad, false)
+      image.addEventListener('error', onImageError, false)
+      if (url.slice(0, 5) !== 'data:') {
+        if (this.crossOrigin !== void 0) image.crossOrigin = this.crossOrigin
+      }
+      scope.manager.itemStart(url)
+      image.src = url
+      return image
+    }
+  }
+  class TextureLoader extends Loader {
+    constructor(manager) {
+      super(manager)
+    }
+    load(url, onLoad, onProgress, onError) {
+      const texture = new Texture()
+      const loader = new ImageLoader(this.manager)
+      loader.setCrossOrigin(this.crossOrigin)
+      loader.setPath(this.path)
+      loader.load(
+        url,
+        function (image) {
+          texture.image = image
+          texture.needsUpdate = true
+          if (onLoad !== void 0) {
+            onLoad(texture)
+          }
+        },
+        onProgress,
+        onError,
+      )
+      return texture
+    }
+  }
   if (typeof __THREE_DEVTOOLS__ !== 'undefined') {
     __THREE_DEVTOOLS__.dispatchEvent(
       new CustomEvent('register', {
@@ -21814,16 +22012,84 @@
   var eventemitter3Exports = eventemitter3.exports
   const EventEmitter =
     /* @__PURE__ */ getDefaultExportFromCjs(eventemitter3Exports)
+  class SpaceManager {
+    constructor({textureCacheLoader}) {
+      this.spaceIdGroupMap = /* @__PURE__ */ new Map()
+      this.textureCacheLoader = textureCacheLoader
+    }
+    create(spaceConfig) {
+      const {cubeSpaceTextureUrls, id} = spaceConfig
+      const group = new Group()
+      const spaceMesh = this.createCubeSpaceMesh(cubeSpaceTextureUrls)
+      spaceMesh.userData.type = 'spaceMesh'
+      group.userData.type = 'spaceGroup'
+      group.userData.spaceConfig = spaceConfig
+      group.add(spaceMesh)
+      this.spaceIdGroupMap.set(id, group)
+      return group
+    }
+    createCubeSpaceMesh(cubeSpaceTextureUrls) {
+      const boxGeometry = new BoxGeometry(100, 100, 100)
+      boxGeometry.scale(-1, 1, 1)
+      const boxMaterials = this.createCubeSpaceMaterials(cubeSpaceTextureUrls)
+      const spaceMesh = new Mesh(boxGeometry, boxMaterials)
+      return spaceMesh
+    }
+    // 创建正方体空间材料
+    createCubeSpaceMaterials(cubeSpaceTextureUrls) {
+      const directions = ['right', 'left', 'up', 'down', 'front', 'back']
+      const boxMaterials = directions.map(direction => {
+        const texture = this.textureCacheLoader.loadUrl(
+          cubeSpaceTextureUrls[direction],
+        )
+        return new MeshBasicMaterial({map: texture})
+      })
+      return boxMaterials
+    }
+  }
+  class TextureCacheLoader {
+    constructor() {
+      this.cache = /* @__PURE__ */ new Map()
+      this.loader = new TextureLoader()
+    }
+    static getInstance() {
+      if (!TextureCacheLoader.instance)
+        TextureCacheLoader.instance = new TextureCacheLoader()
+      return TextureCacheLoader.instance
+    }
+    /**
+     * 根据单个链接加载纹理
+     * @param url 图片链接
+     * @returns 返回纹理
+     */
+    loadUrl(url) {
+      if (this.cache.has(url)) return this.cache.get(url)
+      const texture = this.loader.load(url)
+      this.cache.set(url, texture)
+      return texture
+    }
+    /**
+     * 根据多个链接加载纹理
+     * @param urls 图片链接数组
+     * @returns 返回纹理数组
+     */
+    loadUrls(urls) {
+      return urls.map(url => this.loadUrl(url))
+    }
+  }
   class Vr360 extends EventEmitter {
     constructor(options) {
       super()
-      const {container} = options
+      const {container, spacesConfig} = options
+      this.textureCacheLoader = TextureCacheLoader.getInstance()
       this.container = container
       this.scene = this.createScene()
       this.camera = this.createCamera()
       this.renderer = this.createRenderer()
+      this.spaceConfig = [...spacesConfig]
       this.container.appendChild(this.renderer.domElement)
-      this.camera.position.z = 5
+      this.spaceManager = this.createSpaceManager()
+      this.updateSpacesConfig(this.spaceConfig)
     }
     get containerWidth() {
       return this.container.clientWidth
@@ -21848,6 +22114,17 @@
       const renderer = new WebGLRenderer()
       renderer.setSize(this.containerWidth, this.containerHeigh)
       return renderer
+    }
+    createSpaceManager() {
+      const spaceManage = new SpaceManager({
+        textureCacheLoader: this.textureCacheLoader,
+      })
+      return spaceManage
+    }
+    updateSpacesConfig(newSpaceConfig) {
+      newSpaceConfig.map(spaceConfig => {
+        this.spaceManager.create(spaceConfig)
+      })
     }
     /**
      * 渲染

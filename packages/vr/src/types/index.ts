@@ -53,7 +53,7 @@ export type SpaceConfig = {
   // 空间 id
   id: string
   // 相机配置
-  camera: ThreeObjectBase
+  camera?: ThreeObjectBase
   // 空间贴图列表
   cubeSpaceTextureUrls: CubeSpaceTextureUrls
 }

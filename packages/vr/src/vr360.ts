@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import EventEmitter from 'EventEmitter3'
 import {SpaceConfig, VROptions} from './types'
 import {SpaceManager} from './space'
+import {TextureCacheLoader} from './helper'
 
 export class Vr360 extends EventEmitter {
   // 容器
@@ -16,6 +17,8 @@ export class Vr360 extends EventEmitter {
   public spaceManager: SpaceManager
   // 空间配置
   public spaceConfig: SpaceConfig[]
+  //texture 缓存器
+  private textureCacheLoader: TextureCacheLoader
 
   public get containerWidth() {
     return this.container.clientWidth
@@ -28,6 +31,8 @@ export class Vr360 extends EventEmitter {
     super()
 
     const {container, spacesConfig} = options
+
+    this.textureCacheLoader = TextureCacheLoader.getInstance()
 
     this.container = container
     this.scene = this.createScene()
@@ -68,12 +73,18 @@ export class Vr360 extends EventEmitter {
   }
 
   createSpaceManager() {
-    const spaceManage = new SpaceManager()
+    const spaceManage = new SpaceManager({
+      textureCacheLoader: this.textureCacheLoader,
+    })
 
     return spaceManage
   }
 
-  updateSpacesConfig(newSpaceConfig: SpaceConfig[]) {}
+  updateSpacesConfig(newSpaceConfig: SpaceConfig[]) {
+    newSpaceConfig.map(spaceConfig => {
+      this.spaceManager.create(spaceConfig)
+    })
+  }
 
   /**
    * 渲染

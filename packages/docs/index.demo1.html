@@ -23,7 +23,19 @@
     const container = document.querySelector('.demo-container') // 360全景容器
 
     const vr360 = new Vr360({
-      container
+      container,
+      spacesConfig: [{
+        id: "space1",
+        cubeSpaceTextureUrls: {
+          // 立方体贴图，分别为：背侧、下侧、前侧、左侧、右侧、上侧，必须
+          back: 'https://m.360buyimg.com/babel/jfs/t1/40814/31/19646/41953/63398297E0707fe35/4e831e60cf579899.jpg',
+          down: 'https://m.360buyimg.com/babel/jfs/t1/43941/23/19369/84038/633982d7E838acd9a/9e7a89cc910d3409.jpg',
+          front: 'https://m.360buyimg.com/babel/jfs/t1/150573/35/27827/113528/633982faE8556c0c0/b455284fd91885c6.jpg',
+          left: 'https://m.360buyimg.com/babel/jfs/t1/189204/25/29491/61430/63398310E3c180e43/26d9b459cf714f9f.jpg',
+          right: 'https://m.360buyimg.com/babel/jfs/t1/184948/34/28448/131232/63398323E61ff80fb/89ab84eda0421260.jpg',
+          up: 'https://m.360buyimg.com/babel/jfs/t1/86258/24/33602/70616/63398334Ea2dcf448/e2f5c275792fb3d6.jpg'
+        }
+      }]
     })
 
     vr360.render()
