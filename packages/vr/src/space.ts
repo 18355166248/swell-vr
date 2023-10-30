@@ -56,4 +56,11 @@ export class SpaceManager {
 
     return boxMaterials
   }
+
+  /**
+   * find
+   */
+  public find(id: string) {
+    return this.spaceIdGroupMap.get(id)
+  }
 }

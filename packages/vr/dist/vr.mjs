@@ -18184,6 +18184,12 @@ class SpaceManager {
     });
     return boxMaterials;
   }
+  /**
+   * find
+   */
+  find(id) {
+    return this.spaceIdGroupMap.get(id);
+  }
 }
 class TextureCacheLoader {
   constructor() {
@@ -18214,6 +18220,38 @@ class TextureCacheLoader {
    */
   loadUrls(urls) {
     return urls.map((url) => this.loadUrl(url));
+  }
+}
+function formatBaseInfo(baseInfo) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+  return {
+    position: {
+      x: ((_a = baseInfo == null ? void 0 : baseInfo.position) == null ? void 0 : _a.x) ?? 0,
+      y: ((_b = baseInfo == null ? void 0 : baseInfo.position) == null ? void 0 : _b.y) ?? 0,
+      z: ((_c = baseInfo == null ? void 0 : baseInfo.position) == null ? void 0 : _c.z) ?? 0
+    },
+    rotate: {
+      x: ((_d = baseInfo == null ? void 0 : baseInfo.rotate) == null ? void 0 : _d.x) ?? 0,
+      y: ((_e = baseInfo == null ? void 0 : baseInfo.rotate) == null ? void 0 : _e.y) ?? 0,
+      z: ((_f = baseInfo == null ? void 0 : baseInfo.rotate) == null ? void 0 : _f.z) ?? 0
+    },
+    scale: {
+      x: ((_g = baseInfo == null ? void 0 : baseInfo.scale) == null ? void 0 : _g.x) ?? 1,
+      y: ((_h = baseInfo == null ? void 0 : baseInfo.scale) == null ? void 0 : _h.y) ?? 1,
+      z: ((_i = baseInfo == null ? void 0 : baseInfo.scale) == null ? void 0 : _i.z) ?? 1
+    }
+  };
+}
+function update3dObjectBaseInfo(object, baseInfo) {
+  const { position, rotate, scale } = baseInfo;
+  if (position && !new Vector3(position.x, position.y, position.z).equals(object.position)) {
+    object.position.set(position.x, position.y, position.z);
+  }
+  if (scale && !new Vector3(scale.x, scale.y, scale.z).equals(object.scale)) {
+    object.scale.set(scale.x, scale.y, scale.z);
+  }
+  if (rotate && !new Euler(rotate.x, rotate.y, rotate.z).equals(object.rotation)) {
+    object.rotation.set(rotate.x, rotate.y, rotate.z);
   }
 }
 class Vr360 extends EventEmitter {
@@ -18264,6 +18302,20 @@ class Vr360 extends EventEmitter {
     newSpaceConfig.map((spaceConfig) => {
       this.spaceManager.create(spaceConfig);
     });
+    this.switchSpace(newSpaceConfig[0].id);
+  }
+  switchSpace(id) {
+    console.log("🚀 ~ file: vr360.ts:92 ~ Vr360 ~ switchSpace ~ id:", id);
+    const spaceGroup = this.spaceManager.find(id);
+    if (!spaceGroup)
+      return;
+    const spaceConfig = spaceGroup.userData.spaceConfig;
+    const { camera } = spaceConfig;
+    if (!this.scene.children.includes(spaceGroup)) {
+      this.scene.add(spaceGroup);
+    }
+    const nextCameraInfo = formatBaseInfo(camera);
+    update3dObjectBaseInfo(this.camera, nextCameraInfo);
   }
   /**
    * 渲染

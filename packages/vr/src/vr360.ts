@@ -2,7 +2,11 @@ import * as THREE from 'three'
 import EventEmitter from 'EventEmitter3'
 import {SpaceConfig, VROptions} from './types'
 import {SpaceManager} from './space'
-import {TextureCacheLoader} from './helper'
+import {
+  TextureCacheLoader,
+  formatBaseInfo,
+  update3dObjectBaseInfo,
+} from './helper'
 
 export class Vr360 extends EventEmitter {
   // 容器
@@ -84,6 +88,27 @@ export class Vr360 extends EventEmitter {
     newSpaceConfig.map(spaceConfig => {
       this.spaceManager.create(spaceConfig)
     })
+
+    this.switchSpace(newSpaceConfig[0].id)
+  }
+
+  switchSpace(id: string) {
+    console.log('🚀 ~ file: vr360.ts:92 ~ Vr360 ~ switchSpace ~ id:', id)
+    const spaceGroup = this.spaceManager.find(id)
+    if (!spaceGroup) return
+
+    const spaceConfig = spaceGroup.userData.spaceConfig as SpaceConfig
+    const {camera} = spaceConfig
+
+    // 添加目标空间进场景
+    if (!this.scene.children.includes(spaceGroup)) {
+      this.scene.add(spaceGroup)
+    }
+
+    // 下一个镜头的信息
+    const nextCameraInfo = formatBaseInfo(camera)
+
+    update3dObjectBaseInfo(this.camera, nextCameraInfo)
   }
 
   /**
