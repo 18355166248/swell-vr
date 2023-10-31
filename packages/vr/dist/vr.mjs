@@ -19205,7 +19205,6 @@ class Vr360 extends EventEmitter {
     this.switchSpace(newSpaceConfig[0].id);
   }
   switchSpace(id) {
-    console.log("🚀 ~ file: vr360.ts:92 ~ Vr360 ~ switchSpace ~ id:", id);
     const spaceGroup = this.spaceManager.find(id);
     if (!spaceGroup)
       return;

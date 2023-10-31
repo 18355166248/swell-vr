@@ -1,14 +1,14 @@
 import * as THREE from 'three'
 import EventEmitter from 'EventEmitter3'
-import { SpaceConfig, VROptions } from './types'
-import { SpaceManager } from './space'
+import {SpaceConfig, VROptions} from './types'
+import {SpaceManager} from './space'
 import {
   TextureCacheLoader,
   formatBaseInfo,
   update3dObjectBaseInfo,
 } from './helper'
 // 引入轨道控制器扩展库OrbitControls
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 
 export class Vr360 extends EventEmitter {
   // 容器
@@ -28,18 +28,17 @@ export class Vr360 extends EventEmitter {
   // 控制器
   public controls: OrbitControls
 
-
-  public get containerWidth () {
+  public get containerWidth() {
     return this.container.clientWidth
   }
-  public get containerHeigh () {
+  public get containerHeigh() {
     return this.container.clientHeight
   }
 
   constructor(options: VROptions) {
     super()
 
-    const { container, spacesConfig } = options
+    const {container, spacesConfig} = options
 
     this.textureCacheLoader = TextureCacheLoader.getInstance()
 
@@ -59,13 +58,13 @@ export class Vr360 extends EventEmitter {
     this.updateSpacesConfig(this.spaceConfig)
   }
 
-  createScene () {
+  createScene() {
     const scene = new THREE.Scene()
 
     return scene
   }
 
-  createCamera () {
+  createCamera() {
     const camera = new THREE.PerspectiveCamera(
       75,
       this.containerWidth / this.containerHeigh,
@@ -76,13 +75,13 @@ export class Vr360 extends EventEmitter {
     return camera
   }
 
-  createRenderer () {
+  createRenderer() {
     const renderer = new THREE.WebGLRenderer()
     renderer.setSize(this.containerWidth, this.containerHeigh)
     return renderer
   }
 
-  createSpaceManager () {
+  createSpaceManager() {
     const spaceManage = new SpaceManager({
       textureCacheLoader: this.textureCacheLoader,
     })
@@ -90,7 +89,7 @@ export class Vr360 extends EventEmitter {
     return spaceManage
   }
 
-  updateSpacesConfig (newSpaceConfig: SpaceConfig[]) {
+  updateSpacesConfig(newSpaceConfig: SpaceConfig[]) {
     newSpaceConfig.map(spaceConfig => {
       this.spaceManager.create(spaceConfig)
     })
@@ -98,14 +97,12 @@ export class Vr360 extends EventEmitter {
     this.switchSpace(newSpaceConfig[0].id)
   }
 
-
-  switchSpace (id: string) {
-    console.log('🚀 ~ file: vr360.ts:92 ~ Vr360 ~ switchSpace ~ id:', id)
+  switchSpace(id: string) {
     const spaceGroup = this.spaceManager.find(id)
     if (!spaceGroup) return
 
     const spaceConfig = spaceGroup.userData.spaceConfig as SpaceConfig
-    const { camera } = spaceConfig
+    const {camera} = spaceConfig
 
     // 添加目标空间进场景
     if (!this.scene.children.includes(spaceGroup)) {
@@ -118,9 +115,9 @@ export class Vr360 extends EventEmitter {
     update3dObjectBaseInfo(this.camera, nextCameraInfo)
   }
 
-  createControls () {
+  createControls() {
     // 设置相机控件轨道控制器OrbitControls
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    const controls = new OrbitControls(this.camera, this.renderer.domElement)
     // API 文档 https://threejs.org/docs/#examples/zh/controls/OrbitControls
     // 为指定的DOM元素添加按键监听。推荐将window作为指定的DOM元素。
 
@@ -145,7 +142,7 @@ export class Vr360 extends EventEmitter {
   /**
    * 渲染
    */
-  public render (): void {
+  public render(): void {
     requestAnimationFrame(this.render.bind(this))
     // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
     this.controls.update()
@@ -155,7 +152,7 @@ export class Vr360 extends EventEmitter {
   /**
    * 每次渲染更新时执行一些东西
    */
-  private handleUpdate (): void {
+  private handleUpdate(): void {
     this.renderer.render(this.scene, this.camera)
   }
 }

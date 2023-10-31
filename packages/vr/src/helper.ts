@@ -18,7 +18,7 @@ export class TextureCacheLoader {
   private cache = new Map<string, THREE.Texture>()
 
   /**
-   * 加载器
+   * 加载器 https://threejs.org/docs/#api/zh/loaders/TextureLoader
    */
   private loader = new THREE.TextureLoader()
 
