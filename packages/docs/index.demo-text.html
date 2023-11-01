@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>threejs Demo1</title>
+  <link rel="stylesheet" href="./assets/common.css">
+  <!-- 引入 threejs -->
+  <script src="./assets/three/three.min.js"></script>
+  <style>
+    #info {
+      position: absolute;
+      top: 50px;
+      width: 100%;
+      text-align: center;
+      z-index: 100;
+      display: block;
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="info">Description</div>
+
+  <script>
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10_00);
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+
+    // 画线
+    camera.position.set(0, 0, 100)
+    camera.lookAt(0, 0, 0)
+    const material = new THREE.LineBasicMaterial({ color: 'red' });
+    const points = [];
+    points.push(new THREE.Vector3(-10, 0, 0));
+    points.push(new THREE.Vector3(0, 10, 0));
+    points.push(new THREE.Vector3(10, 0, 0));
+    points.push(new THREE.Vector3(20, 10, 0));
+    points.push(new THREE.Vector3(30, 0, 0));
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+    const line = new THREE.Line(geometry, material);
+    line.position.set(-50, 0, 0)
+    scene.add(line);
+
+    // 纹理
+    const texture = new THREE.TextureLoader().load("./assets/XIMA/back.JPG");
+    // texture.wrapS = THREE.RepeatWrapping;
+    // texture.wrapT = THREE.RepeatWrapping;
+    // texture.repeat.set(4, 4);
+    const geometry1 = new THREE.PlaneGeometry(60, 60);
+    const material1 = new THREE.MeshBasicMaterial({ map: texture });
+    const mesh = new THREE.Mesh(geometry1, material1);
+    mesh.position.set(50, 0, 0)
+    scene.add(mesh);
+
+    function render () {
+      requestAnimationFrame(render);
+      renderer.render(scene, camera);
+    }
+    render();
+  </script>
+</body>
+
+</html>

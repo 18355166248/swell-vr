@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>three.js webgl - GLTFloader + EXT_texture_avif</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <link type="text/css" rel="stylesheet" href="./assets/css/main.css" />
+  <style>
+    body {
+      background-color: #bfe3dd;
+      color: #000;
+    }
+
+    a {
+      color: #986b60;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <script type="module">
+    import * as THREE from 'three';
+
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+    let camera, scene, renderer;
+
+    init();
+    render();
+
+    function init () {
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(1.5, 4, 9);
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf6eedc);
+
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('/packages/docs/assets/three/draco/gltf/');
+
+      const loader = new GLTFLoader();
+      loader.setDRACOLoader(dracoLoader);
+      loader.setPath('/packages/docs/assets/three/');
+      loader.load('forest_house.glb', function (gltf) {
+        scene.add(gltf.scene);
+        render();
+      });
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.addEventListener('change', render);
+      controls.target.set(0, 2, 0);
+      controls.update();
+
+      window.addEventListener('resize', onWindowResize);
+
+    }
+
+    function onWindowResize () {
+
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      render();
+
+    }
+
+    //
+
+    function render () {
+
+      renderer.render(scene, camera);
+
+    }
+  </script>
+</body>
+
+</html>

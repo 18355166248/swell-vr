@@ -1,0 +1,11 @@
+Model Information:
+* title:	T-62  Soviet medium tank
+* source:	https://sketchfab.com/3d-models/t-62-soviet-medium-tank-012085812f114e9b94f5bde06ff8f7da
+* author:	Dayzr (https://sketchfab.com/Dayzr)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "T-62  Soviet medium tank" (https://sketchfab.com/3d-models/t-62-soviet-medium-tank-012085812f114e9b94f5bde06ff8f7da) by Dayzr (https://sketchfab.com/Dayzr) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
