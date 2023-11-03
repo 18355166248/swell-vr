@@ -1,84 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <title>three.js webgl - GLTFloader + EXT_texture_avif</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-  <link type="text/css" rel="stylesheet" href="./assets/css/main.css" />
-  <script src="./assets/js/onresize.js"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "../vr/node_modules/three/build/three.module.js",
-        "three/addons/": "../vr/node_modules/three/examples/jsm/"
+  <head>
+    <title>three.js webgl - GLTFloader + EXT_texture_avif</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <link type="text/css" rel="stylesheet" href="./assets/css/main.css" />
+    <script src="./assets/js/onresize.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../vr/node_modules/three/build/three.module.js",
+          "three/addons/": "../vr/node_modules/three/examples/jsm/"
+        }
       }
-    }
-  </script>
-</head>
+    </script>
+  </head>
 
-<body>
-  <script type="module">
-    import * as THREE from 'three';
+  <body>
+    <script type="module">
+      import * as THREE from 'three'
 
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-    import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+      import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
+      import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js'
+      import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js'
+      import {RGBELoader} from 'three/addons/loaders/RGBELoader.js'
 
-    let head;
+      let head
 
-    const camera = new THREE.PerspectiveCamera(
-      45,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000,
+      )
 
-    camera.position.set(6, 6, 6);
+      camera.position.set(6, 6, 6)
 
-    const scene = new THREE.Scene();
+      const scene = new THREE.Scene()
 
-    const grid = new THREE.GridHelper(30, 30);
-    scene.add(grid);
+      const grid = new THREE.GridHelper(30, 30)
+      scene.add(grid)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0xA3A3A3);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 4;
+      const renderer = new THREE.WebGLRenderer({antialias: true})
+      renderer.setPixelRatio(window.devicePixelRatio)
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setClearColor(0xa3a3a3)
+      renderer.outputEncoding = THREE.sRGBEncoding
+      renderer.toneMapping = THREE.ACESFilmicToneMapping
+      renderer.toneMappingExposure = 4
 
-    document.body.appendChild(renderer.domElement);
+      document.body.appendChild(renderer.domElement)
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.update();
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controls.update()
 
-    const loader = new GLTFLoader();
-    const rgbeLoader = new RGBELoader();
+      const loader = new GLTFLoader()
+      const rgbeLoader = new RGBELoader()
 
-    rgbeLoader.load('/packages/docs/assets/three/MR_INT-005_WhiteNeons_NAD.hdr', function (texture) {
-      texture.mapping = THREE.EquirectangularReflectionMapping;
-      scene.environment = texture;
-      loader.load('./assets/three/car/scene.gltf', function (gltf) {
-        const model = gltf.scene
+      rgbeLoader.load(
+        '/packages/docs/assets/three/MR_INT-005_WhiteNeons_NAD.hdr',
+        function (texture) {
+          texture.mapping = THREE.EquirectangularReflectionMapping
+          scene.environment = texture
+          loader.load('./assets/three/car/scene.gltf', function (gltf) {
+            const model = gltf.scene
 
-        scene.add(model);
-        head = model
-      });
-    })
+            scene.add(model)
+            head = model
+          })
+        },
+      )
 
-    initSize()
+      initSize()
 
-    renderer.setAnimationLoop(render);
+      renderer.setAnimationLoop(render)
 
-    function render (time) {
-      if (head)
-        head.rotation.y = - time / 3000;
-      renderer.render(scene, camera);
-    }
-  </script>
-</body>
-
+      function render(time) {
+        if (head) head.rotation.y = -time / 3000
+        renderer.render(scene, camera)
+      }
+    </script>
+  </body>
 </html>

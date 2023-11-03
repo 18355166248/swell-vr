@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky install",
-    "build:watch": "pnpm --filter vr --filter vr-core build:watch"
+    "build:watch": "pnpm --filter vr --filter vr-core build:watch",
+    "lint": "eslint --fix --ext .ts,.tsx src",
+    "prettier": "prettier --write packages"
   },
   "commitlint": {
     "extends": [

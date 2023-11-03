@@ -1,53 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>threejs Demo1</title>
-  <link rel="stylesheet" href="./assets/common.css">
-  <script src="./assets/js/onresize.js"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "../vr/node_modules/three/build/three.module.js",
-        "three/addons/": "../vr/node_modules/three/examples/jsm/"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>threejs Demo1</title>
+    <link rel="stylesheet" href="./assets/common.css" />
+    <script src="./assets/js/onresize.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../vr/node_modules/three/build/three.module.js",
+          "three/addons/": "../vr/node_modules/three/examples/jsm/"
+        }
       }
-    }
-  </script>
-</head>
+    </script>
+  </head>
 
-<body>
-  <script>
-    var camera, scene, renderer, render
-  </script>
-  <script type="module">
-    import * as THREE from 'three';
+  <body>
+    <script>
+      var camera, scene, renderer, render
+    </script>
+    <script type="module">
+      import * as THREE from 'three'
 
-    camera = new THREE.PerspectiveCamera(
-      45,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
+      camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000,
+      )
 
-    camera.position.set(0, 0, 0);
+      camera.position.set(0, 0, 0)
 
-    scene = new THREE.Scene();
+      scene = new THREE.Scene()
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+      renderer = new THREE.WebGLRenderer({antialias: true})
+      renderer.setPixelRatio(window.devicePixelRatio)
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      document.body.appendChild(renderer.domElement)
 
-    renderer.setAnimationLoop(render);
+      renderer.setAnimationLoop(render)
 
-    render = (time) => {
-      renderer.render(scene, camera);
-    }
+      render = time => {
+        renderer.render(scene, camera)
+      }
 
-    initSize()
-  </script>
-</body>
-
+      initSize()
+    </script>
+  </body>
 </html>

@@ -2,7 +2,7 @@
   "name": "vr",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/vr.mjs",
   "scripts": {
     "build": "pnpm type-check && esno ./scripts/build.ts",
     "build:watch": "cross-env WATCH=true pnpm build",

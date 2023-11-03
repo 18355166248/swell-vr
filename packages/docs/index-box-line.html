@@ -1,73 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>threejs Demo1</title>
+    <link rel="stylesheet" href="./assets/common.css" />
+    <!-- 引入 threejs -->
+    <script src="./assets/three/three.min.js"></script>
+    <!-- 获取OrbitControls控制器 -->
+    <script src="./assets/three/OrbitControls.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>threejs Demo1</title>
-  <link rel="stylesheet" href="./assets/common.css">
-  <!-- 引入 threejs -->
-  <script src="./assets/three/three.min.js"></script>
-  <!-- 获取OrbitControls控制器 -->
-  <script src="./assets/three/OrbitControls.js"></script>
-</head>
+  <body>
+    <script>
+      var scene = new THREE.Scene()
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        10_00,
+      )
+      var renderer = new THREE.WebGLRenderer()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      document.body.appendChild(renderer.domElement)
 
-<body>
-  <script>
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10_00);
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+      camera.position.set(1, 1, 5)
 
-    camera.position.set(1, 1, 5)
+      // 画盒子
+      // 默认情况下，当我们调用 scene.add() 的时候，物体将会被添加到 (0,0,0) 坐标。但将使得摄像机和立方体彼此在一起。为了防止这种情况的发生，我们只需要将摄像机稍微向外移动一些即可。
 
-    // 画盒子
-    // 默认情况下，当我们调用 scene.add() 的时候，物体将会被添加到 (0,0,0) 坐标。但将使得摄像机和立方体彼此在一起。为了防止这种情况的发生，我们只需要将摄像机稍微向外移动一些即可。
+      var geometry = new THREE.BoxGeometry(1, 1, 1)
+      var material = new THREE.MeshBasicMaterial({color: 'blue'})
+      var cube = new THREE.Mesh(geometry, material)
+      // cube.rotation.set(0.3, 0.3, 0)
+      scene.add(cube)
 
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshBasicMaterial({ color: 'blue' });
-    var cube = new THREE.Mesh(geometry, material);
-    // cube.rotation.set(0.3, 0.3, 0)
-    scene.add(cube);
+      // 创建轨道控制器
+      // 参数：相机，渲染器dom元素
+      const controls = new THREE.OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true // 开启阻尼效果
+      controls.rotateSpeed = 0.5 // 旋转速度
+      controls.target.set(0, 0, 0) // 查看物体时的中心点
 
+      // 添加坐标轴辅助器
+      // 参数：坐标轴长度
+      const lineNum = 3
+      const axesHelper = new THREE.AxesHelper(lineNum)
+      scene.add(axesHelper)
 
-    // 创建轨道控制器
-    // 参数：相机，渲染器dom元素
-    const controls = new THREE.OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true; // 开启阻尼效果
-    controls.rotateSpeed = 0.5; // 旋转速度
-    controls.target.set(0, 0, 0); // 查看物体时的中心点
+      let arrow = 'top'
 
-    // 添加坐标轴辅助器
-    // 参数：坐标轴长度
-    const lineNum = 3
-    const axesHelper = new THREE.AxesHelper(lineNum)
-    scene.add(axesHelper)
+      function render() {
+        // 让物体沿着y轴往返运动
+        if (arrow === 'top') {
+          cube.position.y += 0.01
+        } else {
+          cube.position.y -= 0.01
+        }
 
-    let arrow = 'top'
+        if (cube.position.y > lineNum) {
+          arrow = 'bottom'
+        }
+        if (cube.position.y < 0) {
+          arrow = 'top'
+        }
 
-    function render () {
-      // 让物体沿着y轴往返运动
-      if (arrow === 'top') {
-        cube.position.y += 0.01
-      } else {
-        cube.position.y -= 0.01
+        requestAnimationFrame(render)
+        controls.update() //更新控制器
+        renderer.render(scene, camera)
       }
-
-      if (cube.position.y > lineNum) {
-        arrow = 'bottom'
-      }
-      if (cube.position.y < 0) {
-        arrow = 'top'
-      }
-
-      requestAnimationFrame(render);
-      controls.update() //更新控制器
-      renderer.render(scene, camera);
-    }
-    render();
-  </script>
-</body>
-
+      render()
+    </script>
+  </body>
 </html>

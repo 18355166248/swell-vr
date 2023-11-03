@@ -1,39 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>threejs Demo1</title>
+    <link rel="stylesheet" href="./assets/common.css" />
+    <!-- 引入 threejs -->
+    <script src="./assets/three/three.min.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>threejs Demo1</title>
-  <link rel="stylesheet" href="./assets/common.css">
-  <!-- 引入 threejs -->
-  <script src="./assets/three/three.min.js"></script>
-</head>
+  <body>
+    <script>
+      var scene = new THREE.Scene()
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        10_00,
+      )
+      var renderer = new THREE.WebGLRenderer()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      document.body.appendChild(renderer.domElement)
 
-<body>
-  <script>
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10_00);
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+      // 画盒子
+      // 默认情况下，当我们调用 scene.add() 的时候，物体将会被添加到 (0,0,0) 坐标。但将使得摄像机和立方体彼此在一起。为了防止这种情况的发生，我们只需要将摄像机稍微向外移动一些即可。
+      camera.position.z = 5
+      var geometry = new THREE.BoxGeometry(1, 1, 1)
+      var material = new THREE.MeshBasicMaterial({color: 'blue'})
+      var cube = new THREE.Mesh(geometry, material)
+      scene.add(cube)
 
-    // 画盒子
-    // 默认情况下，当我们调用 scene.add() 的时候，物体将会被添加到 (0,0,0) 坐标。但将使得摄像机和立方体彼此在一起。为了防止这种情况的发生，我们只需要将摄像机稍微向外移动一些即可。
-    camera.position.z = 5;
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshBasicMaterial({ color: 'blue' });
-    var cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    function render () {
-      requestAnimationFrame(render);
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-    render();
-  </script>
-</body>
-
+      function render() {
+        requestAnimationFrame(render)
+        cube.rotation.x += 0.01
+        cube.rotation.y += 0.01
+        renderer.render(scene, camera)
+      }
+      render()
+    </script>
+  </body>
 </html>

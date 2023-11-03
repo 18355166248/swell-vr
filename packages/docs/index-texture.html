@@ -1,58 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>threejs Demo1</title>
-  <link rel="stylesheet" href="./assets/common.css">
-  <script src="./assets/js/onresize.js"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "../vr/node_modules/three/build/three.module.js",
-        "three/addons/": "../vr/node_modules/three/examples/jsm/"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>threejs Demo1</title>
+    <link rel="stylesheet" href="./assets/common.css" />
+    <script src="./assets/js/onresize.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../vr/node_modules/three/build/three.module.js",
+          "three/addons/": "../vr/node_modules/three/examples/jsm/"
+        }
       }
-    }
-  </script>
-</head>
+    </script>
+  </head>
 
-<body>
-  <script>
-    var camera, scene, renderer, render
-  </script>
-  <script type="module">
-    import * as THREE from 'three';
+  <body>
+    <script>
+      var camera, scene, renderer, render
+    </script>
+    <script type="module">
+      import * as THREE from 'three'
 
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10_00);
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+      var scene = new THREE.Scene()
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        10_00,
+      )
+      var renderer = new THREE.WebGLRenderer()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      document.body.appendChild(renderer.domElement)
 
-    camera.position.set(0, 0, 2);
-    // 引入纹理到几何体
-    const textureLoader = new THREE.TextureLoader()
-    const plasterTexture = textureLoader.load('./assets/images/texture1.jpg')
+      camera.position.set(0, 0, 2)
+      // 引入纹理到几何体
+      const textureLoader = new THREE.TextureLoader()
+      const plasterTexture = textureLoader.load('./assets/images/texture1.jpg')
 
-    // 引入外部纹理
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const meshMaterial = new THREE.MeshBasicMaterial({
-      color: 0xAEEEEE,
-      map: plasterTexture
-    });
-    const cube = new THREE.Mesh(cubeGeometry, meshMaterial);
+      // 引入外部纹理
+      const cubeGeometry = new THREE.BoxGeometry(1, 1, 1)
+      const meshMaterial = new THREE.MeshBasicMaterial({
+        color: 0xaeeeee,
+        map: plasterTexture,
+      })
+      const cube = new THREE.Mesh(cubeGeometry, meshMaterial)
 
-    scene.add(cube)
+      scene.add(cube)
 
-    render = (time) => {
-      cube.rotation.x += 0.005
-      cube.rotation.y += 0.005
-      renderer.render(scene, camera);
-    }
+      render = time => {
+        cube.rotation.x += 0.005
+        cube.rotation.y += 0.005
+        renderer.render(scene, camera)
+      }
 
-    renderer.setAnimationLoop(render);
-  </script>
-</body>
-
+      renderer.setAnimationLoop(render)
+    </script>
+  </body>
 </html>
