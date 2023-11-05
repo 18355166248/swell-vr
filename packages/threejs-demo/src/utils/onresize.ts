@@ -2,14 +2,15 @@ import * as THREE from 'three'
 
 export function initReSize(
   camera: THREE.PerspectiveCamera,
-  renderer: THREE.Renderer,
-  render: () => void,
+  renderer: THREE.WebGLRenderer,
+  render: (num?: number) => void,
 ) {
   function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
 
     renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     render()
   }
 

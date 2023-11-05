@@ -2,8 +2,31 @@ import * as THREE from 'three'
 import {initReSize} from '../utils/onresize'
 import textureImg from '../assets/texture/texture1.jpg'
 import {RGBELoader} from 'three/addons/loaders/RGBELoader.js'
+import {useLayoutEffect, useRef} from 'react'
 
-export default function initTexture(dom: HTMLElement) {
+export default function TextureDemo() {
+  const textureRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    let destroyTasks: unknown[] = []
+    if (textureRef.current) {
+      destroyTasks = initTexture(textureRef.current).destroyTasks
+    }
+
+    return () => {
+      console.log(223)
+      destroyTasks.forEach(task => typeof task === 'function' && task())
+    }
+  }, [])
+
+  return (
+    <div>
+      <div ref={textureRef}> </div>
+    </div>
+  )
+}
+
+function initTexture(dom: HTMLElement) {
   const destroyTasks = []
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x808080)
