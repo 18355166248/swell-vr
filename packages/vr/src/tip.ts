@@ -43,12 +43,7 @@ export default class TipManager {
     if (rotate) {
       sprite.rotation.set(rotate.x, rotate.y, rotate.z)
     }
-    console.log('sprite', sprite)
     sprite.addEventListener('mouseover', _e => {
-      const e = _e as unknown as HTMLElementEventMap['mouseover']
-      console.log('🚀 ~ file: tip.ts:49 ~ TipManager ~ create ~ e:', e)
-    })
-    sprite.addEventListener('click', _e => {
       const e = _e as unknown as HTMLElementEventMap['mouseover']
       console.log('🚀 ~ file: tip.ts:49 ~ TipManager ~ create ~ e:', e)
     })

@@ -18791,12 +18791,7 @@ class TipManager {
     if (rotate) {
       sprite.rotation.set(rotate.x, rotate.y, rotate.z);
     }
-    console.log("sprite", sprite);
     sprite.addEventListener("mouseover", (_e) => {
-      const e = _e;
-      console.log("🚀 ~ file: tip.ts:49 ~ TipManager ~ create ~ e:", e);
-    });
-    sprite.addEventListener("click", (_e) => {
       const e = _e;
       console.log("🚀 ~ file: tip.ts:49 ~ TipManager ~ create ~ e:", e);
     });
@@ -18894,10 +18889,10 @@ function getRaycasterAndMouse() {
   if (!raycaster)
     raycaster = new Raycaster();
   if (!mouseVector)
-    mouseVector = new Vector3();
+    mouseVector = new Vector2();
   return {
     raycaster,
-    mouseVector
+    mouse: mouseVector
   };
 }
 class TextureCacheLoader {
@@ -18975,20 +18970,46 @@ function addListenerToThree(getDeps, events = [
   const renderElement = renderer == null ? void 0 : renderer.domElement;
   if (!renderElement)
     return;
-  getRaycasterAndMouse();
+  console.log("🚀 ~ file: helper.ts:144 ~ renderElement:", renderElement);
+  const { raycaster: raycaster2, mouse } = getRaycasterAndMouse();
+  let isMouseDown = false;
   renderElement.addEventListener("mousedown", () => {
+    isMouseDown = true;
   });
   renderElement.addEventListener("mouseup", () => {
+    isMouseDown = false;
   });
   for (const eventName of events) {
     renderElement.addEventListener(eventName, (e) => handleEvent(eventName, e));
   }
   function handleEvent(eventName, event) {
+    var _a, _b, _c, _d;
     event.preventDefault();
     const { camera, scene, renderer: renderer2 } = getDeps();
     if (!camera || !scene || !renderer2)
       return;
-    renderer2.domElement.getBoundingClientRect();
+    const bound = renderer2.domElement.getBoundingClientRect();
+    const clientX = ((_b = (_a = event == null ? void 0 : event.changedTouches) == null ? void 0 : _a[0]) == null ? void 0 : _b.clientX) ?? event.clientX;
+    const clientY = ((_d = (_c = event == null ? void 0 : event.changedTouches) == null ? void 0 : _c[0]) == null ? void 0 : _d.clientY) ?? event.clientY;
+    mouse.x = (clientX - bound.left) / renderer2.domElement.clientWidth * 2 - 1;
+    mouse.y = -((clientY - bound.top) / renderer2.domElement.clientHeight) * 2 + 1;
+    raycaster2.setFromCamera(mouse, camera);
+    const intersects = raycaster2.intersectObjects(scene.children);
+    const firstIntersect = intersects[0] ?? void 0;
+    if (!firstIntersect || intersects.length <= 0)
+      return;
+    firstIntersect.object.dispatchEvent({
+      type: "mouseover",
+      intersect: firstIntersect,
+      sourceEvent: event,
+      isMouseDown
+    });
+    firstIntersect.object.dispatchEvent({
+      type: eventName === "touchmove" ? "mousemove" : eventName,
+      intersect: firstIntersect,
+      sourceEvent: event,
+      isMouseDown
+    });
   }
 }
 const _changeEvent = { type: "change" };

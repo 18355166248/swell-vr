@@ -2,14 +2,14 @@ import * as THREE from 'three'
 import {DeepPartial, DeepRequired, ThreeObjectBase} from './types'
 
 let raycaster: THREE.Raycaster
-let mouseVector: THREE.Vector3
+let mouseVector: THREE.Vector2
 
 function getRaycasterAndMouse() {
   if (!raycaster) raycaster = new THREE.Raycaster()
-  if (!mouseVector) mouseVector = new THREE.Vector3()
+  if (!mouseVector) mouseVector = new THREE.Vector2()
   return {
     raycaster,
-    mouseVector,
+    mouse: mouseVector,
   }
 }
 
@@ -20,6 +20,13 @@ export type GetAddListenerToThreeObjectDeps = () => {
   camera?: THREE.PerspectiveCamera
   scene?: THREE.Scene
   renderer?: THREE.WebGLRenderer
+}
+
+export type ThreeObjectDispatchEvent<T extends keyof HTMLElementEventMap> = {
+  type: T
+  intersect: THREE.Intersection
+  sourceEvent: HTMLElementEventMap[T]
+  isMouseDown: boolean
 }
 
 /**
@@ -141,8 +148,9 @@ export function addListenerToThree(
   const {renderer} = getDeps()
   const renderElement = renderer?.domElement
   if (!renderElement) return
+  console.log('🚀 ~ file: helper.ts:144 ~ renderElement:', renderElement)
 
-  const {raycaster, mouseVector} = getRaycasterAndMouse()
+  const {raycaster, mouse} = getRaycasterAndMouse()
   // 鼠标是否处于按压状态，用于传给 tip 判断，在按下鼠标滑动时不显示 tip
   let isMouseDown = false
 
@@ -150,20 +158,54 @@ export function addListenerToThree(
     isMouseDown = true
   })
   renderElement.addEventListener('mouseup', () => {
-    isMouseDown = true
+    isMouseDown = false
   })
 
   for (const eventName of events) {
-    renderElement.addEventListener(eventName, e => handleEvent(eventName, e))
+    renderElement.addEventListener(eventName, e =>
+      handleEvent(eventName, e as MouseEvent),
+    )
   }
-  function handleEvent(
-    eventName: keyof HTMLElementEventMap,
-    event: MouseEvent | TouchEvent,
-  ) {
+
+  function handleEvent(eventName: string, event: MouseEvent | TouchEvent) {
     event.preventDefault()
     const {camera, scene, renderer} = getDeps()
     if (!camera || !scene || !renderer) return
 
     const bound = renderer.domElement.getBoundingClientRect()
+
+    const clientX =
+      (event as TouchEvent)?.changedTouches?.[0]?.clientX ??
+      (event as MouseEvent).clientX
+    const clientY =
+      (event as TouchEvent)?.changedTouches?.[0]?.clientY ??
+      (event as MouseEvent).clientY
+
+    // 通过鼠标点击的位置计算出 raycaster 所需要的点的位置，以屏幕中心为原点，值的范围为-1到1.
+    mouse.x = ((clientX - bound.left) / renderer.domElement.clientWidth) * 2 - 1
+    mouse.y =
+      -((clientY - bound.top) / renderer.domElement.clientHeight) * 2 + 1
+    // 通过鼠标点的位置和当前相机的矩阵计算出raycaster
+    raycaster.setFromCamera(mouse, camera)
+    // 获取raycaster直线和所有模型相交的数组集合。第二个参数表示是否需要递归查找
+    const intersects = raycaster.intersectObjects(scene.children)
+    // 所有的相交的模型 如果只需要将第一个触发事件，那就数组的第一个
+    const firstIntersect = intersects[0] ?? undefined
+    if (!firstIntersect || intersects.length <= 0) return
+
+    // 触发本次 hover 对象的 mouseover 事件
+    firstIntersect.object.dispatchEvent({
+      type: 'mouseover',
+      intersect: firstIntersect,
+      sourceEvent: event,
+      isMouseDown,
+    } as any)
+
+    firstIntersect.object.dispatchEvent({
+      type: (eventName === 'touchmove' ? 'mousemove' : eventName) as string,
+      intersect: firstIntersect,
+      sourceEvent: event,
+      isMouseDown,
+    } as any)
   }
 }
