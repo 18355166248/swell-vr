@@ -14,18 +14,48 @@
 
   <body>
     <div class="demo">
+      <!-- 提示 -->
+      <div class="demo-tip">
+        <!-- 提示标题 -->
+        <div class="demo-tip-title"></div>
+        <!-- 提示内容 -->
+        <div class="demo-tip-content"></div>
+      </div>
       <div class="demo-container"></div>
     </div>
 
     <script>
       const {Vr360} = Vr
       const container = document.querySelector('.demo-container') // 360全景容器
+      const tip = document.querySelector('.demo-tip')
 
       const vr360 = new Vr360({
         container,
+        tipContainer: tip,
         spacesConfig: [
           {
             id: 'space1',
+            tips: [
+              {
+                id: '1',
+                position: {x: 0, y: -10, z: 40},
+                content: {
+                  title: '坐骑',
+                  content: '文本描述',
+                },
+              },
+              {
+                id: '2',
+                position: {x: -10, y: -6, z: 40},
+                textureUrl:
+                  'https://m.360buyimg.com/babel/jfs/t1/125314/12/31594/6260/6339b149E14068522/5c0d35a3e149936a.png',
+                targetSpaceId: 'space2',
+                content: {
+                  title: '去客厅',
+                  content: '走吧',
+                },
+              },
+            ],
             cubeSpaceTextureUrls: {
               // 立方体贴图，分别为：背侧、下侧、前侧、左侧、右侧、上侧，必须
               // back: './assets/XIMA/back.JPG',
@@ -51,27 +81,13 @@
       vr360.controls.autoRotate = true
 
       vr360.render()
-      // var scene = new THREE.Scene();
-      // var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-      // var renderer = new THREE.WebGLRenderer();
-      // renderer.setSize(window.innerWidth, window.innerHeight);
-      // document.body.appendChild(renderer.domElement);
+      vr360.listenResize()
 
-      // var geometry = new THREE.BoxGeometry(1, 1, 1);
-      // var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      // var cube = new THREE.Mesh(geometry, material);
-      // scene.add(cube);
-
-      // camera.position.z = 5;
-
-      // function render () {
-      //   requestAnimationFrame(render);
-      //   cube.rotation.x += 0.1;
-      //   cube.rotation.y += 0.1;
-      //   renderer.render(scene, camera);
-      // }
-      // render();
+      // 页面销毁时卸载实例
+      window.addEventListener('unload', () => {
+        vr360.destroy()
+      })
     </script>
   </body>
 </html>

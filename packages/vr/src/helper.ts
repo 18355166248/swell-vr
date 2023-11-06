@@ -1,6 +1,27 @@
 import * as THREE from 'three'
 import {DeepPartial, DeepRequired, ThreeObjectBase} from './types'
 
+let raycaster: THREE.Raycaster
+let mouseVector: THREE.Vector3
+
+function getRaycasterAndMouse() {
+  if (!raycaster) raycaster = new THREE.Raycaster()
+  if (!mouseVector) mouseVector = new THREE.Vector3()
+  return {
+    raycaster,
+    mouseVector,
+  }
+}
+
+/**
+ * 获取依赖函数
+ */
+export type GetAddListenerToThreeObjectDeps = () => {
+  camera?: THREE.PerspectiveCamera
+  scene?: THREE.Scene
+  renderer?: THREE.WebGLRenderer
+}
+
 /**
  * 纹理缓存加载器
  */
@@ -102,5 +123,47 @@ export function update3dObjectBaseInfo(
     !new THREE.Euler(rotate.x, rotate.y, rotate.z).equals(object.rotation)
   ) {
     object.rotation.set(rotate.x, rotate.y, rotate.z)
+  }
+}
+
+/**
+ * 为 threejs 添加事件监听
+ */
+export function addListenerToThree(
+  getDeps: GetAddListenerToThreeObjectDeps,
+  events: (keyof HTMLElementEventMap)[] = [
+    'click',
+    'mousemove',
+    'touchmove',
+    'mouseup',
+  ],
+) {
+  const {renderer} = getDeps()
+  const renderElement = renderer?.domElement
+  if (!renderElement) return
+
+  const {raycaster, mouseVector} = getRaycasterAndMouse()
+  // 鼠标是否处于按压状态，用于传给 tip 判断，在按下鼠标滑动时不显示 tip
+  let isMouseDown = false
+
+  renderElement.addEventListener('mousedown', () => {
+    isMouseDown = true
+  })
+  renderElement.addEventListener('mouseup', () => {
+    isMouseDown = true
+  })
+
+  for (const eventName of events) {
+    renderElement.addEventListener(eventName, e => handleEvent(eventName, e))
+  }
+  function handleEvent(
+    eventName: keyof HTMLElementEventMap,
+    event: MouseEvent | TouchEvent,
+  ) {
+    event.preventDefault()
+    const {camera, scene, renderer} = getDeps()
+    if (!camera || !scene || !renderer) return
+
+    const bound = renderer.domElement.getBoundingClientRect()
   }
 }

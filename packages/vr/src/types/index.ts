@@ -1,6 +1,8 @@
+import {Tip} from './tip'
+
 export interface VROptions {
   container: HTMLElement
-
+  tipContainer: HTMLElement
   // 空间配置
   spacesConfig: SpaceConfig[]
 }
@@ -56,6 +58,7 @@ export type SpaceConfig = {
   camera?: ThreeObjectBase
   // 空间贴图列表
   cubeSpaceTextureUrls: CubeSpaceTextureUrls
+  tips: Tip[]
 }
 
 /**

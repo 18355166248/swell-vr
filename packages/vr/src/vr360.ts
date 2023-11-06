@@ -4,21 +4,25 @@ import {SpaceConfig, VROptions} from './types'
 import {SpaceManager} from './space'
 import {
   TextureCacheLoader,
+  addListenerToThree,
   formatBaseInfo,
   update3dObjectBaseInfo,
 } from './helper'
 // 引入轨道控制器扩展库OrbitControls
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
+import {initReSize} from './utils/onresize'
 
 export class Vr360 extends EventEmitter {
   // 容器
   public container: HTMLElement
+  // 提示容器
+  public tipContainer: HTMLElement
   // 场景
   public scene: THREE.Scene
   // 相机
-  public camera: THREE.Camera
+  public camera: THREE.PerspectiveCamera
   // 渲染器
-  public renderer: THREE.Renderer
+  public renderer: THREE.WebGLRenderer
   // 空间管理器
   public spaceManager: SpaceManager
   // 空间配置
@@ -27,6 +31,8 @@ export class Vr360 extends EventEmitter {
   private textureCacheLoader: TextureCacheLoader
   // 控制器
   public controls: OrbitControls
+  // 销毁列表
+  private destroyList: (() => void)[] = []
 
   public get containerWidth() {
     return this.container.clientWidth
@@ -38,11 +44,12 @@ export class Vr360 extends EventEmitter {
   constructor(options: VROptions) {
     super()
 
-    const {container, spacesConfig} = options
+    const {container, spacesConfig, tipContainer} = options
 
     this.textureCacheLoader = TextureCacheLoader.getInstance()
 
     this.container = container
+    this.tipContainer = tipContainer
     this.scene = this.createScene()
     this.camera = this.createCamera()
     this.renderer = this.createRenderer()
@@ -52,6 +59,12 @@ export class Vr360 extends EventEmitter {
 
     this.container.appendChild(this.renderer.domElement)
 
+    addListenerToThree(() => ({
+      camera: this.camera,
+      scene: this.scene,
+      renderer: this.renderer,
+    }))
+
     // 创建空间管理器
     this.spaceManager = this.createSpaceManager()
     // 实例化空间
@@ -60,6 +73,10 @@ export class Vr360 extends EventEmitter {
 
   createScene() {
     const scene = new THREE.Scene()
+
+    this.destroyList.push(() => {
+      scene.remove(...scene.children)
+    })
 
     return scene
   }
@@ -78,12 +95,23 @@ export class Vr360 extends EventEmitter {
   createRenderer() {
     const renderer = new THREE.WebGLRenderer()
     renderer.setSize(this.containerWidth, this.containerHeigh)
+    this.destroyList.push(() => {
+      renderer.dispose()
+      renderer.forceContextLoss()
+      renderer.domElement.remove()
+    })
+
     return renderer
   }
 
   createSpaceManager() {
     const spaceManage = new SpaceManager({
       textureCacheLoader: this.textureCacheLoader,
+      container: this.container,
+      scene: this.scene,
+      camera: this.camera,
+      renderer: this.renderer,
+      tipContainer: this.tipContainer,
     })
 
     return spaceManage
@@ -136,6 +164,10 @@ export class Vr360 extends EventEmitter {
     controls.target = new THREE.Vector3(0, 0, 1)
     controls.update()
 
+    this.destroyList.push(() => {
+      controls.dispose()
+    })
+
     return controls
   }
 
@@ -154,5 +186,23 @@ export class Vr360 extends EventEmitter {
    */
   private handleUpdate(): void {
     this.renderer.render(this.scene, this.camera)
+  }
+
+  // 监听页面尺寸变化 更新画布尺寸
+  public listenResize() {
+    const {addEventListenerResize, removeEventListenerResize} = initReSize(
+      this.camera,
+      this.renderer,
+      this.handleUpdate.bind(this),
+    )
+
+    this.destroyList.push(removeEventListenerResize)
+
+    addEventListenerResize()
+  }
+
+  // 销毁实例
+  public destroy() {
+    this.destroyList.forEach(task => task())
   }
 }
