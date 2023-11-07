@@ -1936,7 +1936,7 @@ class Quaternion {
     this._onChangeCallback();
     return this;
   }
-  setFromEuler(euler, update) {
+  setFromEuler(euler, update2) {
     const x = euler._x, y = euler._y, z = euler._z, order = euler._order;
     const cos = Math.cos;
     const sin = Math.sin;
@@ -1986,7 +1986,7 @@ class Quaternion {
       default:
         console.warn("THREE.Quaternion: .setFromEuler() encountered an unknown order: " + order);
     }
-    if (update !== false)
+    if (update2 !== false)
       this._onChangeCallback();
     return this;
   }
@@ -4140,7 +4140,7 @@ class Euler {
     this._onChangeCallback();
     return this;
   }
-  setFromRotationMatrix(m, order = this._order, update = true) {
+  setFromRotationMatrix(m, order = this._order, update2 = true) {
     const te = m.elements;
     const m11 = te[0], m12 = te[4], m13 = te[8];
     const m21 = te[1], m22 = te[5], m23 = te[9];
@@ -4210,13 +4210,13 @@ class Euler {
         console.warn("THREE.Euler: .setFromRotationMatrix() encountered an unknown order: " + order);
     }
     this._order = order;
-    if (update === true)
+    if (update2 === true)
       this._onChangeCallback();
     return this;
   }
-  setFromQuaternion(q, order, update) {
+  setFromQuaternion(q, order, update2) {
     _matrix.makeRotationFromQuaternion(q);
-    return this.setFromRotationMatrix(_matrix, order, update);
+    return this.setFromRotationMatrix(_matrix, order, update2);
   }
   setFromVector3(v, order = this._order) {
     return this.set(v.x, v.y, v.z, order);
@@ -7938,7 +7938,7 @@ function WebGLAttributes(gl, capabilities) {
       buffers.delete(attribute);
     }
   }
-  function update(attribute, bufferType) {
+  function update2(attribute, bufferType) {
     if (attribute.isGLBufferAttribute) {
       const cached = buffers.get(attribute);
       if (!cached || cached.version < attribute.version) {
@@ -7964,7 +7964,7 @@ function WebGLAttributes(gl, capabilities) {
   return {
     get,
     remove,
-    update
+    update: update2
   };
 }
 class PlaneGeometry extends BufferGeometry {
@@ -10348,7 +10348,7 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
     info.memory.geometries++;
     return geometry;
   }
-  function update(geometry) {
+  function update2(geometry) {
     const geometryAttributes = geometry.attributes;
     for (const name in geometryAttributes) {
       attributes.update(geometryAttributes[name], gl.ARRAY_BUFFER);
@@ -10410,7 +10410,7 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
   }
   return {
     get,
-    update,
+    update: update2,
     getWireframeAttribute
   };
 }
@@ -10464,7 +10464,7 @@ function WebGLInfo(gl) {
     points: 0,
     lines: 0
   };
-  function update(count, mode, instanceCount) {
+  function update2(count, mode, instanceCount) {
     render.calls++;
     switch (mode) {
       case gl.TRIANGLES:
@@ -10499,7 +10499,7 @@ function WebGLInfo(gl) {
     programs: null,
     autoReset: true,
     reset,
-    update
+    update: update2
   };
 }
 function numericalSort(a, b) {
@@ -10517,7 +10517,7 @@ function WebGLMorphtargets(gl, capabilities, textures) {
   for (let i = 0; i < 8; i++) {
     workInfluences[i] = [i, 0];
   }
-  function update(object, geometry, program) {
+  function update2(object, geometry, program) {
     const objectInfluences = object.morphTargetInfluences;
     if (capabilities.isWebGL2 === true) {
       const morphAttribute = geometry.morphAttributes.position || geometry.morphAttributes.normal || geometry.morphAttributes.color;
@@ -10660,12 +10660,12 @@ function WebGLMorphtargets(gl, capabilities, textures) {
     }
   }
   return {
-    update
+    update: update2
   };
 }
 function WebGLObjects(gl, geometries, attributes, info) {
   let updateMap = /* @__PURE__ */ new WeakMap();
-  function update(object) {
+  function update2(object) {
     const frame = info.render.frame;
     const geometry = object.geometry;
     const buffergeometry = geometries.get(object, geometry);
@@ -10705,7 +10705,7 @@ function WebGLObjects(gl, geometries, attributes, info) {
       attributes.remove(instancedMesh.instanceColor);
   }
   return {
-    update,
+    update: update2,
     dispose
   };
 }
@@ -12461,7 +12461,7 @@ function WebGLProperties() {
   function remove(object) {
     properties.delete(object);
   }
-  function update(object, key, value) {
+  function update2(object, key, value) {
     properties.get(object)[key] = value;
   }
   function dispose() {
@@ -12470,7 +12470,7 @@ function WebGLProperties() {
   return {
     get,
     remove,
-    update,
+    update: update2,
     dispose
   };
 }
@@ -15363,13 +15363,13 @@ class ArrayCamera extends PerspectiveCamera {
     this.cameras = array;
   }
 }
-class Group extends Object3D {
+let Group$1 = class Group extends Object3D {
   constructor() {
     super();
     this.isGroup = true;
     this.type = "Group";
   }
-}
+};
 const _moveEvent = { type: "move" };
 class WebXRController {
   constructor() {
@@ -15379,7 +15379,7 @@ class WebXRController {
   }
   getHandSpace() {
     if (this._hand === null) {
-      this._hand = new Group();
+      this._hand = new Group$1();
       this._hand.matrixAutoUpdate = false;
       this._hand.visible = false;
       this._hand.joints = {};
@@ -15389,7 +15389,7 @@ class WebXRController {
   }
   getTargetRaySpace() {
     if (this._targetRay === null) {
-      this._targetRay = new Group();
+      this._targetRay = new Group$1();
       this._targetRay.matrixAutoUpdate = false;
       this._targetRay.visible = false;
       this._targetRay.hasLinearVelocity = false;
@@ -15401,7 +15401,7 @@ class WebXRController {
   }
   getGripSpace() {
     if (this._grip === null) {
-      this._grip = new Group();
+      this._grip = new Group$1();
       this._grip.matrixAutoUpdate = false;
       this._grip.visible = false;
       this._grip.hasLinearVelocity = false;
@@ -15550,7 +15550,7 @@ class WebXRController {
   // private method
   _getHandJoint(hand, inputjoint) {
     if (hand.joints[inputjoint.jointName] === void 0) {
-      const joint = new Group();
+      const joint = new Group$1();
       joint.matrixAutoUpdate = false;
       joint.visible = false;
       hand.joints[inputjoint.jointName] = joint;
@@ -16316,7 +16316,7 @@ function WebGLUniformsGroups(gl, info, capabilities, state) {
     const webglProgram = program.program;
     state.uniformBlockBinding(uniformsGroup, webglProgram);
   }
-  function update(uniformsGroup, program) {
+  function update2(uniformsGroup, program) {
     let buffer = buffers[uniformsGroup.id];
     if (buffer === void 0) {
       prepareUniformsGroup(uniformsGroup);
@@ -16518,7 +16518,7 @@ function WebGLUniformsGroups(gl, info, capabilities, state) {
   }
   return {
     bind,
-    update,
+    update: update2,
     dispose
   };
 }
@@ -18772,10 +18772,18 @@ var eventemitter3 = { exports: {} };
 var eventemitter3Exports = eventemitter3.exports;
 const EventEmitter = /* @__PURE__ */ getDefaultExportFromCjs(eventemitter3Exports);
 const defaultUrl = "data:image/png;base64,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";
-class TipManager {
+const tipEventNames = [
+  "showTip",
+  "hideTip",
+  "clickTip",
+  "switchSpace"
+];
+class TipManager extends EventEmitter {
   constructor(options) {
+    super();
     this.tipSpriteMap = /* @__PURE__ */ new Map();
     this.container = options.container;
+    this.tipContainer = options.tipContainer;
     this.scene = options.scene;
     this.camera = options.camera;
     this.renderer = options.renderer;
@@ -18791,11 +18799,55 @@ class TipManager {
     if (rotate) {
       sprite.rotation.set(rotate.x, rotate.y, rotate.z);
     }
+    const emitShowTip = (e) => {
+      const intersect = e.intersect;
+      const tip = intersect.object.userData.tip;
+      const containerHalfWidth = this.container.clientWidth / 2;
+      const containerHalfHeight = this.container.clientHeight / 2;
+      const tipContainerWidth = this.tipContainer.clientWidth;
+      const tipContainerHeight = this.tipContainer.clientHeight;
+      const rendererOffsetLeft = this.renderer.domElement.offsetLeft;
+      const rendererOffsetTop = this.renderer.domElement.offsetTop;
+      const percentPosition = intersect.object.position.clone().project(this.camera);
+      const left = (percentPosition.x + 1) * containerHalfWidth - tipContainerWidth / 2 + rendererOffsetLeft;
+      const top = (1 - percentPosition.y) * containerHalfHeight - tipContainerHeight / 2 + rendererOffsetTop;
+      const showTipParams = { tip, left, top };
+      this.emit("showTip", showTipParams);
+    };
+    const emitHideTip = (e) => {
+      const intersect = e.intersect;
+      const tip = intersect.object.userData.tip;
+      const hideTipParams = { tip };
+      this.emit("hideTip", hideTipParams);
+    };
     sprite.addEventListener("mouseover", (_e) => {
       const e = _e;
-      console.log("🚀 ~ file: tip.ts:49 ~ TipManager ~ create ~ e:", e);
+      if (e.isMouseDown)
+        return;
+      emitShowTip(e);
+    });
+    sprite.addEventListener("mouseout", (_e) => {
+      const e = _e;
+      if (e.isMouseDown)
+        return;
+      emitHideTip(e);
+    });
+    sprite.addEventListener("click", (_e) => {
+      const e = _e;
+      const intersect = e.intersect;
+      const tip = intersect.object.userData.tip;
+      this.emit("clickTip", { tip });
+      if (tip.targetSpaceId) {
+        const hideTipParams = { tip };
+        this.emit("hideTip", hideTipParams);
+        this.emit("switchSpace", {
+          targetSpaceId: tip.targetSpaceId,
+          clickPosition: intersect.point
+        });
+      }
     });
     sprite.userData.cursor = "pointer";
+    sprite.userData.tip = config;
     this.tipSpriteMap.set(id, sprite);
     return sprite;
   }
@@ -18809,7 +18861,8 @@ class TipManager {
     return this.tipSpriteMap.get(tip.id);
   }
 }
-class SpaceManager {
+const spaceEventNames = [...tipEventNames];
+class SpaceManager extends EventEmitter {
   constructor({
     textureCacheLoader,
     container,
@@ -18818,6 +18871,7 @@ class SpaceManager {
     camera,
     renderer
   }) {
+    super();
     this.spaceIdGroupMap = /* @__PURE__ */ new Map();
     this.spaceIdTipManager = /* @__PURE__ */ new Map();
     this.textureCacheLoader = textureCacheLoader;
@@ -18829,7 +18883,7 @@ class SpaceManager {
   }
   create(spaceConfig) {
     const { cubeSpaceTextureUrls, id, tips } = spaceConfig;
-    const group = new Group();
+    const group = new Group$1();
     if (this.tipContainer && tips) {
       const tipManager = this.createTipManager(group);
       tips.forEach((tip) => {
@@ -18869,10 +18923,16 @@ class SpaceManager {
       return;
     const tipManager = new TipManager({
       container: this.container,
+      tipContainer: this.tipContainer,
       scene: this.scene,
       camera: this.camera,
       renderer: this.renderer,
       textureCacheLoader: this.textureCacheLoader
+    });
+    spaceEventNames.forEach((eventName) => {
+      tipManager.on(eventName, (e) => {
+        this.emit(eventName, e);
+      });
     });
     return tipManager;
   }
@@ -18970,7 +19030,7 @@ function addListenerToThree(getDeps, events = [
   const renderElement = renderer == null ? void 0 : renderer.domElement;
   if (!renderElement)
     return;
-  console.log("🚀 ~ file: helper.ts:144 ~ renderElement:", renderElement);
+  let preIntersect;
   const { raycaster: raycaster2, mouse } = getRaycasterAndMouse();
   let isMouseDown = false;
   renderElement.addEventListener("mousedown", () => {
@@ -18980,7 +19040,10 @@ function addListenerToThree(getDeps, events = [
     isMouseDown = false;
   });
   for (const eventName of events) {
-    renderElement.addEventListener(eventName, (e) => handleEvent(eventName, e));
+    renderElement.addEventListener(
+      eventName,
+      (e) => handleEvent(eventName, e)
+    );
   }
   function handleEvent(eventName, event) {
     var _a, _b, _c, _d;
@@ -18998,12 +19061,21 @@ function addListenerToThree(getDeps, events = [
     const firstIntersect = intersects[0] ?? void 0;
     if (!firstIntersect || intersects.length <= 0)
       return;
-    firstIntersect.object.dispatchEvent({
-      type: "mouseover",
-      intersect: firstIntersect,
-      sourceEvent: event,
-      isMouseDown
-    });
+    if (["mousemove", "touchmove"].includes(eventName) && (preIntersect == null ? void 0 : preIntersect.object.uuid) !== firstIntersect.object.uuid) {
+      preIntersect == null ? void 0 : preIntersect.object.dispatchEvent({
+        type: "mouseout",
+        intersect: preIntersect,
+        sourceEvent: event,
+        isMouseDown
+      });
+      preIntersect = firstIntersect;
+      firstIntersect == null ? void 0 : firstIntersect.object.dispatchEvent({
+        type: "mouseover",
+        intersect: firstIntersect,
+        sourceEvent: event,
+        isMouseDown
+      });
+    }
     firstIntersect.object.dispatchEvent({
       type: eventName === "touchmove" ? "mousemove" : eventName,
       intersect: firstIntersect,
@@ -19011,6 +19083,29 @@ function addListenerToThree(getDeps, events = [
       isMouseDown
     });
   }
+}
+function get3dObjectBaseInfo(object) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+  return {
+    position: {
+      x: ((_a = object == null ? void 0 : object.position) == null ? void 0 : _a.x) ?? 0,
+      y: ((_b = object == null ? void 0 : object.position) == null ? void 0 : _b.y) ?? 0,
+      z: ((_c = object == null ? void 0 : object.position) == null ? void 0 : _c.z) ?? 0
+    },
+    rotate: {
+      // x: 0,
+      // y: 0,
+      // z: 0,
+      x: ((_d = object == null ? void 0 : object.rotation) == null ? void 0 : _d.x) ?? 0,
+      y: ((_e = object == null ? void 0 : object.rotation) == null ? void 0 : _e.y) ?? 0,
+      z: ((_f = object == null ? void 0 : object.rotation) == null ? void 0 : _f.z) ?? 0
+    },
+    scale: {
+      x: ((_g = object == null ? void 0 : object.scale) == null ? void 0 : _g.x) ?? 1,
+      y: ((_h = object == null ? void 0 : object.scale) == null ? void 0 : _h.y) ?? 1,
+      z: ((_i = object == null ? void 0 : object.scale) == null ? void 0 : _i.z) ?? 1
+    }
+  };
 }
 const _changeEvent = { type: "change" };
 const _startEvent = { type: "start" };
@@ -19093,7 +19188,7 @@ class OrbitControls extends EventDispatcher {
       const lastQuaternion = new Quaternion();
       const lastTargetPosition = new Vector3();
       const twoPI = 2 * Math.PI;
-      return function update(deltaTime = null) {
+      return function update2(deltaTime = null) {
         const position = scope.object.position;
         offset.copy(position).sub(scope.target);
         offset.applyQuaternion(quat);
@@ -19764,10 +19859,797 @@ function initReSize(camera, renderer, render) {
     removeEventListenerResize
   };
 }
+var Easing = Object.freeze({
+  Linear: Object.freeze({
+    None: function(amount) {
+      return amount;
+    },
+    In: function(amount) {
+      return this.None(amount);
+    },
+    Out: function(amount) {
+      return this.None(amount);
+    },
+    InOut: function(amount) {
+      return this.None(amount);
+    }
+  }),
+  Quadratic: Object.freeze({
+    In: function(amount) {
+      return amount * amount;
+    },
+    Out: function(amount) {
+      return amount * (2 - amount);
+    },
+    InOut: function(amount) {
+      if ((amount *= 2) < 1) {
+        return 0.5 * amount * amount;
+      }
+      return -0.5 * (--amount * (amount - 2) - 1);
+    }
+  }),
+  Cubic: Object.freeze({
+    In: function(amount) {
+      return amount * amount * amount;
+    },
+    Out: function(amount) {
+      return --amount * amount * amount + 1;
+    },
+    InOut: function(amount) {
+      if ((amount *= 2) < 1) {
+        return 0.5 * amount * amount * amount;
+      }
+      return 0.5 * ((amount -= 2) * amount * amount + 2);
+    }
+  }),
+  Quartic: Object.freeze({
+    In: function(amount) {
+      return amount * amount * amount * amount;
+    },
+    Out: function(amount) {
+      return 1 - --amount * amount * amount * amount;
+    },
+    InOut: function(amount) {
+      if ((amount *= 2) < 1) {
+        return 0.5 * amount * amount * amount * amount;
+      }
+      return -0.5 * ((amount -= 2) * amount * amount * amount - 2);
+    }
+  }),
+  Quintic: Object.freeze({
+    In: function(amount) {
+      return amount * amount * amount * amount * amount;
+    },
+    Out: function(amount) {
+      return --amount * amount * amount * amount * amount + 1;
+    },
+    InOut: function(amount) {
+      if ((amount *= 2) < 1) {
+        return 0.5 * amount * amount * amount * amount * amount;
+      }
+      return 0.5 * ((amount -= 2) * amount * amount * amount * amount + 2);
+    }
+  }),
+  Sinusoidal: Object.freeze({
+    In: function(amount) {
+      return 1 - Math.sin((1 - amount) * Math.PI / 2);
+    },
+    Out: function(amount) {
+      return Math.sin(amount * Math.PI / 2);
+    },
+    InOut: function(amount) {
+      return 0.5 * (1 - Math.sin(Math.PI * (0.5 - amount)));
+    }
+  }),
+  Exponential: Object.freeze({
+    In: function(amount) {
+      return amount === 0 ? 0 : Math.pow(1024, amount - 1);
+    },
+    Out: function(amount) {
+      return amount === 1 ? 1 : 1 - Math.pow(2, -10 * amount);
+    },
+    InOut: function(amount) {
+      if (amount === 0) {
+        return 0;
+      }
+      if (amount === 1) {
+        return 1;
+      }
+      if ((amount *= 2) < 1) {
+        return 0.5 * Math.pow(1024, amount - 1);
+      }
+      return 0.5 * (-Math.pow(2, -10 * (amount - 1)) + 2);
+    }
+  }),
+  Circular: Object.freeze({
+    In: function(amount) {
+      return 1 - Math.sqrt(1 - amount * amount);
+    },
+    Out: function(amount) {
+      return Math.sqrt(1 - --amount * amount);
+    },
+    InOut: function(amount) {
+      if ((amount *= 2) < 1) {
+        return -0.5 * (Math.sqrt(1 - amount * amount) - 1);
+      }
+      return 0.5 * (Math.sqrt(1 - (amount -= 2) * amount) + 1);
+    }
+  }),
+  Elastic: Object.freeze({
+    In: function(amount) {
+      if (amount === 0) {
+        return 0;
+      }
+      if (amount === 1) {
+        return 1;
+      }
+      return -Math.pow(2, 10 * (amount - 1)) * Math.sin((amount - 1.1) * 5 * Math.PI);
+    },
+    Out: function(amount) {
+      if (amount === 0) {
+        return 0;
+      }
+      if (amount === 1) {
+        return 1;
+      }
+      return Math.pow(2, -10 * amount) * Math.sin((amount - 0.1) * 5 * Math.PI) + 1;
+    },
+    InOut: function(amount) {
+      if (amount === 0) {
+        return 0;
+      }
+      if (amount === 1) {
+        return 1;
+      }
+      amount *= 2;
+      if (amount < 1) {
+        return -0.5 * Math.pow(2, 10 * (amount - 1)) * Math.sin((amount - 1.1) * 5 * Math.PI);
+      }
+      return 0.5 * Math.pow(2, -10 * (amount - 1)) * Math.sin((amount - 1.1) * 5 * Math.PI) + 1;
+    }
+  }),
+  Back: Object.freeze({
+    In: function(amount) {
+      var s = 1.70158;
+      return amount === 1 ? 1 : amount * amount * ((s + 1) * amount - s);
+    },
+    Out: function(amount) {
+      var s = 1.70158;
+      return amount === 0 ? 0 : --amount * amount * ((s + 1) * amount + s) + 1;
+    },
+    InOut: function(amount) {
+      var s = 1.70158 * 1.525;
+      if ((amount *= 2) < 1) {
+        return 0.5 * (amount * amount * ((s + 1) * amount - s));
+      }
+      return 0.5 * ((amount -= 2) * amount * ((s + 1) * amount + s) + 2);
+    }
+  }),
+  Bounce: Object.freeze({
+    In: function(amount) {
+      return 1 - Easing.Bounce.Out(1 - amount);
+    },
+    Out: function(amount) {
+      if (amount < 1 / 2.75) {
+        return 7.5625 * amount * amount;
+      } else if (amount < 2 / 2.75) {
+        return 7.5625 * (amount -= 1.5 / 2.75) * amount + 0.75;
+      } else if (amount < 2.5 / 2.75) {
+        return 7.5625 * (amount -= 2.25 / 2.75) * amount + 0.9375;
+      } else {
+        return 7.5625 * (amount -= 2.625 / 2.75) * amount + 0.984375;
+      }
+    },
+    InOut: function(amount) {
+      if (amount < 0.5) {
+        return Easing.Bounce.In(amount * 2) * 0.5;
+      }
+      return Easing.Bounce.Out(amount * 2 - 1) * 0.5 + 0.5;
+    }
+  }),
+  generatePow: function(power) {
+    if (power === void 0) {
+      power = 4;
+    }
+    power = power < Number.EPSILON ? Number.EPSILON : power;
+    power = power > 1e4 ? 1e4 : power;
+    return {
+      In: function(amount) {
+        return Math.pow(amount, power);
+      },
+      Out: function(amount) {
+        return 1 - Math.pow(1 - amount, power);
+      },
+      InOut: function(amount) {
+        if (amount < 0.5) {
+          return Math.pow(amount * 2, power) / 2;
+        }
+        return (1 - Math.pow(2 - amount * 2, power)) / 2 + 0.5;
+      }
+    };
+  }
+});
+var now = function() {
+  return performance.now();
+};
+var Group2 = (
+  /** @class */
+  function() {
+    function Group3() {
+      this._tweens = {};
+      this._tweensAddedDuringUpdate = {};
+    }
+    Group3.prototype.getAll = function() {
+      var _this = this;
+      return Object.keys(this._tweens).map(function(tweenId) {
+        return _this._tweens[tweenId];
+      });
+    };
+    Group3.prototype.removeAll = function() {
+      this._tweens = {};
+    };
+    Group3.prototype.add = function(tween) {
+      this._tweens[tween.getId()] = tween;
+      this._tweensAddedDuringUpdate[tween.getId()] = tween;
+    };
+    Group3.prototype.remove = function(tween) {
+      delete this._tweens[tween.getId()];
+      delete this._tweensAddedDuringUpdate[tween.getId()];
+    };
+    Group3.prototype.update = function(time, preserve) {
+      if (time === void 0) {
+        time = now();
+      }
+      if (preserve === void 0) {
+        preserve = false;
+      }
+      var tweenIds = Object.keys(this._tweens);
+      if (tweenIds.length === 0) {
+        return false;
+      }
+      while (tweenIds.length > 0) {
+        this._tweensAddedDuringUpdate = {};
+        for (var i = 0; i < tweenIds.length; i++) {
+          var tween = this._tweens[tweenIds[i]];
+          var autoStart = !preserve;
+          if (tween && tween.update(time, autoStart) === false && !preserve) {
+            delete this._tweens[tweenIds[i]];
+          }
+        }
+        tweenIds = Object.keys(this._tweensAddedDuringUpdate);
+      }
+      return true;
+    };
+    return Group3;
+  }()
+);
+var Interpolation = {
+  Linear: function(v, k) {
+    var m = v.length - 1;
+    var f = m * k;
+    var i = Math.floor(f);
+    var fn = Interpolation.Utils.Linear;
+    if (k < 0) {
+      return fn(v[0], v[1], f);
+    }
+    if (k > 1) {
+      return fn(v[m], v[m - 1], m - f);
+    }
+    return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
+  },
+  Bezier: function(v, k) {
+    var b = 0;
+    var n = v.length - 1;
+    var pw = Math.pow;
+    var bn = Interpolation.Utils.Bernstein;
+    for (var i = 0; i <= n; i++) {
+      b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
+    }
+    return b;
+  },
+  CatmullRom: function(v, k) {
+    var m = v.length - 1;
+    var f = m * k;
+    var i = Math.floor(f);
+    var fn = Interpolation.Utils.CatmullRom;
+    if (v[0] === v[m]) {
+      if (k < 0) {
+        i = Math.floor(f = m * (1 + k));
+      }
+      return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
+    } else {
+      if (k < 0) {
+        return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
+      }
+      if (k > 1) {
+        return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
+      }
+      return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
+    }
+  },
+  Utils: {
+    Linear: function(p0, p1, t) {
+      return (p1 - p0) * t + p0;
+    },
+    Bernstein: function(n, i) {
+      var fc = Interpolation.Utils.Factorial;
+      return fc(n) / fc(i) / fc(n - i);
+    },
+    Factorial: function() {
+      var a = [1];
+      return function(n) {
+        var s = 1;
+        if (a[n]) {
+          return a[n];
+        }
+        for (var i = n; i > 1; i--) {
+          s *= i;
+        }
+        a[n] = s;
+        return s;
+      };
+    }(),
+    CatmullRom: function(p0, p1, p2, p3, t) {
+      var v0 = (p2 - p0) * 0.5;
+      var v1 = (p3 - p1) * 0.5;
+      var t2 = t * t;
+      var t3 = t * t2;
+      return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+    }
+  }
+};
+var Sequence = (
+  /** @class */
+  function() {
+    function Sequence2() {
+    }
+    Sequence2.nextId = function() {
+      return Sequence2._nextId++;
+    };
+    Sequence2._nextId = 0;
+    return Sequence2;
+  }()
+);
+var mainGroup = new Group2();
+var Tween = (
+  /** @class */
+  function() {
+    function Tween2(_object, _group) {
+      if (_group === void 0) {
+        _group = mainGroup;
+      }
+      this._object = _object;
+      this._group = _group;
+      this._isPaused = false;
+      this._pauseStart = 0;
+      this._valuesStart = {};
+      this._valuesEnd = {};
+      this._valuesStartRepeat = {};
+      this._duration = 1e3;
+      this._isDynamic = false;
+      this._initialRepeat = 0;
+      this._repeat = 0;
+      this._yoyo = false;
+      this._isPlaying = false;
+      this._reversed = false;
+      this._delayTime = 0;
+      this._startTime = 0;
+      this._easingFunction = Easing.Linear.None;
+      this._interpolationFunction = Interpolation.Linear;
+      this._chainedTweens = [];
+      this._onStartCallbackFired = false;
+      this._onEveryStartCallbackFired = false;
+      this._id = Sequence.nextId();
+      this._isChainStopped = false;
+      this._propertiesAreSetUp = false;
+      this._goToEnd = false;
+    }
+    Tween2.prototype.getId = function() {
+      return this._id;
+    };
+    Tween2.prototype.isPlaying = function() {
+      return this._isPlaying;
+    };
+    Tween2.prototype.isPaused = function() {
+      return this._isPaused;
+    };
+    Tween2.prototype.to = function(target, duration) {
+      if (duration === void 0) {
+        duration = 1e3;
+      }
+      if (this._isPlaying)
+        throw new Error("Can not call Tween.to() while Tween is already started or paused. Stop the Tween first.");
+      this._valuesEnd = target;
+      this._propertiesAreSetUp = false;
+      this._duration = duration;
+      return this;
+    };
+    Tween2.prototype.duration = function(duration) {
+      if (duration === void 0) {
+        duration = 1e3;
+      }
+      this._duration = duration;
+      return this;
+    };
+    Tween2.prototype.dynamic = function(dynamic) {
+      if (dynamic === void 0) {
+        dynamic = false;
+      }
+      this._isDynamic = dynamic;
+      return this;
+    };
+    Tween2.prototype.start = function(time, overrideStartingValues) {
+      if (time === void 0) {
+        time = now();
+      }
+      if (overrideStartingValues === void 0) {
+        overrideStartingValues = false;
+      }
+      if (this._isPlaying) {
+        return this;
+      }
+      this._group && this._group.add(this);
+      this._repeat = this._initialRepeat;
+      if (this._reversed) {
+        this._reversed = false;
+        for (var property in this._valuesStartRepeat) {
+          this._swapEndStartRepeatValues(property);
+          this._valuesStart[property] = this._valuesStartRepeat[property];
+        }
+      }
+      this._isPlaying = true;
+      this._isPaused = false;
+      this._onStartCallbackFired = false;
+      this._onEveryStartCallbackFired = false;
+      this._isChainStopped = false;
+      this._startTime = time;
+      this._startTime += this._delayTime;
+      if (!this._propertiesAreSetUp || overrideStartingValues) {
+        this._propertiesAreSetUp = true;
+        if (!this._isDynamic) {
+          var tmp = {};
+          for (var prop in this._valuesEnd)
+            tmp[prop] = this._valuesEnd[prop];
+          this._valuesEnd = tmp;
+        }
+        this._setupProperties(this._object, this._valuesStart, this._valuesEnd, this._valuesStartRepeat, overrideStartingValues);
+      }
+      return this;
+    };
+    Tween2.prototype.startFromCurrentValues = function(time) {
+      return this.start(time, true);
+    };
+    Tween2.prototype._setupProperties = function(_object, _valuesStart, _valuesEnd, _valuesStartRepeat, overrideStartingValues) {
+      for (var property in _valuesEnd) {
+        var startValue = _object[property];
+        var startValueIsArray = Array.isArray(startValue);
+        var propType = startValueIsArray ? "array" : typeof startValue;
+        var isInterpolationList = !startValueIsArray && Array.isArray(_valuesEnd[property]);
+        if (propType === "undefined" || propType === "function") {
+          continue;
+        }
+        if (isInterpolationList) {
+          var endValues = _valuesEnd[property];
+          if (endValues.length === 0) {
+            continue;
+          }
+          var temp = [startValue];
+          for (var i = 0, l = endValues.length; i < l; i += 1) {
+            var value = this._handleRelativeValue(startValue, endValues[i]);
+            if (isNaN(value)) {
+              isInterpolationList = false;
+              console.warn("Found invalid interpolation list. Skipping.");
+              break;
+            }
+            temp.push(value);
+          }
+          if (isInterpolationList) {
+            _valuesEnd[property] = temp;
+          }
+        }
+        if ((propType === "object" || startValueIsArray) && startValue && !isInterpolationList) {
+          _valuesStart[property] = startValueIsArray ? [] : {};
+          var nestedObject = startValue;
+          for (var prop in nestedObject) {
+            _valuesStart[property][prop] = nestedObject[prop];
+          }
+          _valuesStartRepeat[property] = startValueIsArray ? [] : {};
+          var endValues = _valuesEnd[property];
+          if (!this._isDynamic) {
+            var tmp = {};
+            for (var prop in endValues)
+              tmp[prop] = endValues[prop];
+            _valuesEnd[property] = endValues = tmp;
+          }
+          this._setupProperties(nestedObject, _valuesStart[property], endValues, _valuesStartRepeat[property], overrideStartingValues);
+        } else {
+          if (typeof _valuesStart[property] === "undefined" || overrideStartingValues) {
+            _valuesStart[property] = startValue;
+          }
+          if (!startValueIsArray) {
+            _valuesStart[property] *= 1;
+          }
+          if (isInterpolationList) {
+            _valuesStartRepeat[property] = _valuesEnd[property].slice().reverse();
+          } else {
+            _valuesStartRepeat[property] = _valuesStart[property] || 0;
+          }
+        }
+      }
+    };
+    Tween2.prototype.stop = function() {
+      if (!this._isChainStopped) {
+        this._isChainStopped = true;
+        this.stopChainedTweens();
+      }
+      if (!this._isPlaying) {
+        return this;
+      }
+      this._group && this._group.remove(this);
+      this._isPlaying = false;
+      this._isPaused = false;
+      if (this._onStopCallback) {
+        this._onStopCallback(this._object);
+      }
+      return this;
+    };
+    Tween2.prototype.end = function() {
+      this._goToEnd = true;
+      this.update(Infinity);
+      return this;
+    };
+    Tween2.prototype.pause = function(time) {
+      if (time === void 0) {
+        time = now();
+      }
+      if (this._isPaused || !this._isPlaying) {
+        return this;
+      }
+      this._isPaused = true;
+      this._pauseStart = time;
+      this._group && this._group.remove(this);
+      return this;
+    };
+    Tween2.prototype.resume = function(time) {
+      if (time === void 0) {
+        time = now();
+      }
+      if (!this._isPaused || !this._isPlaying) {
+        return this;
+      }
+      this._isPaused = false;
+      this._startTime += time - this._pauseStart;
+      this._pauseStart = 0;
+      this._group && this._group.add(this);
+      return this;
+    };
+    Tween2.prototype.stopChainedTweens = function() {
+      for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
+        this._chainedTweens[i].stop();
+      }
+      return this;
+    };
+    Tween2.prototype.group = function(group) {
+      if (group === void 0) {
+        group = mainGroup;
+      }
+      this._group = group;
+      return this;
+    };
+    Tween2.prototype.delay = function(amount) {
+      if (amount === void 0) {
+        amount = 0;
+      }
+      this._delayTime = amount;
+      return this;
+    };
+    Tween2.prototype.repeat = function(times) {
+      if (times === void 0) {
+        times = 0;
+      }
+      this._initialRepeat = times;
+      this._repeat = times;
+      return this;
+    };
+    Tween2.prototype.repeatDelay = function(amount) {
+      this._repeatDelayTime = amount;
+      return this;
+    };
+    Tween2.prototype.yoyo = function(yoyo) {
+      if (yoyo === void 0) {
+        yoyo = false;
+      }
+      this._yoyo = yoyo;
+      return this;
+    };
+    Tween2.prototype.easing = function(easingFunction) {
+      if (easingFunction === void 0) {
+        easingFunction = Easing.Linear.None;
+      }
+      this._easingFunction = easingFunction;
+      return this;
+    };
+    Tween2.prototype.interpolation = function(interpolationFunction) {
+      if (interpolationFunction === void 0) {
+        interpolationFunction = Interpolation.Linear;
+      }
+      this._interpolationFunction = interpolationFunction;
+      return this;
+    };
+    Tween2.prototype.chain = function() {
+      var tweens = [];
+      for (var _i = 0; _i < arguments.length; _i++) {
+        tweens[_i] = arguments[_i];
+      }
+      this._chainedTweens = tweens;
+      return this;
+    };
+    Tween2.prototype.onStart = function(callback) {
+      this._onStartCallback = callback;
+      return this;
+    };
+    Tween2.prototype.onEveryStart = function(callback) {
+      this._onEveryStartCallback = callback;
+      return this;
+    };
+    Tween2.prototype.onUpdate = function(callback) {
+      this._onUpdateCallback = callback;
+      return this;
+    };
+    Tween2.prototype.onRepeat = function(callback) {
+      this._onRepeatCallback = callback;
+      return this;
+    };
+    Tween2.prototype.onComplete = function(callback) {
+      this._onCompleteCallback = callback;
+      return this;
+    };
+    Tween2.prototype.onStop = function(callback) {
+      this._onStopCallback = callback;
+      return this;
+    };
+    Tween2.prototype.update = function(time, autoStart) {
+      if (time === void 0) {
+        time = now();
+      }
+      if (autoStart === void 0) {
+        autoStart = true;
+      }
+      if (this._isPaused)
+        return true;
+      var property;
+      var elapsed;
+      var endTime = this._startTime + this._duration;
+      if (!this._goToEnd && !this._isPlaying) {
+        if (time > endTime)
+          return false;
+        if (autoStart)
+          this.start(time, true);
+      }
+      this._goToEnd = false;
+      if (time < this._startTime) {
+        return true;
+      }
+      if (this._onStartCallbackFired === false) {
+        if (this._onStartCallback) {
+          this._onStartCallback(this._object);
+        }
+        this._onStartCallbackFired = true;
+      }
+      if (this._onEveryStartCallbackFired === false) {
+        if (this._onEveryStartCallback) {
+          this._onEveryStartCallback(this._object);
+        }
+        this._onEveryStartCallbackFired = true;
+      }
+      elapsed = (time - this._startTime) / this._duration;
+      elapsed = this._duration === 0 || elapsed > 1 ? 1 : elapsed;
+      var value = this._easingFunction(elapsed);
+      this._updateProperties(this._object, this._valuesStart, this._valuesEnd, value);
+      if (this._onUpdateCallback) {
+        this._onUpdateCallback(this._object, elapsed);
+      }
+      if (elapsed === 1) {
+        if (this._repeat > 0) {
+          if (isFinite(this._repeat)) {
+            this._repeat--;
+          }
+          for (property in this._valuesStartRepeat) {
+            if (!this._yoyo && typeof this._valuesEnd[property] === "string") {
+              this._valuesStartRepeat[property] = // eslint-disable-next-line
+              // @ts-ignore FIXME?
+              this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property]);
+            }
+            if (this._yoyo) {
+              this._swapEndStartRepeatValues(property);
+            }
+            this._valuesStart[property] = this._valuesStartRepeat[property];
+          }
+          if (this._yoyo) {
+            this._reversed = !this._reversed;
+          }
+          if (this._repeatDelayTime !== void 0) {
+            this._startTime = time + this._repeatDelayTime;
+          } else {
+            this._startTime = time + this._delayTime;
+          }
+          if (this._onRepeatCallback) {
+            this._onRepeatCallback(this._object);
+          }
+          this._onEveryStartCallbackFired = false;
+          return true;
+        } else {
+          if (this._onCompleteCallback) {
+            this._onCompleteCallback(this._object);
+          }
+          for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
+            this._chainedTweens[i].start(this._startTime + this._duration, false);
+          }
+          this._isPlaying = false;
+          return false;
+        }
+      }
+      return true;
+    };
+    Tween2.prototype._updateProperties = function(_object, _valuesStart, _valuesEnd, value) {
+      for (var property in _valuesEnd) {
+        if (_valuesStart[property] === void 0) {
+          continue;
+        }
+        var start = _valuesStart[property] || 0;
+        var end = _valuesEnd[property];
+        var startIsArray = Array.isArray(_object[property]);
+        var endIsArray = Array.isArray(end);
+        var isInterpolationList = !startIsArray && endIsArray;
+        if (isInterpolationList) {
+          _object[property] = this._interpolationFunction(end, value);
+        } else if (typeof end === "object" && end) {
+          this._updateProperties(_object[property], start, end, value);
+        } else {
+          end = this._handleRelativeValue(start, end);
+          if (typeof end === "number") {
+            _object[property] = start + (end - start) * value;
+          }
+        }
+      }
+    };
+    Tween2.prototype._handleRelativeValue = function(start, end) {
+      if (typeof end !== "string") {
+        return end;
+      }
+      if (end.charAt(0) === "+" || end.charAt(0) === "-") {
+        return start + parseFloat(end);
+      }
+      return parseFloat(end);
+    };
+    Tween2.prototype._swapEndStartRepeatValues = function(property) {
+      var tmp = this._valuesStartRepeat[property];
+      var endValue = this._valuesEnd[property];
+      if (typeof endValue === "string") {
+        this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(endValue);
+      } else {
+        this._valuesStartRepeat[property] = this._valuesEnd[property];
+      }
+      this._valuesEnd[property] = tmp;
+    };
+    return Tween2;
+  }()
+);
+var TWEEN = mainGroup;
+TWEEN.getAll.bind(TWEEN);
+TWEEN.removeAll.bind(TWEEN);
+TWEEN.add.bind(TWEEN);
+TWEEN.remove.bind(TWEEN);
+var update = TWEEN.update.bind(TWEEN);
+const extendsSpaceEventNames = spaceEventNames.filter(
+  (eventName) => !["switchSpace"].includes(eventName)
+);
+const VREventNames = [...extendsSpaceEventNames, "update"];
 class Vr360 extends EventEmitter {
   constructor(options) {
     super();
     this.destroyList = [];
+    this.curSpaceId = "";
     const { container, spacesConfig, tipContainer } = options;
     this.textureCacheLoader = TextureCacheLoader.getInstance();
     this.container = container;
@@ -19827,31 +20709,78 @@ class Vr360 extends EventEmitter {
       renderer: this.renderer,
       tipContainer: this.tipContainer
     });
+    extendsSpaceEventNames.forEach((eventName) => {
+      spaceManage.on(eventName, (e) => {
+        this.emit(eventName, e);
+      });
+    });
+    spaceManage.on("switchSpace", (e) => {
+      console.log(e);
+      this.switchSpace(e.targetSpaceId, e.clickPosition);
+    });
     return spaceManage;
   }
   updateSpacesConfig(newSpaceConfig) {
     newSpaceConfig.map((spaceConfig) => {
       this.spaceManager.create(spaceConfig);
     });
-    this.switchSpace(newSpaceConfig[0].id);
+    if (!this.curSpaceId) {
+      this.switchSpace(newSpaceConfig[0].id);
+    }
   }
-  switchSpace(id) {
+  switchSpace(id, clickPosition) {
+    if (this.curSpaceId === id || !id)
+      return;
     const spaceGroup = this.spaceManager.find(id);
     if (!spaceGroup)
       return;
+    if (!spaceGroup.userData.spaceConfig) {
+      throw new Error("spaceConfig 不存在");
+    }
     const spaceConfig = spaceGroup.userData.spaceConfig;
     const { camera } = spaceConfig;
+    this.curSpaceId = spaceConfig.id;
     if (!this.scene.children.includes(spaceGroup)) {
       this.scene.add(spaceGroup);
     }
+    this.scene.children.forEach((child) => {
+      if (child instanceof Group$1 && child.userData.type === "spaceGroup" && child !== spaceGroup) {
+        console.log(11, child);
+        this.scene.remove(child);
+      }
+    });
     const nextCameraInfo = formatBaseInfo(camera);
-    update3dObjectBaseInfo(this.camera, nextCameraInfo);
+    const handleCompleteSwitch = () => {
+      this.emit("afterSwitchSpace", { spaceConfig });
+    };
+    if (clickPosition) {
+      console.log("this.camera", JSON.stringify(this.camera.position));
+      const currentCameraInfo = {
+        ...get3dObjectBaseInfo(this.camera),
+        position: {
+          x: nextCameraInfo.position.x - (clickPosition.x - this.camera.position.x),
+          y: nextCameraInfo.position.y - (clickPosition.y - this.camera.position.y),
+          z: nextCameraInfo.position.z - (clickPosition.z - this.camera.position.z)
+        }
+      };
+      console.log(JSON.stringify(currentCameraInfo));
+      console.log(JSON.stringify(nextCameraInfo));
+      new Tween(currentCameraInfo).to(nextCameraInfo, 5e3).onUpdate((cameraInfo) => {
+        console.log(666, JSON.stringify(cameraInfo));
+        update3dObjectBaseInfo(this.camera, cameraInfo);
+      }).easing(Easing.Linear.None).start().onComplete(() => {
+        handleCompleteSwitch();
+      });
+    } else {
+      update3dObjectBaseInfo(this.camera, nextCameraInfo);
+      handleCompleteSwitch();
+    }
   }
   createControls() {
     const controls = new OrbitControls(this.camera, this.renderer.domElement);
     controls.listenToKeyEvents(window);
     controls.autoRotate = false;
-    controls.autoRotateSpeed = 0.5;
+    controls.autoRotateSpeed = 0.1;
     controls.enableZoom = false;
     controls.enableDamping = true;
     controls.enablePan = true;
@@ -19869,9 +20798,10 @@ class Vr360 extends EventEmitter {
   /**
    * 渲染
    */
-  render() {
+  render(time) {
     requestAnimationFrame(this.render.bind(this));
     this.controls.update();
+    update(time);
     this.handleUpdate();
   }
   /**
@@ -19896,6 +20826,7 @@ class Vr360 extends EventEmitter {
   }
 }
 export {
+  VREventNames,
   Vr360
 };
 //# sourceMappingURL=vr.mjs.map

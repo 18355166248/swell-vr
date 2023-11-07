@@ -148,7 +148,9 @@ export function addListenerToThree(
   const {renderer} = getDeps()
   const renderElement = renderer?.domElement
   if (!renderElement) return
-  console.log('🚀 ~ file: helper.ts:144 ~ renderElement:', renderElement)
+
+  // 上一个事件的对象
+  let preIntersect: THREE.Intersection | undefined
 
   const {raycaster, mouse} = getRaycasterAndMouse()
   // 鼠标是否处于按压状态，用于传给 tip 判断，在按下鼠标滑动时不显示 tip
@@ -193,13 +195,31 @@ export function addListenerToThree(
     const firstIntersect = intersects[0] ?? undefined
     if (!firstIntersect || intersects.length <= 0) return
 
-    // 触发本次 hover 对象的 mouseover 事件
-    firstIntersect.object.dispatchEvent({
-      type: 'mouseover',
-      intersect: firstIntersect,
-      sourceEvent: event,
-      isMouseDown,
-    } as any)
+    // 因为mouseover和mouseout会频繁触发 所以这里要做优化
+    // 在鼠标移动的时候 去监听 mouseover 和 mouseout 事件
+    if (
+      ['mousemove', 'touchmove'].includes(eventName) &&
+      preIntersect?.object.uuid !== firstIntersect.object.uuid
+    ) {
+      // 在 mousemove touchmove 事件时, 并且本次鼠标指中的 three 对象和上一个对象不相同时 相当于遇到了 tip 节点
+
+      // 触发上次hover对象的mouseout事件
+      preIntersect?.object.dispatchEvent({
+        type: 'mouseout',
+        intersect: preIntersect,
+        sourceEvent: event,
+        isMouseDown,
+      } as any)
+      preIntersect = firstIntersect
+
+      // 触发本次 hover 对象的 mouseover 事件
+      firstIntersect?.object.dispatchEvent({
+        type: 'mouseover',
+        intersect: firstIntersect,
+        sourceEvent: event,
+        isMouseDown,
+      } as any)
+    }
 
     firstIntersect.object.dispatchEvent({
       type: (eventName === 'touchmove' ? 'mousemove' : eventName) as string,
@@ -207,5 +227,33 @@ export function addListenerToThree(
       sourceEvent: event,
       isMouseDown,
     } as any)
+  }
+}
+
+/**
+ * 获取 threejs 3d 对象的位置、缩放、旋转等基础信息
+ * @param object threejs 3d 对象
+ * @returns 返回 threejs 3d 对象的位置、缩放、旋转等基础信息
+ */
+export function get3dObjectBaseInfo(object?: THREE.Object3D): ThreeObjectBase {
+  return {
+    position: {
+      x: object?.position?.x ?? 0,
+      y: object?.position?.y ?? 0,
+      z: object?.position?.z ?? 0,
+    },
+    rotate: {
+      // x: 0,
+      // y: 0,
+      // z: 0,
+      x: object?.rotation?.x ?? 0,
+      y: object?.rotation?.y ?? 0,
+      z: object?.rotation?.z ?? 0,
+    },
+    scale: {
+      x: object?.scale?.x ?? 1,
+      y: object?.scale?.y ?? 1,
+      z: object?.scale?.z ?? 1,
+    },
   }
 }

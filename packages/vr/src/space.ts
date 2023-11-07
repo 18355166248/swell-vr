@@ -1,8 +1,15 @@
 import * as THREE from 'three'
 import {CubeSpaceTextureUrls, SpaceConfig} from './types'
 import {TextureCacheLoader} from './helper'
-import TipManage from './tip'
+import TipManage, {TipManagerEvents, tipEventNames} from './tip'
 import TipManager from './tip'
+import EventEmitter from 'EventEmitter3'
+
+export const spaceEventNames = [...tipEventNames]
+
+type SpaceManagerEvents = TipManagerEvents
+
+export type SpaceEventName = keyof SpaceManagerEvents
 
 export type SpaceManagerProps = {
   // 容器
@@ -18,7 +25,7 @@ export type SpaceManagerProps = {
   textureCacheLoader: TextureCacheLoader
 }
 
-export class SpaceManager {
+export class SpaceManager extends EventEmitter<TipManagerEvents> {
   private container: HTMLElement
   private tipContainer: HTMLElement
   private textureCacheLoader: TextureCacheLoader
@@ -36,6 +43,7 @@ export class SpaceManager {
     camera,
     renderer,
   }: SpaceManagerProps) {
+    super()
     this.textureCacheLoader = textureCacheLoader
     this.container = container
     this.tipContainer = tipContainer
@@ -101,10 +109,20 @@ export class SpaceManager {
     if (!this.tipContainer) return
     const tipManager = new TipManager({
       container: this.container,
+      tipContainer: this.tipContainer,
       scene: this.scene,
       camera: this.camera,
       renderer: this.renderer,
       textureCacheLoader: this.textureCacheLoader,
+    })
+
+    // tip的事件继承
+    spaceEventNames.forEach(eventName => {
+      // @ts-ignore
+      tipManager.on(eventName, e => {
+        // @ts-ignore
+        this.emit(eventName, e)
+      })
     })
 
     return tipManager

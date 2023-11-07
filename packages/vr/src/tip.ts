@@ -2,10 +2,46 @@ import * as THREE from 'three'
 import {Tip} from './types/tip'
 import defaultUrl from './assets/tips.png'
 import {TextureCacheLoader} from './helper'
+import EventEmitter from 'EventEmitter3'
+
+type TipParams = {
+  tip: Tip
+}
+
+interface ShowTipParams extends TipParams {
+  left: number
+  top: number
+}
+
+interface SwitchSpaceParams {
+  targetSpaceId: string
+  clickPosition: THREE.Vector3
+}
+
+export type TipManagerEvents = {
+  // 触发提示时的回调
+  showTip: (params: ShowTipParams) => void
+  // 隐藏提示时的回调
+  hideTip: (params: TipParams) => void
+  // 点击提示时的回调
+  clickTip: (params: TipParams) => void
+  // 切换空间时的回调
+  switchSpace: (params: SwitchSpaceParams) => void
+}
+
+export type TipEventName = keyof TipManagerEvents
+
+export const tipEventNames: TipEventName[] = [
+  'showTip',
+  'hideTip',
+  'clickTip',
+  'switchSpace',
+]
 
 export type TipManageProps = {
   // 容器
   container: HTMLElement
+  tipContainer: HTMLElement
   // 场景
   scene: THREE.Scene
   // 相机
@@ -15,8 +51,16 @@ export type TipManageProps = {
   textureCacheLoader: TextureCacheLoader
 }
 
-export default class TipManager {
+export type ThreeObjectDispatchEvent<T extends keyof HTMLElementEventMap> = {
+  type: T
+  intersect: THREE.Intersection
+  sourceEvent: HTMLElementEventMap[T]
+  isMouseDown: boolean
+}
+
+export default class TipManager extends EventEmitter<TipManagerEvents> {
   private container: HTMLElement
+  private tipContainer: HTMLElement
   private scene: THREE.Scene
   private camera: THREE.PerspectiveCamera
   private renderer: THREE.WebGLRenderer
@@ -24,7 +68,9 @@ export default class TipManager {
   private tipSpriteMap = new Map<string, THREE.Sprite>()
 
   constructor(options: TipManageProps) {
+    super()
     this.container = options.container
+    this.tipContainer = options.tipContainer
     this.scene = options.scene
     this.camera = options.camera
     this.renderer = options.renderer
@@ -43,12 +89,82 @@ export default class TipManager {
     if (rotate) {
       sprite.rotation.set(rotate.x, rotate.y, rotate.z)
     }
+
+    const emitShowTip = (e: ThreeObjectDispatchEvent<'mouseover'>) => {
+      const intersect = e.intersect
+      const tip = intersect.object.userData.tip as Tip
+
+      const containerHalfWidth = this.container.clientWidth / 2
+      const containerHalfHeight = this.container.clientHeight / 2
+
+      const tipContainerWidth = this.tipContainer.clientWidth
+      const tipContainerHeight = this.tipContainer.clientHeight
+      const rendererOffsetLeft = this.renderer.domElement.offsetLeft
+      const rendererOffsetTop = this.renderer.domElement.offsetTop
+      const percentPosition = intersect.object.position
+        .clone()
+        .project(this.camera)
+      const left =
+        (percentPosition.x + 1) * containerHalfWidth -
+        tipContainerWidth / 2 +
+        rendererOffsetLeft
+      const top =
+        (1 - percentPosition.y) * containerHalfHeight -
+        tipContainerHeight / 2 +
+        rendererOffsetTop
+
+      const showTipParams: ShowTipParams = {tip, left, top}
+
+      this.emit('showTip', showTipParams)
+    }
+
+    const emitHideTip = (e: ThreeObjectDispatchEvent<'mouseout'>) => {
+      const intersect = e.intersect
+      const tip = intersect.object.userData.tip as Tip
+
+      const hideTipParams: TipParams = {tip}
+
+      this.emit('hideTip', hideTipParams)
+    }
+
     sprite.addEventListener('mouseover', _e => {
-      const e = _e as unknown as HTMLElementEventMap['mouseover']
-      console.log('🚀 ~ file: tip.ts:49 ~ TipManager ~ create ~ e:', e)
+      const e = _e as unknown as ThreeObjectDispatchEvent<'mouseover'>
+
+      if (e.isMouseDown) return
+
+      emitShowTip(e)
+    })
+    sprite.addEventListener('mouseout', _e => {
+      const e = _e as unknown as ThreeObjectDispatchEvent<'mouseout'>
+      if (e.isMouseDown) return
+
+      emitHideTip(e)
+    })
+
+    // 点击切换空间
+    sprite.addEventListener('click', _e => {
+      const e = _e as unknown as ThreeObjectDispatchEvent<'click'>
+
+      const intersect = e.intersect
+      const tip = intersect.object.userData.tip as Tip
+
+      this.emit('clickTip', {tip})
+
+      if (tip.targetSpaceId) {
+        // 跳转时隐藏提示
+        const hideTipParams: TipParams = {tip}
+
+        this.emit('hideTip', hideTipParams)
+
+        this.emit('switchSpace', {
+          targetSpaceId: tip.targetSpaceId,
+          clickPosition: intersect.point,
+        })
+      }
     })
 
     sprite.userData.cursor = 'pointer'
+    sprite.userData.tip = config
 
     this.tipSpriteMap.set(id, sprite)
 

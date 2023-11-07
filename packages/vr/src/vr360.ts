@@ -1,18 +1,29 @@
 import * as THREE from 'three'
 import EventEmitter from 'EventEmitter3'
-import {SpaceConfig, VROptions} from './types'
-import {SpaceManager} from './space'
+import {SpaceConfig, ThreeObjectBase, VREvents, VROptions} from './types'
+import {SpaceEventName, SpaceManager, spaceEventNames} from './space'
 import {
   TextureCacheLoader,
   addListenerToThree,
   formatBaseInfo,
+  get3dObjectBaseInfo,
   update3dObjectBaseInfo,
 } from './helper'
 // 引入轨道控制器扩展库OrbitControls
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 import {initReSize} from './utils/onresize'
+import * as TWEEN from '@tweenjs/tween.js'
 
-export class Vr360 extends EventEmitter {
+// 空间管理器事件列表
+const extendsSpaceEventNames = spaceEventNames.filter(
+  eventName => !['switchSpace'].includes(eventName),
+) as unknown as Exclude<SpaceEventName, 'switchSpace'>[]
+
+export const VREventNames = [...extendsSpaceEventNames, 'update']
+
+let tween: TWEEN.Tween<ThreeObjectBase> | undefined
+
+export class Vr360 extends EventEmitter<VREvents> {
   // 容器
   public container: HTMLElement
   // 提示容器
@@ -33,6 +44,8 @@ export class Vr360 extends EventEmitter {
   public controls: OrbitControls
   // 销毁列表
   private destroyList: (() => void)[] = []
+  // 当前空间id
+  private curSpaceId = ''
 
   public get containerWidth() {
     return this.container.clientWidth
@@ -114,6 +127,21 @@ export class Vr360 extends EventEmitter {
       tipContainer: this.tipContainer,
     })
 
+    // 空间的事件继承
+    extendsSpaceEventNames.forEach(eventName => {
+      // @ts-ignore
+      spaceManage.on(eventName, e => {
+        // @ts-ignore
+        this.emit(eventName, e)
+      })
+    })
+
+    // 特殊处理 switchSpace
+    spaceManage.on('switchSpace', e => {
+      console.log(e)
+      this.switchSpace(e.targetSpaceId, e.clickPosition)
+    })
+
     return spaceManage
   }
 
@@ -122,25 +150,86 @@ export class Vr360 extends EventEmitter {
       this.spaceManager.create(spaceConfig)
     })
 
-    this.switchSpace(newSpaceConfig[0].id)
+    // 初始化空间
+    if (!this.curSpaceId) {
+      this.switchSpace(newSpaceConfig[0].id)
+    }
   }
 
-  switchSpace(id: string) {
+  switchSpace(id: string, clickPosition?: THREE.Vector3) {
+    if (this.curSpaceId === id || !id) return
     const spaceGroup = this.spaceManager.find(id)
+
     if (!spaceGroup) return
+
+    if (!spaceGroup.userData.spaceConfig) {
+      throw new Error('spaceConfig 不存在')
+    }
 
     const spaceConfig = spaceGroup.userData.spaceConfig as SpaceConfig
     const {camera} = spaceConfig
+
+    this.curSpaceId = spaceConfig.id
 
     // 添加目标空间进场景
     if (!this.scene.children.includes(spaceGroup)) {
       this.scene.add(spaceGroup)
     }
 
+    // 移除其他的场景
+    this.scene.children.forEach(child => {
+      if (
+        child instanceof THREE.Group &&
+        child.userData.type === 'spaceGroup' &&
+        child !== spaceGroup
+      ) {
+        console.log(11, child)
+        this.scene.remove(child)
+      }
+    })
+
     // 下一个镜头的信息
     const nextCameraInfo = formatBaseInfo(camera)
 
-    update3dObjectBaseInfo(this.camera, nextCameraInfo)
+    const handleCompleteSwitch = () => {
+      this.emit('afterSwitchSpace', {spaceConfig})
+    }
+
+    if (clickPosition) {
+      console.log('this.camera', JSON.stringify(this.camera.position))
+      // 增加切换场景的动画
+      // 获取当前相机的信息
+      const currentCameraInfo: ThreeObjectBase = {
+        ...get3dObjectBaseInfo(this.camera),
+        position: {
+          x:
+            nextCameraInfo.position.x -
+            (clickPosition.x - this.camera.position.x),
+          y:
+            nextCameraInfo.position.y -
+            (clickPosition.y - this.camera.position.y),
+          z:
+            nextCameraInfo.position.z -
+            (clickPosition.z - this.camera.position.z),
+        },
+      }
+      console.log(JSON.stringify(currentCameraInfo))
+      console.log(JSON.stringify(nextCameraInfo))
+      tween = new TWEEN.Tween(currentCameraInfo)
+        .to(nextCameraInfo, 5000)
+        .onUpdate(cameraInfo => {
+          console.log(666, JSON.stringify(cameraInfo))
+          update3dObjectBaseInfo(this.camera, cameraInfo)
+        })
+        .easing(TWEEN.Easing.Linear.None)
+        .start()
+        .onComplete(() => {
+          handleCompleteSwitch()
+        })
+    } else {
+      update3dObjectBaseInfo(this.camera, nextCameraInfo)
+      handleCompleteSwitch()
+    }
   }
 
   createControls() {
@@ -151,7 +240,7 @@ export class Vr360 extends EventEmitter {
 
     controls.listenToKeyEvents(window)
     controls.autoRotate = false
-    controls.autoRotateSpeed = 0.5
+    controls.autoRotateSpeed = 0.1
     controls.enableZoom = false
     controls.enableDamping = true
     controls.enablePan = true
@@ -174,10 +263,11 @@ export class Vr360 extends EventEmitter {
   /**
    * 渲染
    */
-  public render(): void {
+  public render(time?: number): void {
     requestAnimationFrame(this.render.bind(this))
     // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
     this.controls.update()
+    TWEEN.update(time)
     this.handleUpdate()
   }
 

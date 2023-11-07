@@ -82,3 +82,19 @@ export type DeepRequired<T> = {
     ? DeepRequired<T[P]>
     : T[P]
 }
+
+/**
+ * 完成跳转空间时的回调 event
+ */
+export type AfterSwitchSpaceEvent = {
+  /**
+   * 跳转的目标空间配置
+   */
+  spaceConfig: SpaceConfig
+}
+
+// 自定义事件
+export type VREvents = {
+  update: () => void
+  afterSwitchSpace: (e: AfterSwitchSpaceEvent) => void
+}
