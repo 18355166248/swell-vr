@@ -1,20 +1,27 @@
+import {useMemo, useState} from 'react'
 import './app.less'
 import Texture from './examples/Texture'
-import Seed from './examples/Seed'
-import {useMemo, useState} from 'react'
+import Seed from './utils'
+import Css2DLabel from './examples/Css2DLabel'
 
 const tabList = {
   Texture,
   Seed,
+  Css2DLabel,
 }
+
+const prefixTitle = 'Three.JS-Demo'
 
 type TabKeys = keyof typeof tabList
 
 function App() {
-  const [active, setActive] = useState<TabKeys>('Texture')
+  const [active, setActive] = useState<TabKeys>('Css2DLabel')
   const keys = Object.keys(tabList) as TabKeys[]
 
-  const Component = useMemo(() => tabList[active], [active])
+  const Component = useMemo(() => {
+    document.title = `${prefixTitle}: ${active}`
+    return tabList[active]
+  }, [active])
 
   return (
     <div className="app">

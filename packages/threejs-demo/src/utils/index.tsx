@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import {initReSize} from '../../utils/onresize'
-import SeedScene from './scene'
+import {initReSize} from './onresize'
+import SeedScene from '../examples/Seed/scene'
 import {useLayoutEffect, useRef} from 'react'
 
 export default function Seed() {
@@ -17,11 +17,7 @@ export default function Seed() {
     }
   }, [])
 
-  return (
-    <div>
-      <div ref={domRef}> </div>
-    </div>
-  )
+  return <div ref={domRef} />
 }
 
 function initSeed(dom: HTMLElement) {

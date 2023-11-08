@@ -18,11 +18,7 @@ export default function TextureDemo() {
     }
   }, [])
 
-  return (
-    <div>
-      <div ref={textureRef}> </div>
-    </div>
-  )
+  return <div ref={textureRef} />
 }
 
 function initTexture(dom: HTMLElement) {
