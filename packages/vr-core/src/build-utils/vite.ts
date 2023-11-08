@@ -26,8 +26,6 @@ export const createViteConfig = ({
   const {name} = pkg
   const pkgName = name as string
 
-  console.log(111, pascalCase(pkgName.split('/').pop() as string))
-
   return {
     root: pathResolve('./'),
     build: {

@@ -24,12 +24,12 @@
   "license": "ISC",
   "dependencies": {
     "@types/three": "^0.156.0",
+    "rimraf": "^5.0.1",
     "three": "^0.156.1",
     "vite": "^4.4.9",
     "vitest": "^0.34.4"
   },
   "devDependencies": {
-    "rimraf": "^5.0.1",
     "unbuild": "^2.0.0"
   }
 }
