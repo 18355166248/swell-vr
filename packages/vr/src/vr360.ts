@@ -1,6 +1,12 @@
 import * as THREE from 'three'
 import EventEmitter from 'EventEmitter3'
-import {SpaceConfig, ThreeObjectBase, VREvents, VROptions} from './types'
+import {
+  SpaceConfig,
+  ThreeObjectBase,
+  VREvents,
+  VROptions,
+  Vector3Position,
+} from './types'
 import {SpaceEventName, SpaceManager, spaceEventNames} from './space'
 import {
   TextureCacheLoader,
@@ -138,7 +144,6 @@ export class Vr360 extends EventEmitter<VREvents> {
 
     // 特殊处理 switchSpace
     spaceManage.on('switchSpace', e => {
-      console.log(e)
       this.switchSpace(e.targetSpaceId, e.clickPosition)
     })
 
@@ -183,7 +188,6 @@ export class Vr360 extends EventEmitter<VREvents> {
         child.userData.type === 'spaceGroup' &&
         child !== spaceGroup
       ) {
-        console.log(11, child)
         this.scene.remove(child)
       }
     })
@@ -196,7 +200,6 @@ export class Vr360 extends EventEmitter<VREvents> {
     }
 
     if (clickPosition) {
-      console.log('this.camera', JSON.stringify(this.camera.position))
       // 增加切换场景的动画
       // 获取当前相机的信息
       const currentCameraInfo: ThreeObjectBase = {
@@ -213,12 +216,15 @@ export class Vr360 extends EventEmitter<VREvents> {
             (clickPosition.z - this.camera.position.z),
         },
       }
-      console.log(JSON.stringify(currentCameraInfo))
-      console.log(JSON.stringify(nextCameraInfo))
+
+      // TODO 很关键 如果不带的动画会不准确 (找问题找了1天)
+      // TODO 很关键 如果不带的动画会不准确
+      // TODO 很关键 如果不带的动画会不准确
+      nextCameraInfo.rotate = currentCameraInfo.rotate as Vector3Position
+
       tween = new TWEEN.Tween(currentCameraInfo)
-        .to(nextCameraInfo, 5000)
+        .to(nextCameraInfo, 500)
         .onUpdate(cameraInfo => {
-          console.log(666, JSON.stringify(cameraInfo))
           update3dObjectBaseInfo(this.camera, cameraInfo)
         })
         .easing(TWEEN.Easing.Linear.None)
@@ -263,11 +269,11 @@ export class Vr360 extends EventEmitter<VREvents> {
   /**
    * 渲染
    */
-  public render(time?: number): void {
+  public render(): void {
     requestAnimationFrame(this.render.bind(this))
     // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
     this.controls.update()
-    TWEEN.update(time)
+    TWEEN.update()
     this.handleUpdate()
   }
 

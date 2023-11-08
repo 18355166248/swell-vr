@@ -20719,7 +20719,6 @@
         });
       });
       spaceManage.on("switchSpace", (e) => {
-        console.log(e);
         this.switchSpace(e.targetSpaceId, e.clickPosition);
       });
       return spaceManage;
@@ -20749,7 +20748,6 @@
       }
       this.scene.children.forEach((child) => {
         if (child instanceof Group$1 && child.userData.type === "spaceGroup" && child !== spaceGroup) {
-          console.log(11, child);
           this.scene.remove(child);
         }
       });
@@ -20758,7 +20756,6 @@
         this.emit("afterSwitchSpace", { spaceConfig });
       };
       if (clickPosition) {
-        console.log("this.camera", JSON.stringify(this.camera.position));
         const currentCameraInfo = {
           ...get3dObjectBaseInfo(this.camera),
           position: {
@@ -20767,10 +20764,8 @@
             z: nextCameraInfo.position.z - (clickPosition.z - this.camera.position.z)
           }
         };
-        console.log(JSON.stringify(currentCameraInfo));
-        console.log(JSON.stringify(nextCameraInfo));
-        new Tween(currentCameraInfo).to(nextCameraInfo, 5e3).onUpdate((cameraInfo) => {
-          console.log(666, JSON.stringify(cameraInfo));
+        nextCameraInfo.rotate = currentCameraInfo.rotate;
+        new Tween(currentCameraInfo).to(nextCameraInfo, 500).onUpdate((cameraInfo) => {
           update3dObjectBaseInfo(this.camera, cameraInfo);
         }).easing(Easing.Linear.None).start().onComplete(() => {
           handleCompleteSwitch();
@@ -20802,10 +20797,10 @@
     /**
      * 渲染
      */
-    render(time) {
+    render() {
       requestAnimationFrame(this.render.bind(this));
       this.controls.update();
-      update(time);
+      update();
       this.handleUpdate();
     }
     /**
