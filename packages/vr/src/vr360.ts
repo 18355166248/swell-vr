@@ -246,7 +246,7 @@ export class Vr360 extends EventEmitter<VREvents> {
 
     controls.listenToKeyEvents(window)
     controls.autoRotate = false
-    controls.autoRotateSpeed = 0.1
+    controls.autoRotateSpeed = 1
     controls.enableZoom = false
     controls.enableDamping = true
     controls.enablePan = true
