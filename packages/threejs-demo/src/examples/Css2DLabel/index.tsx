@@ -5,9 +5,9 @@ import {initReSize} from '../../utils/onresize'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import {initEarth} from './earth'
 import {initLight} from './light'
-import initGUI from './GUI'
 import {initMoon} from './moon'
 import initCSSRender from './CSS2D'
+import initGUI from './GUI'
 
 export default function Css2DLabel() {
   const domRef = useRef<HTMLDivElement>(null)
@@ -45,12 +45,15 @@ function initCss2DLabel(dom: HTMLElement) {
 
   // scene
   const axesHelper = new THREE.AxesHelper(5)
+  axesHelper.layers.enableAll()
   scene.add(axesHelper)
   const earth = initEarth({textureLoader})
+  earth.layers.enableAll()
   scene.add(earth)
   const moon = initMoon({textureLoader})
   scene.add(moon)
   const light = initLight()
+  light.layers.enableAll()
   scene.add(light)
   moon.layers.enableAll()
 
@@ -77,7 +80,7 @@ function initCss2DLabel(dom: HTMLElement) {
   renderer.setAnimationLoop(render)
   // renderer.setClearColor(0x7ec0ee, 1)
 
-  const gui = initGUI(camera)
+  const gui = initGUI(camera, dom)
 
   // control  注意: 这里的控制器交给 CSSRender 因为层级更高
   const controls = new OrbitControls(camera, CSSRender.domElement)

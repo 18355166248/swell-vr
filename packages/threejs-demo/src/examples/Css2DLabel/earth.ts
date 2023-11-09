@@ -41,7 +41,6 @@ export function initEarth({textureLoader}: EarthProps) {
   earthContentLabel.position.set(1 * EARTH_RADIUS, 0, 0)
   earthContentLabel.center.set(0, 2.8)
   earthContentLabel.layers.set(1)
-
   earth.add(earthContentLabel)
 
   return earth
