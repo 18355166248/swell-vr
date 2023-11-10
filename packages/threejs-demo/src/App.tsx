@@ -36,13 +36,13 @@ const prefixTitle = 'Three.JS-Demo'
 
 function App() {
   const keys = Object.keys(componentEnum)
-  const [active, setActive] = useState('OverallView' || keys[0])
+  const [active, setActive] = useState(keys[0])
 
   const Component = useMemo(() => {
     document.title = `${prefixTitle}: ${active}`
     return componentEnum[active]
   }, [active])
-
+ 
   return (
     <div className="app">
       <div className="tab">
