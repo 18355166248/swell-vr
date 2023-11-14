@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import {initReSize} from '../../utils/onresize'
-import textureImg from '../../assets/texture/texture1.jpg'
 import {RGBELoader} from 'three/addons/loaders/RGBELoader.js'
 import {useLayoutEffect, useRef} from 'react'
 
@@ -47,9 +46,6 @@ function initTexture(dom: HTMLElement) {
   scene.add(group)
 
   camera.position.set(0, 0, 2)
-  // 引入纹理到几何体
-  const textureLoader = new THREE.TextureLoader()
-  const plasterTexture = textureLoader.load(textureImg)
 
   new RGBELoader().load('/royal_esplanade_1k.hdr', function (texture) {
     texture.mapping = THREE.EquirectangularReflectionMapping
@@ -65,7 +61,6 @@ function initTexture(dom: HTMLElement) {
     new THREE.IcosahedronGeometry(0.2, 8), // 球
     new THREE.TorusGeometry(0.2, 0.04, 64, 32), // 圆环
   ]
-  const num = Math.floor(Math.random() * geometries.length)
   const geometry = geometries[3]
 
   const material = new THREE.MeshStandardMaterial({

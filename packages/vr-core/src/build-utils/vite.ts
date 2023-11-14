@@ -1,9 +1,10 @@
-import type {UserConfig} from 'vite'
+import type {UserConfig, LibraryFormats} from 'vite'
 import path from 'path'
 
 export type CreateViteConfigProps = {
   packagePath: string // 执行打包命令的文件路径
   minify?: boolean
+  formats?: LibraryFormats[]
 }
 
 export const pascalCase = (str: string) =>
@@ -15,6 +16,7 @@ export const pascalCase = (str: string) =>
 export const createViteConfig = ({
   packagePath,
   minify,
+  formats = ['cjs', 'es', 'umd', 'iife'],
 }: CreateViteConfigProps): UserConfig => {
   const pathResolve = (..._path: string[]) =>
     path.resolve(packagePath, ..._path)
@@ -33,6 +35,7 @@ export const createViteConfig = ({
       lib: {
         entry: pathResolve('src/index.ts'),
         name: pascalCase(pkgName.split('/').pop() as string),
+        formats,
       },
       rollupOptions: {
         output: {

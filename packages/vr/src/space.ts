@@ -7,7 +7,7 @@ import EventEmitter from 'EventEmitter3'
 
 export const spaceEventNames = [...tipEventNames]
 
-type SpaceManagerEvents = TipManagerEvents
+export type SpaceManagerEvents = TipManagerEvents
 
 export type SpaceEventName = keyof SpaceManagerEvents
 

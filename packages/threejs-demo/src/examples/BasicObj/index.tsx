@@ -37,7 +37,6 @@ function initCss2DLabel(dom: HTMLElement) {
     10_00,
   )
   const renderer = new THREE.WebGLRenderer()
-  const textureLoader = new THREE.TextureLoader()
 
   camera.layers.enableAll()
 

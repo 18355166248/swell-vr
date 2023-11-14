@@ -1,3 +1,4 @@
+import {SpaceManagerEvents} from 'src/space'
 import {Tip} from './tip'
 
 export interface VROptions {
@@ -97,4 +98,4 @@ export type AfterSwitchSpaceEvent = {
 export type VREvents = {
   update: () => void
   afterSwitchSpace: (e: AfterSwitchSpaceEvent) => void
-}
+} & Omit<SpaceManagerEvents, 'switchSpace'>
