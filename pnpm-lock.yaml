@@ -48,6 +48,9 @@ importers:
 
   packages/threejs-demo:
     dependencies:
+      '@swellvr/vr-core':
+        specifier: workspace:^
+        version: link:../vr-core
       react:
         specifier: ^18.2.0
         version: registry.npmmirror.com/react@18.2.0
