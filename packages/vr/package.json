@@ -4,6 +4,7 @@
   "description": "",
   "private": false,
   "main": "dist/vr.mjs",
+  "files": ["dist"],
   "scripts": {
     "build": "pnpm type-check && esno ./scripts/build.ts",
     "build:watch": "cross-env WATCH=true pnpm build",
