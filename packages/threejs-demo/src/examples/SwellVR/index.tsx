@@ -29,13 +29,20 @@ export default function Css2DLabel() {
       vr.controls.autoRotate = true
       vr.render()
       vr.listenResize()
-      vr.on('showTip', e => {
-        vr.controls.autoRotate = false
+      vr.on(
+        'showTip',
+        (e: {
+          left: number
+          top: number
+          tip: {content: {title: string; content: string}}
+        }) => {
+          vr.controls.autoRotate = false
 
-        const {left, top, tip} = e
-        const {title, content} = tip.content
-        setTipConfig({left, top, title, content})
-      })
+          const {left, top, tip} = e
+          const {title, content} = tip.content
+          setTipConfig({left, top, title, content})
+        },
+      )
 
       vr.on('hideTip', () => {
         vr.controls.autoRotate = true
