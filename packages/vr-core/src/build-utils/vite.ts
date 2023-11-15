@@ -5,6 +5,8 @@ export type CreateViteConfigProps = {
   packagePath: string // 执行打包命令的文件路径
   minify?: boolean
   formats?: LibraryFormats[]
+  externalMap?: Record<string, string>
+  dedupe?: string[]
 }
 
 export const pascalCase = (str: string) =>
@@ -17,6 +19,8 @@ export const createViteConfig = ({
   packagePath,
   minify,
   formats = ['cjs', 'es', 'umd', 'iife'],
+  externalMap = {},
+  dedupe = [],
 }: CreateViteConfigProps): UserConfig => {
   const pathResolve = (..._path: string[]) =>
     path.resolve(packagePath, ..._path)
@@ -39,13 +43,18 @@ export const createViteConfig = ({
       },
       rollupOptions: {
         output: {
+          globals: externalMap,
           chunkFileNames: () => {
             return '[format]/[name].[format].js'
           },
         },
+        external: Object.keys(externalMap),
       },
       sourcemap: true,
       minify,
+    },
+    resolve: {
+      dedupe,
     },
   }
 }

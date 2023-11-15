@@ -1,12 +1,8 @@
-import {ElementType, useMemo, useState} from 'react'
+import {ElementType, Suspense, lazy, useMemo, useState} from 'react'
 import './app.less'
 
-interface ModuleProps {
-  default: ElementType
-}
-
 // const req = require.context('./', true, /.vue$/)
-const examples = import.meta.glob<ModuleProps>(
+const examples = import.meta.glob<ElementType>(
   ['./examples/*/index.ts', './examples/*/index.tsx'],
   {
     eager: true,
@@ -18,7 +14,7 @@ const componentEnum = Object.keys(examples)
     if (res) {
       const val = {
         key: res[1],
-        components: examples[key].default,
+        components: examples[key],
       }
       return val
     }
@@ -40,9 +36,9 @@ function App() {
 
   const Component = useMemo(() => {
     document.title = `${prefixTitle}: ${active}`
-    return componentEnum[active]
+    return lazy(() => Promise.resolve(componentEnum[active] as never))
   }, [active])
- 
+
   return (
     <div className="app">
       <div className="tab">
@@ -57,7 +53,9 @@ function App() {
         ))}
       </div>
       <div className="content">
-        <Component />
+        <Suspense fallback={<div></div>}>
+          <Component />
+        </Suspense>
       </div>
     </div>
   )

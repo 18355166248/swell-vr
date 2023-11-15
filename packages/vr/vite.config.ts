@@ -14,6 +14,10 @@ const createViteConfig = (option: CreateViteConfigProps = {}): UserConfig => {
   return buildUtils.createViteConfig({
     packagePath: pkgPath,
     minify,
+    externalMap: {
+      three: 'THREE',
+    },
+    dedupe: ['three'], // use the same versio
   })
 }
 
