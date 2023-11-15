@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "husky install",
     "build:watch": "pnpm --filter vr --filter vr-core build:watch",
-    "build:threejsdemo": "pnpm --filter threejs-demo build",
+    "buildthreejsdemo": "pnpm --filter threejs-demo build",
     "lint": "eslint --fix --ext .ts,.tsx src",
     "prettier": "prettier --write packages"
   },
