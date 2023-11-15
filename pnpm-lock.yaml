@@ -58,7 +58,7 @@ importers:
         specifier: ^18.2.0
         version: registry.npmmirror.com/react-dom@18.2.0(react@18.2.0)
       swell-vr:
-        specifier: workspace:1.2.0
+        specifier: 1.2.0
         version: link:../vr
     devDependencies:
       '@types/react':
