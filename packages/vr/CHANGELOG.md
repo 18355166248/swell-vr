@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/18355166248/swell-vr/compare/v1.1.0...v1.2.0) (2023-11-15)
+
+
+### Features
+
+* 更新组件预览 ([ef7cd8b](https://github.com/18355166248/swell-vr/commit/ef7cd8bc029bb96425087625a60614aed9e16026))
+* 压缩图片 ([fbb930b](https://github.com/18355166248/swell-vr/commit/fbb930bffd589df8d54654c28290f743aba39f32))
+* 优化打包配置 ([3c8ad09](https://github.com/18355166248/swell-vr/commit/3c8ad096b27b662908934f6933d7a34c08e97bf4))
+
 ## 1.1.0 (2023-11-14)
 
 
