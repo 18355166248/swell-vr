@@ -1,43 +1,32 @@
-import {ElementType, Suspense, lazy, useMemo, useState} from 'react'
+import {Suspense, useEffect, useMemo} from 'react'
 import './app.less'
-
-// const req = require.context('./', true, /.vue$/)
-const examples = import.meta.glob<ElementType>(
-  ['./examples/*/index.ts', './examples/*/index.tsx'],
-  {
-    eager: true,
-  },
-)
-const componentEnum = Object.keys(examples)
-  .map(key => {
-    const res = key.match(/^\.\/examples\/(.*)\/index\.[tsx|ts]/)
-    if (res) {
-      const val = {
-        key: res[1],
-        components: examples[key],
-      }
-      return val
-    }
-  })
-  .filter(v => !!v)
-  .reduce((obj: Record<string, ElementType>, val) => {
-    if (val) {
-      obj[val.key] = val.components
-      return obj
-    }
-    return obj
-  }, {}) as unknown as Record<string, ElementType>
+import {Outlet, useLocation, useNavigate} from 'react-router-dom'
+import {routerKeys} from './router'
 
 const prefixTitle = 'Three.JS-Demo'
 
 function App() {
-  const keys = Object.keys(componentEnum)
-  const [active, setActive] = useState(keys[0])
+  const keys = routerKeys
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const Component = useMemo(() => {
+  useEffect(() => {
+    if (location.pathname === '/') {
+      navigate(`/${routerKeys[0]}`)
+    }
+  }, [location])
+
+  const active = useMemo(() => {
+    return location.pathname.substring(1)
+  }, [location.pathname])
+
+  useEffect(() => {
     document.title = `${prefixTitle}: ${active}`
-    return lazy(() => Promise.resolve(componentEnum[active] as never))
   }, [active])
+
+  function goRoute(key: string) {
+    navigate(`/${key}`)
+  }
 
   return (
     <div className="app">
@@ -46,7 +35,7 @@ function App() {
           <div
             className={`tab-item ${active === key ? 'active' : ''}`}
             key={key}
-            onClick={() => setActive(key)}
+            onClick={() => goRoute(key)}
           >
             {key}
           </div>
@@ -54,7 +43,7 @@ function App() {
       </div>
       <div className="content">
         <Suspense fallback={<div></div>}>
-          <Component />
+          <Outlet />
         </Suspense>
       </div>
     </div>
