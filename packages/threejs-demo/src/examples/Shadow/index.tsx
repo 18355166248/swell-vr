@@ -8,7 +8,7 @@ import './index.less'
 import Loading from '../../components/Loading'
 // import DavidHeadGlb from './DavidHead.glb'
 import StatueGlb from './statue.glb'
-import initGUI from './GUI'
+// import initGUI from './GUI'
 import {SecondDataKeys, secondData} from './data'
 
 function initShadow(
@@ -139,6 +139,8 @@ export default function Shadow() {
 
   // 鼠标悬停菜单动画
   useLayoutEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     function update(e) {
       const span = e.target.querySelector('span')
       if (e.type === 'mouseleave') {
@@ -257,7 +259,7 @@ export default function Shadow() {
     setSecondKey(key)
     switch (key) {
       case 'one':
-        animateCamera2({x: 6.6, y: 2.2, z: 6.6}, {x: 0, y: 0.9, z: 0})
+        animateCamera2({x: 6.6, y: 2.2, z: 6.6}, {y: 0.9})
         break
       case 'two':
         animateCamera2({x: -2.1, y: 2.2, z: 6.6}, {y: -0.2})
