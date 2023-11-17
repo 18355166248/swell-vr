@@ -2,15 +2,22 @@ import * as THREE from 'three'
 import {GUI} from 'three/examples/jsm/libs/lil-gui.module.min.js'
 
 const cameraConfig = {
-  fov: 50,
+  fov: 35, // 50 70
+  viewX: 6.6, // 0
+  viewY: 2.2, // 2
+  viewZ: 6.6, // 5
+}
+
+const pointLightConfig = {
   viewX: 0,
-  viewY: 2,
-  viewZ: 5,
+  viewY: 1.8,
+  viewZ: 1.2,
 }
 
 export default function initGUI(
   camera: THREE.PerspectiveCamera,
   container: HTMLElement,
+  pointLight: THREE.PointLight,
 ) {
   const div = document.createElement('div')
   container.appendChild(div)
@@ -20,6 +27,11 @@ export default function initGUI(
   div.style.top = '0'
 
   const gui = new GUI({container: div, title: 'Camera Layers'})
+
+  gui.add(camera.rotation, 'x', -3, 3)
+  gui.add(camera.rotation, 'y', -5, 1.3, 0.1)
+  gui.add(camera.rotation, 'z', -10, 10)
+
   const cameraFolder = gui.addFolder('相机属性设置')
 
   cameraFolder
@@ -30,9 +42,8 @@ export default function initGUI(
       camera.fov = num
       camera.updateProjectionMatrix()
     })
-
   cameraFolder
-    .add(cameraConfig, 'viewX', -50, 50)
+    .add(cameraConfig, 'viewX', -100, 100, 0.1)
     .name('修改视角-x')
     .onChange(num => {
       console.log('x', num)
@@ -44,7 +55,7 @@ export default function initGUI(
       )
     })
   cameraFolder
-    .add(cameraConfig, 'viewY', 0, 100)
+    .add(cameraConfig, 'viewY', 0, 20, 0.2)
     .name('修改视角-y')
     .onChange(num => {
       console.log('y', num)
@@ -65,6 +76,45 @@ export default function initGUI(
         cameraConfig.viewX,
         cameraConfig.viewY,
         cameraConfig.viewZ,
+      )
+    })
+
+  const pointLightFolder = gui.addFolder('点光源设置')
+  pointLightFolder.add(pointLight, 'intensity', 1, 10, 0.00001)
+  pointLightFolder.add(pointLight, 'distance', 0, 100, 0.00001)
+  pointLightFolder.add(pointLight, 'decay', 0, 10, 0.00001)
+  pointLightFolder
+    .add(pointLightConfig, 'viewX', -30, 50, 1)
+    .name('修改视角-x')
+    .onChange(num => {
+      console.log(pointLightConfig)
+      pointLightConfig.viewX = num
+      pointLight.position.set(
+        pointLightConfig.viewX,
+        pointLightConfig.viewY,
+        pointLightConfig.viewZ,
+      )
+    })
+  pointLightFolder
+    .add(pointLightConfig, 'viewY', -100, 100, 0.3)
+    .name('修改视角-y')
+    .onChange(num => {
+      pointLightConfig.viewY = num
+      pointLight.position.set(
+        pointLightConfig.viewX,
+        pointLightConfig.viewY,
+        pointLightConfig.viewZ,
+      )
+    })
+  pointLightFolder
+    .add(pointLightConfig, 'viewZ', 0, 10)
+    .name('修改视角-z')
+    .onChange(num => {
+      pointLightConfig.viewZ = num
+      pointLight.position.set(
+        pointLightConfig.viewX,
+        pointLightConfig.viewY,
+        pointLightConfig.viewZ,
       )
     })
 
