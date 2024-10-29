@@ -274,7 +274,7 @@ export default class Map {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.update()
     this.controls.minDistance = 100
-    this.controls.maxDistance = 800
+    this.controls.maxDistance = 400
     // 使动画循环使用时阻尼或自转 意思是否有惯性
     this.controls.enableDamping = true
     //是否可以缩放
@@ -282,6 +282,8 @@ export default class Map {
   }
 
   setLight() {
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2) // 环境光
+
     const light = new THREE.DirectionalLight(0xffffff, 0.5) // 平行光
     light.position.set(20, -50, 20)
 
@@ -289,7 +291,36 @@ export default class Map {
     light.shadow.mapSize.width = 1024
     light.shadow.mapSize.height = 1024
 
+    // 半球光
+    const hemiLight = new THREE.HemisphereLight('#80edff', '#75baff', 0.3)
+    // 这个也是默认位置
+    hemiLight.position.set(20, -50, 0)
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.5)
+    pointLight.position.set(20, -50, 50)
+
+    pointLight.castShadow = true
+    pointLight.shadow.mapSize.width = 1024
+    pointLight.shadow.mapSize.height = 1024
+
+    const pointLight2 = new THREE.PointLight(0xffffff, 0.5)
+    pointLight2.position.set(50, -50, 20)
+    pointLight2.castShadow = true
+    pointLight2.shadow.mapSize.width = 1024
+    pointLight2.shadow.mapSize.height = 1024
+
+    const pointLight3 = new THREE.PointLight(0xffffff, 0.5)
+    pointLight3.position.set(-50, -50, 20)
+    pointLight3.castShadow = true
+    pointLight3.shadow.mapSize.width = 1024
+    pointLight3.shadow.mapSize.height = 1024
+
     this.scene?.add(light)
+    this.scene?.add(ambientLight)
+    this.scene?.add(hemiLight)
+    this.scene?.add(pointLight)
+    this.scene?.add(pointLight2)
+    this.scene?.add(pointLight3)
   }
 
   setBackground() {
