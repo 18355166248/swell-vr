@@ -41,7 +41,7 @@ function App() {
           </div>
         ))}
       </div>
-      <div className="content">
+      <div className="content w-full h-full">
         <Suspense fallback={<div></div>}>
           <Outlet />
         </Suspense>

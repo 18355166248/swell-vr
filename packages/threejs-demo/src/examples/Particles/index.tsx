@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import {initReSize} from '../../utils/onresize'
 import {useLayoutEffect, useRef} from 'react'
-import initGUI from './GUI'
 import {createParticles} from './createParticles'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 
