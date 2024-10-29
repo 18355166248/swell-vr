@@ -7,6 +7,7 @@ import {CSM, CSMMode} from 'three/examples/jsm/csm/CSM.js'
 import {CSMHelper} from 'three/examples/jsm/csm/CSMHelper.js'
 
 const COLOR_ARR = ['#0465BD', '#357bcb', '#3a7abd']
+const HIGHT_COLOR = '#4fa5ff'
 
 let csmHelper: CSMHelper
 
@@ -47,6 +48,11 @@ export default class Map {
   lightProbe?: THREE.LightProbe
   csm?: CSM
   csmHelper?: CSMHelper<CSM>
+  raycaster?: THREE.Raycaster
+  mouse?: THREE.Vector2
+  activeIntersects: THREE.Intersection<
+    THREE.Object3D<THREE.Object3DEventMap>
+  >[] = []
 
   constructor(private readonly container: HTMLDivElement) {
     this.width = this.container.clientWidth
@@ -105,6 +111,8 @@ export default class Map {
 
       // 初始化控制器
       this.setController()
+      //
+      this.setRaycaster()
       // 初始化灯光
       this.setLight()
       // 初始化地图
@@ -142,6 +150,45 @@ export default class Map {
   render(): void {
     if (!this.scene || !this.camera) return
     requestAnimationFrame(this.render.bind(this))
+    if (this.raycaster && this.mouse) {
+      // 通过摄像机和鼠标位置更新射线
+      this.raycaster.setFromCamera(this.mouse, this.camera)
+
+      // 计算物体和射线的焦点
+      const intersects = this.raycaster.intersectObjects(this.scene.children)
+
+      // 恢复之前的高亮
+      this.activeIntersects.forEach(intersects => {
+        const {object} = intersects
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const {_color, material} = object
+        material[0].color.set(_color)
+        material[1].color.set(_color)
+      })
+
+      this.activeIntersects = []
+      // 改变颜色
+      for (let i = 0; i < intersects.length; i++) {
+        if (
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material &&
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material.length === 2
+        ) {
+          this.activeIntersects.push(intersects[i])
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material[0].color.set(HIGHT_COLOR)
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material[1].color.set(HIGHT_COLOR)
+          break // 只取第一个
+        }
+      }
+    }
     this.camera.updateMatrixWorld()
     // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
     this.csm?.update()
@@ -204,6 +251,9 @@ export default class Map {
           }
           mesh.castShadow = true
           mesh.receiveShadow = true
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          mesh._color = color
           province.add(mesh)
         })
       })
@@ -257,5 +307,24 @@ export default class Map {
     ground.rotation.z = 0
     ground.receiveShadow = true
     this.scene?.add(ground)
+  }
+
+  setRaycaster() {
+    // 光线投射用于进行鼠标拾取
+    this.raycaster = new THREE.Raycaster()
+    this.mouse = new THREE.Vector2()
+
+    // 鼠标事件
+    window.addEventListener('mousemove', this.onMouseMove.bind(this))
+  }
+  onMouseMove(event: MouseEvent) {
+    if (!this.mouse) return
+    const {top, left, width, height} = this.container.getBoundingClientRect()
+    // this.mouse.x = (clientX / width) * 2 - 1: 将鼠标在容器内的X坐标转换为-1到1之间的标准化值。这是通过将鼠标的X坐标除以容器的宽度得到相对位置，然后乘以2并减去1来实现的。这个转换使得容器的左边界对应-1，右边界对应1，而容器的中心对应0。
+    // this.mouse.y = -(clientY / height) * 2 + 1: 将鼠标在容器内的Y坐标转换为-1到1之间的标准化值。与X坐标的处理类似，但是这里乘以-1是为了使得容器的上边界对应1，下边界对应-1，而容器的中心仍然对应0。这种处理方式在图形编程中很常见，因为它简化了基于中心的计算。
+    const clientX = event.clientX - left
+    const clientY = event.clientY - top
+    this.mouse.x = (clientX / width) * 2 - 1
+    this.mouse.y = -(clientY / height) * 2 + 1
   }
 }
