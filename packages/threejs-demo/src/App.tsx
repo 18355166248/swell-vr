@@ -3,7 +3,7 @@ import './app.less'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {routerKeys} from './router'
 
-const prefixTitle = 'Three.JS-Demo'
+const prefixTitle = 'ThreeJS-Demo'
 
 function App() {
   const keys = routerKeys

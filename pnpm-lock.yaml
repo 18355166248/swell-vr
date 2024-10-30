@@ -54,6 +54,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      d3-geo:
+        specifier: ^3.1.1
+        version: 3.1.1
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -70,6 +73,9 @@ importers:
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
+      '@types/d3-geo':
+        specifier: ^3.1.0
+        version: 3.1.0
       '@types/react':
         specifier: ^18.2.15
         version: 18.2.34
