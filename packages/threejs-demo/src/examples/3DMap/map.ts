@@ -53,6 +53,7 @@ export default class Map {
   activeIntersects: THREE.Intersection<
     THREE.Object3D<THREE.Object3DEventMap>
   >[] = []
+  material?: THREE.ShaderMaterial
 
   constructor(private readonly container: HTMLDivElement) {
     this.width = this.container.clientWidth
@@ -211,11 +212,13 @@ export default class Map {
         multiPolygon.forEach(polygon => {
           // 使用路径以及可选的孔洞来定义一个二维形状平面
           const shape = new THREE.Shape()
+          const points = []
           for (let i = 0; i < polygon.length; i++) {
             const [x, y] = projection(polygon[i] as [number, number]) as [
               number,
               number,
             ]
+            points.push(new THREE.Vector3(x, -y, 11))
             if (i === 0) {
               shape.moveTo(x, -y)
             }
@@ -255,6 +258,10 @@ export default class Map {
           // @ts-ignore
           mesh._color = color
           province.add(mesh)
+
+          // 创建轮廓线
+
+          province.add(this.createLine(points))
         })
       })
 
@@ -357,5 +364,55 @@ export default class Map {
     const clientY = event.clientY - top
     this.mouse.x = (clientX / width) * 2 - 1
     this.mouse.y = -(clientY / height) * 2 + 1
+  }
+  createLine(points: THREE.Vector3[]) {
+    const curve = new THREE.CatmullRomCurve3(points, true, 'catmullrom', 0)
+
+    const geometry = new THREE.TubeGeometry(
+      curve,
+      Math.round(points.length * 0.5),
+      0.01,
+      8,
+      true,
+    )
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: {value: 0.0},
+        len: {value: 0.03},
+        size: {value: 0.02},
+        color1: {value: new THREE.Color('#fff')},
+        color2: {value: new THREE.Color('yellow')},
+      },
+      // 顶点着色器
+      vertexShader: `
+        uniform float time;
+        uniform float size;
+        uniform float len;
+        uniform vec3 color1;
+        uniform vec3 color2;
+        varying vec3 vColor;
+        void main() {
+          vColor = color1;
+          vec3 newPosition = position;
+          float d = uv.x - time;
+
+          if (abs(d) < len) {
+            newPosition = newPosition + normal * size;
+            vColor = color2;
+          }
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+        }
+      `,
+      // 片元着色器
+      fragmentShader: `
+        varying vec3 vColor;
+        void main() {
+          gl_FragColor =vec4(vColor, 1.0);
+        }
+      `,
+    })
+    this.material = material
+    const mesh = new THREE.Mesh(geometry, material)
+    return mesh
   }
 }
