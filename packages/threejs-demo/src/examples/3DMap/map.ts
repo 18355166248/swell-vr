@@ -206,13 +206,25 @@ export default class Map {
       const province = new THREE.Object3D()
       const coordinates = item.geometry.coordinates
       const type = item.geometry.type
-      const color = COLOR_ARR[index % COLOR_ARR.length]
+      // const color = COLOR_ARR[index % COLOR_ARR.length]
+      const color = '#0465BD'
+
+      const lineColor = '#FFFFFF'
 
       // 多边形
       if (type === 'Polygon') {
         coordinates.forEach(coordinate => {
-          const mesh = this.drawExtrudeMesh(coordinate as number[][], color)
+          const mesh = this.drawExtrudeMesh(
+            coordinate as number[][],
+            color,
+            index,
+          )
+          const lineMaterial = this.drawLineProvince(
+            coordinate as number[][],
+            lineColor,
+          )
           province.add(mesh)
+          province.add(lineMaterial)
         })
       }
 
@@ -220,67 +232,25 @@ export default class Map {
       if (type === 'MultiPolygon') {
         coordinates.forEach(multiPolygon => {
           multiPolygon.forEach(polygon => {
-            const mesh = this.drawExtrudeMesh(polygon as number[][], color)
+            const mesh = this.drawExtrudeMesh(
+              polygon as number[][],
+              color,
+              index,
+            )
+            const lineMaterial = this.drawLineProvince(
+              polygon as number[][],
+              lineColor,
+            )
             province.add(mesh)
+            province.add(lineMaterial)
           })
         })
       }
 
-      // 循环坐标数组
-      // coordinates.forEach(multiPolygon => {
-      //   multiPolygon.forEach(polygon => {
-      //     // 使用路径以及可选的孔洞来定义一个二维形状平面
-      //     const shape = new THREE.Shape()
-      //     for (let i = 0; i < polygon.length; i++) {
-      //       const [x, y] = projection(polygon[i] as [number, number]) as [
-      //         number,
-      //         number,
-      //       ]
-      //       if (i === 0) {
-      //         shape.moveTo(x, -y)
-      //       }
-      //       shape.lineTo(x, -y)
-      //     }
-
-      //     const extrudeSettings = {
-      //       depth: 4,
-      //       bevelEnabled: true,
-      //       bevelSegments: 1,
-      //       bevelThickness: 0.2,
-      //     }
-
-      //     // 挤压缓冲几何体（ExtrudeGeometry） 从一个形状路径中，挤压出一个BufferGeometry。
-      //     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
-
-      //     // 平面部分材质
-      //     const material = new THREE.MeshStandardMaterial({
-      //       metalness: 1,
-      //       color: color,
-      //     })
-      //     // 拉高部分材质
-      //     const material1 = new THREE.MeshStandardMaterial({
-      //       metalness: 1,
-      //       roughness: 1,
-      //       color: color,
-      //     })
-
-      //     const mesh = new THREE.Mesh(geometry, [material, material1])
-
-      //     if (index % 2 === 0) {
-      //       mesh.scale.set(1, 1, 1.2)
-      //     }
-      //     mesh.castShadow = true
-      //     mesh.receiveShadow = true
-      //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //     // @ts-ignore
-      //     mesh._color = color
-      //     province.add(mesh)
-      //   })
-      // })
-
       // 将geo的属性放到省份模型中
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(province as any).properties = item.properties
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      province.properties = item.properties
 
       this.map?.add(province)
     })
@@ -293,7 +263,7 @@ export default class Map {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.update()
-    this.controls.minDistance = 100
+    this.controls.minDistance = 20
     this.controls.maxDistance = 400
     // 使动画循环使用时阻尼或自转 意思是否有惯性
     this.controls.enableDamping = true
@@ -429,7 +399,7 @@ export default class Map {
     return mesh
   }
   // 平面
-  drawExtrudeMesh(coordinate: number[][], color: string) {
+  drawExtrudeMesh(coordinate: number[][], color: string, index: number) {
     const shape = new THREE.Shape()
     for (let i = 0; i < coordinate.length; i++) {
       const [x, y] = projection(coordinate[i] as [number, number]) as [
@@ -444,7 +414,7 @@ export default class Map {
 
     const extrudeSettings = {
       depth: 4,
-      bevelEnabled: true,
+      bevelEnabled: false,
       bevelSegments: 1,
       bevelThickness: 0.2,
     }
@@ -465,6 +435,32 @@ export default class Map {
     })
 
     const mesh = new THREE.Mesh(geometry, [material, material1])
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    mesh._color = color
+
+    // 有层次感
+    // if (index % 2 === 0) {
+    //   mesh.scale.set(1, 1, 1.2)
+    // }
+
     return mesh
+  }
+  drawLineProvince(coordinate: number[][], color: string) {
+    const lineGeometry = new THREE.BufferGeometry()
+    const pointsArray: THREE.Vector3[] = []
+    coordinate.forEach(row => {
+      const [x, y] = projection(row as [number, number]) as [number, number]
+      // 创建三维点
+      pointsArray.push(new THREE.Vector3(x, -y, 4))
+    })
+    // 放入多个点
+    lineGeometry.setFromPoints(pointsArray)
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: color,
+      opacity: 0.15,
+      transparent: true,
+    })
+    return new THREE.Line(lineGeometry, lineMaterial)
   }
 }
