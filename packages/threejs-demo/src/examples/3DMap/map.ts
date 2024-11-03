@@ -1,10 +1,11 @@
 import * as THREE from 'three'
 import {initReSize} from '../../utils/onresize'
-import ChinaData from '../../data/map/china-province.json'
 import * as d3 from 'd3'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import {CSM, CSMMode} from 'three/examples/jsm/csm/CSM.js'
 import {CSMHelper} from 'three/examples/jsm/csm/CSMHelper.js'
+import ChinaProvinceData from '../../data/map/china-province.json'
+import ChinaData from '../../data/map/china.json'
 
 const COLOR_ARR = ['#0465BD', '#357bcb', '#3a7abd']
 const HIGHT_COLOR = '#4fa5ff'
@@ -54,6 +55,12 @@ export default class Map {
     THREE.Object3D<THREE.Object3DEventMap>
   >[] = []
   material?: THREE.ShaderMaterial
+  lines: [number, number, number][] = []
+  geometry = new THREE.BufferGeometry()
+  opacitys?: Float32Array
+  indexBol: boolean = true
+  pointSpeed = 7
+  currentPos = 0
 
   constructor(private readonly container: HTMLDivElement) {
     this.width = this.container.clientWidth
@@ -84,7 +91,7 @@ export default class Map {
         50_00,
       )
 
-      this.camera.position.set(0, -10, 70)
+      this.camera.position.set(0, -10, 90)
       this.camera.lookAt(0, 0, 0)
 
       this.scene.position.y = 8
@@ -113,7 +120,7 @@ export default class Map {
       // 初始化控制器
       this.setController()
       //
-      this.setRaycaster()
+      // this.setRaycaster()
       // 初始化灯光
       this.setLight()
       // 初始化地图
@@ -190,6 +197,7 @@ export default class Map {
         }
       }
     }
+    this.animateAction()
     this.camera.updateMatrixWorld()
     // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
     this.csm?.update()
@@ -201,28 +209,22 @@ export default class Map {
     // 建一个空对象存放对象
     this.map = new THREE.Object3D()
 
-    ChinaData.features.forEach((item, index) => {
+    ChinaProvinceData.features.forEach(item => {
       // 定一个省份的3D对象
       const province = new THREE.Object3D()
       const coordinates = item.geometry.coordinates
       const type = item.geometry.type
-      // const color = COLOR_ARR[index % COLOR_ARR.length]
       const color = '#0465BD'
-
-      const lineColor = '#FFFFFF'
 
       // 多边形
       if (type === 'Polygon') {
         coordinates.forEach(coordinate => {
-          const mesh = this.drawExtrudeMesh(
-            coordinate as number[][],
+          const mesh = this.drawExtrudeMesh(coordinate as number[][], color)
+          const lineParams = {
+            coordinate,
             color,
-            index,
-          )
-          const lineMaterial = this.drawLineProvince(
-            coordinate as number[][],
-            lineColor,
-          )
+          } as {coordinate: number[][]; color: string}
+          const lineMaterial = this.drawLineProvince(lineParams)
           province.add(mesh)
           province.add(lineMaterial)
         })
@@ -232,15 +234,12 @@ export default class Map {
       if (type === 'MultiPolygon') {
         coordinates.forEach(multiPolygon => {
           multiPolygon.forEach(polygon => {
-            const mesh = this.drawExtrudeMesh(
-              polygon as number[][],
+            const mesh = this.drawExtrudeMesh(polygon as number[][], color)
+            const lineParams = {
+              coordinate: polygon,
               color,
-              index,
-            )
-            const lineMaterial = this.drawLineProvince(
-              polygon as number[][],
-              lineColor,
-            )
+            } as {coordinate: number[][]; color: string}
+            const lineMaterial = this.drawLineProvince(lineParams)
             province.add(mesh)
             province.add(lineMaterial)
           })
@@ -255,7 +254,56 @@ export default class Map {
       this.map?.add(province)
     })
 
+    const province = new THREE.Object3D()
+
+    ChinaData.features[0].geometry.coordinates.forEach(coordinate => {
+      // coordinate 多边形数据
+      coordinate.forEach(rows => {
+        const line = this.lineDraw(rows, 0xffffff)
+        province.add(line)
+      })
+    })
+
+    const positions = new Float32Array(this.lines.flat(1))
+    // 设置顶点
+    this.geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(positions, 3),
+    )
+    // 设置 粒子透明度为 0
+    this.opacitys = new Float32Array(positions.length).map(() => 0)
+    this.geometry.setAttribute(
+      'aOpacity',
+      new THREE.BufferAttribute(this.opacitys, 1),
+    )
+
+    this.scene?.add(province)
     this.scene?.add(this.map)
+
+    this.drawActionLine()
+  }
+
+  lineDraw(polygon: number[][], color: number | string) {
+    const zIndex = 4
+    const lineGeometry = new THREE.BufferGeometry()
+    const pointsArray: THREE.Vector3[] = []
+    polygon.forEach(row => {
+      const [x, y] = projection(row as [number, number]) as [number, number]
+      // 创建三维点
+      pointsArray.push(new THREE.Vector3(x, -y, zIndex))
+
+      if (this.indexBol) {
+        this.lines.push([x, -y, zIndex])
+      }
+    })
+    this.indexBol = false
+    // 放入多个点
+    lineGeometry.setFromPoints(pointsArray)
+
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: color,
+    })
+    return new THREE.Line(lineGeometry, lineMaterial)
   }
 
   setController() {
@@ -348,58 +396,8 @@ export default class Map {
     this.mouse.x = (clientX / width) * 2 - 1
     this.mouse.y = -(clientY / height) * 2 + 1
   }
-  createLine(points: THREE.Vector3[]) {
-    const curve = new THREE.CatmullRomCurve3(points, true, 'catmullrom', 0)
-
-    const geometry = new THREE.TubeGeometry(
-      curve,
-      Math.round(points.length * 0.5),
-      0.01,
-      8,
-      true,
-    )
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        time: {value: 0.0},
-        len: {value: 0.03},
-        size: {value: 0.02},
-        color1: {value: new THREE.Color('#fff')},
-        color2: {value: new THREE.Color('yellow')},
-      },
-      // 顶点着色器
-      vertexShader: `
-        uniform float time;
-        uniform float size;
-        uniform float len;
-        uniform vec3 color1;
-        uniform vec3 color2;
-        varying vec3 vColor;
-        void main() {
-          vColor = color1;
-          vec3 newPosition = position;
-          float d = uv.x - time;
-
-          if (abs(d) < len) {
-            newPosition = newPosition + normal * size;
-            vColor = color2;
-          }
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-        }
-      `,
-      // 片元着色器
-      fragmentShader: `
-        varying vec3 vColor;
-        void main() {
-          gl_FragColor =vec4(vColor, 1.0);
-        }
-      `,
-    })
-    this.material = material
-    const mesh = new THREE.Mesh(geometry, material)
-    return mesh
-  }
   // 平面
-  drawExtrudeMesh(coordinate: number[][], color: string, index: number) {
+  drawExtrudeMesh(coordinate: number[][], color: string) {
     const shape = new THREE.Shape()
     for (let i = 0; i < coordinate.length; i++) {
       const [x, y] = projection(coordinate[i] as [number, number]) as [
@@ -446,21 +444,105 @@ export default class Map {
 
     return mesh
   }
-  drawLineProvince(coordinate: number[][], color: string) {
+  drawLineProvince({
+    coordinate,
+    color,
+    zindex = 4,
+    transparent = false,
+  }: // isCountry = false,
+  {
+    coordinate: number[][]
+    color: string
+    zindex?: number
+    transparent?: boolean
+    // isCountry?: boolean // 是否是国家边界 用于划动态的线
+  }) {
     const lineGeometry = new THREE.BufferGeometry()
     const pointsArray: THREE.Vector3[] = []
     coordinate.forEach(row => {
       const [x, y] = projection(row as [number, number]) as [number, number]
       // 创建三维点
-      pointsArray.push(new THREE.Vector3(x, -y, 4))
+      pointsArray.push(new THREE.Vector3(x, -y, zindex))
     })
     // 放入多个点
     lineGeometry.setFromPoints(pointsArray)
     const lineMaterial = new THREE.LineBasicMaterial({
-      color: color,
+      color,
       opacity: 0.15,
-      transparent: true,
+      transparent,
     })
     return new THREE.Line(lineGeometry, lineMaterial)
+  }
+  drawActionLine() {
+    // 控制 颜色和粒子大小
+    const params = {
+      pointSize: 2.0,
+      pointColor: 'red',
+    }
+
+    const vertexShader = `
+      attribute float aOpacity;
+      uniform float uSize;
+      varying float vOpacity;
+
+      void main(){
+          gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);
+          gl_PointSize = uSize;
+
+          vOpacity=aOpacity;
+      }
+      `
+
+    const fragmentShader = `
+      varying float vOpacity;
+      uniform vec3 uColor;
+
+      float invert(float n){
+          return 1.-n;
+      }
+
+      void main(){
+        if(vOpacity <=0.2){
+            discard;
+        }
+        vec2 uv=vec2(gl_PointCoord.x,invert(gl_PointCoord.y));
+        vec2 cUv=2.*uv-1.;
+        vec4 color=vec4(1./length(cUv));
+        color*=vOpacity;
+        color.rgb*=uColor;
+        gl_FragColor=color;
+      }
+      `
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      transparent: true, // 设置透明
+      uniforms: {
+        uSize: {
+          value: params.pointSize,
+        },
+        uColor: {
+          value: new THREE.Color(params.pointColor),
+        },
+      },
+    })
+    const points = new THREE.Points(this.geometry, material)
+    this.scene?.add(points)
+  }
+  animateAction() {
+    if (!this.opacitys) return
+
+    if (this.geometry.attributes.position) {
+      this.currentPos += this.pointSpeed
+      for (let i = 0; i < this.pointSpeed; i++) {
+        this.opacitys[(this.currentPos - i) % this.lines.length] = 0
+      }
+
+      for (let i = 0; i < 200; i++) {
+        this.opacitys[(this.currentPos + i) % this.lines.length] =
+          i / 50 > 2 ? 2 : i / 50
+      }
+      this.geometry.attributes.aOpacity.needsUpdate = true
+    }
   }
 }
