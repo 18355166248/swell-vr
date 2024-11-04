@@ -7,7 +7,6 @@ import {CSMHelper} from 'three/examples/jsm/csm/CSMHelper.js'
 import ChinaProvinceData from '../../data/map/china-province.json'
 import ChinaData from '../../data/map/china.json'
 
-const COLOR_ARR = ['#0465BD', '#357bcb', '#3a7abd']
 const HIGHT_COLOR = '#4fa5ff'
 
 let csmHelper: CSMHelper
@@ -40,7 +39,7 @@ const projection = d3
 export default class Map {
   width: number
   height: number
-  renderer?: THREE.WebGLRenderer
+  renderer: THREE.WebGLRenderer | null = null
   destroyTasks: (() => void)[] = []
   scene?: THREE.Scene
   camera?: THREE.PerspectiveCamera
@@ -59,8 +58,9 @@ export default class Map {
   geometry = new THREE.BufferGeometry()
   opacitys?: Float32Array
   indexBol: boolean = true
-  pointSpeed = 7
+  pointSpeed = 10
   currentPos = 0
+  animationFrame: number | null = null
 
   constructor(private readonly container: HTMLDivElement) {
     this.width = this.container.clientWidth
@@ -118,14 +118,14 @@ export default class Map {
       this.container.appendChild(renderer.domElement)
 
       // 初始化控制器
-      this.setController()
+      // this.setController()
       //
       // this.setRaycaster()
       // 初始化灯光
-      this.setLight()
+      // this.setLight()
       // 初始化地图
       this.initMap()
-      this.setBackground()
+      // this.setBackground()
 
       this.render()
 
@@ -140,69 +140,22 @@ export default class Map {
       addEventListenerResize()
 
       this.destroyTasks.push(() => {
-        renderer?.dispose()
-        renderer?.forceContextLoss()
-        renderer?.domElement.remove()
-      })
+        this.animationFrame && cancelAnimationFrame(this.animationFrame)
+        this.animationFrame = null
 
-      this.destroyTasks.push(() => {
+        if (this.renderer) {
+          this.renderer.renderLists && this.renderer.renderLists.dispose()
+          this.renderer.dispose && this.renderer.dispose()
+          this.renderer.forceContextLoss()
+          this.renderer?.domElement.remove()
+          this.renderer = null
+        }
+
+        this.controls && this.controls.dispose()
         this.scene?.remove(...this.scene.children)
-      })
-
-      this.destroyTasks.push(() => {
         removeEventListenerResize()
       })
     }
-  }
-
-  render(): void {
-    if (!this.scene || !this.camera) return
-    requestAnimationFrame(this.render.bind(this))
-    if (this.raycaster && this.mouse) {
-      // 通过摄像机和鼠标位置更新射线
-      this.raycaster.setFromCamera(this.mouse, this.camera)
-
-      // 计算物体和射线的焦点
-      const intersects = this.raycaster.intersectObjects(this.scene.children)
-
-      // 恢复之前的高亮
-      this.activeIntersects.forEach(intersects => {
-        const {object} = intersects
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const {_color, material} = object
-        material[0].color.set(_color)
-        material[1].color.set(_color)
-      })
-
-      this.activeIntersects = []
-      // 改变颜色
-      for (let i = 0; i < intersects.length; i++) {
-        if (
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          intersects[i].object.material &&
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          intersects[i].object.material.length === 2
-        ) {
-          this.activeIntersects.push(intersects[i])
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          intersects[i].object.material[0].color.set(HIGHT_COLOR)
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          intersects[i].object.material[1].color.set(HIGHT_COLOR)
-          break // 只取第一个
-        }
-      }
-    }
-    this.animateAction()
-    this.camera.updateMatrixWorld()
-    // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
-    this.csm?.update()
-    this.controls?.update()
-    this.renderer?.render(this.scene, this.camera)
   }
 
   initMap() {
@@ -283,6 +236,56 @@ export default class Map {
     this.drawActionLine()
   }
 
+  render(): void {
+    if (!this.scene || !this.camera) return
+    if (this.raycaster && this.mouse) {
+      // 通过摄像机和鼠标位置更新射线
+      this.raycaster.setFromCamera(this.mouse, this.camera)
+
+      // 计算物体和射线的焦点
+      const intersects = this.raycaster.intersectObjects(this.scene.children)
+
+      // 恢复之前的高亮
+      this.activeIntersects.forEach(intersects => {
+        const {object} = intersects
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const {_color, material} = object
+        material[0].color.set(_color)
+        material[1].color.set(_color)
+      })
+
+      this.activeIntersects = []
+      // 改变颜色
+      for (let i = 0; i < intersects.length; i++) {
+        if (
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material &&
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material.length === 2
+        ) {
+          this.activeIntersects.push(intersects[i])
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material[0].color.set(HIGHT_COLOR)
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          intersects[i].object.material[1].color.set(HIGHT_COLOR)
+          break // 只取第一个
+        }
+      }
+    }
+    this.animateAction()
+    this.camera.updateMatrixWorld()
+    // 请注意，如果它被启用，你必须在你的动画循环里调用.update()
+    this.csm?.update()
+    this.controls?.update()
+    this.renderer?.render(this.scene, this.camera)
+    this.animationFrame = requestAnimationFrame(this.render.bind(this))
+  }
+
   lineDraw(polygon: number[][], color: number | string) {
     const zIndex = 4
     const lineGeometry = new THREE.BufferGeometry()
@@ -301,7 +304,7 @@ export default class Map {
     lineGeometry.setFromPoints(pointsArray)
 
     const lineMaterial = new THREE.LineBasicMaterial({
-      color: color,
+      color,
     })
     return new THREE.Line(lineGeometry, lineMaterial)
   }
@@ -310,7 +313,6 @@ export default class Map {
     if (!this.camera || !this.renderer) return
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.update()
     this.controls.minDistance = 20
     this.controls.maxDistance = 400
     // 使动画循环使用时阻尼或自转 意思是否有惯性
