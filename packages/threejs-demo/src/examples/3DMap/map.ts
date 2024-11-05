@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import {initReSize} from '../../utils/onresize'
 import * as d3 from 'd3'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import {CSM, CSMMode} from 'three/examples/jsm/csm/CSM.js'
@@ -13,6 +12,8 @@ import ChinaData from '../../data/map/china.json'
 const HIGHT_COLOR = 'rgb(165, 243, 252)'
 const materialColor = 'rgb(6, 182, 212)'
 const mapLineColor = 'rgb(6, 182, 212)'
+const ActiveColor = '#FFFFFF'
+
 let csmHelper: CSMHelper
 
 const params = {
@@ -34,10 +35,7 @@ const params = {
 }
 
 // 墨卡托投影转换
-const projection = d3
-  .geoMercator()
-  .center([116.412318, 39.909843])
-  .translate([0, 0])
+const projection = d3.geoMercator().center([104.065735, 36]).translate([0, 0])
 
 export default class Map {
   width: number
@@ -61,7 +59,7 @@ export default class Map {
   geometry = new THREE.BufferGeometry()
   opacitys?: Float32Array
   indexBol: boolean = true
-  pointSpeed = 10
+  pointSpeed = 4
   currentPos = 0
   animationFrame: number | null = null
 
@@ -94,7 +92,7 @@ export default class Map {
         50_00,
       )
 
-      this.camera.position.set(0, -10, 90)
+      this.camera.position.set(0, -30, 190)
       this.camera.lookAt(0, 0, 0)
 
       this.scene.position.y = 8
@@ -134,14 +132,6 @@ export default class Map {
 
       this.container.appendChild(renderer.domElement)
 
-      const {addEventListenerResize, removeEventListenerResize} = initReSize(
-        this.camera,
-        renderer,
-        this.render.bind(this),
-      )
-
-      addEventListenerResize()
-
       this.destroyTasks.push(() => {
         this.animationFrame && cancelAnimationFrame(this.animationFrame)
         this.animationFrame = null
@@ -156,7 +146,6 @@ export default class Map {
 
         this.controls && this.controls.dispose()
         this.scene?.remove(...this.scene.children)
-        removeEventListenerResize()
       })
     }
   }
@@ -165,6 +154,7 @@ export default class Map {
     // 建一个空对象存放对象
     this.map = new THREE.Object3D()
 
+    // 省级地图
     ChinaProvinceData.features.forEach(item => {
       // 定一个省份的3D对象
       const province = new THREE.Object3D()
@@ -178,6 +168,7 @@ export default class Map {
             coordinate,
             color: mapLineColor,
             transparent: true,
+            zIndex: 4.1,
           } as {coordinate: number[][]; color: string}
           const lineMaterial = this.drawLineProvince(lineParams)
           province.add(lineMaterial)
@@ -192,6 +183,7 @@ export default class Map {
               coordinate: polygon,
               color: mapLineColor,
               transparent: true,
+              zIndex: 4.1,
             } as {coordinate: number[][]; color: string}
             const lineMaterial = this.drawLineProvince(lineParams)
             province.add(lineMaterial)
@@ -208,6 +200,7 @@ export default class Map {
     })
     this.scene?.add(this.map)
 
+    // 国家地图
     const province = new THREE.Object3D()
     ChinaData.features[0].geometry.coordinates.forEach(coordinate => {
       // coordinate 多边形数据
@@ -220,19 +213,6 @@ export default class Map {
       })
     })
     this.scene?.add(province)
-
-    const positions = new Float32Array(this.lines.flat(1))
-    // 设置顶点
-    this.geometry.setAttribute(
-      'position',
-      new THREE.BufferAttribute(positions, 3),
-    )
-    // 设置 粒子透明度为 0
-    this.opacitys = new Float32Array(positions.length).map(() => 0)
-    this.geometry.setAttribute(
-      'aOpacity',
-      new THREE.BufferAttribute(this.opacitys, 1),
-    )
 
     this.drawActionLine()
   }
@@ -330,7 +310,7 @@ export default class Map {
     lineGeometry.setFromPoints(pointsArray)
     const lineMaterial = new THREE.LineBasicMaterial({
       color,
-      opacity: 0.15,
+      opacity: 1,
       transparent,
     })
     return new THREE.Line(lineGeometry, lineMaterial)
@@ -460,11 +440,18 @@ export default class Map {
     return mesh
   }
   drawActionLine() {
-    // 控制 颜色和粒子大小
-    const params = {
-      pointSize: 2.0,
-      pointColor: 'red',
-    }
+    const positions = new Float32Array(this.lines.flat(1))
+    // 设置顶点
+    this.geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(positions, 3),
+    )
+    // 设置 粒子透明度为 0
+    this.opacitys = new Float32Array(positions.length).map(() => 0)
+    this.geometry.setAttribute(
+      'aOpacity',
+      new THREE.BufferAttribute(this.opacitys, 1),
+    )
 
     const vertexShader = `
       attribute float aOpacity;
@@ -502,13 +489,13 @@ export default class Map {
     const material = new THREE.ShaderMaterial({
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
-      transparent: true, // 设置透明
+      // transparent: true, // 设置透明
       uniforms: {
         uSize: {
-          value: params.pointSize,
+          value: 4,
         },
         uColor: {
-          value: new THREE.Color(params.pointColor),
+          value: new THREE.Color(ActiveColor),
         },
       },
     })
