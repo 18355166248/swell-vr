@@ -7,8 +7,12 @@ import {CSMHelper} from 'three/examples/jsm/csm/CSMHelper.js'
 import ChinaProvinceData from '../../data/map/china-province.json'
 import ChinaData from '../../data/map/china.json'
 
-const HIGHT_COLOR = '#4fa5ff'
-
+// text-cyan-200	color: rgb(165, 243, 252);
+// text-cyan-500	color: rgb(6, 182, 212);
+// text-cyan-950	color: rgb(8, 51, 68);
+const HIGHT_COLOR = 'rgb(165, 243, 252)'
+const materialColor = 'rgb(6, 182, 212)'
+const mapLineColor = 'rgb(6, 182, 212)'
 let csmHelper: CSMHelper
 
 const params = {
@@ -32,8 +36,7 @@ const params = {
 // 墨卡托投影转换
 const projection = d3
   .geoMercator()
-  .center([104.0, 37.5])
-  .scale(80)
+  .center([116.412318, 39.909843])
   .translate([0, 0])
 
 export default class Map {
@@ -81,8 +84,8 @@ export default class Map {
 
       this.scene = new THREE.Scene()
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
-      this.scene.add(ambientLight)
+      // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+      // this.scene.add(ambientLight)
 
       this.camera = new THREE.PerspectiveCamera(
         60,
@@ -118,13 +121,13 @@ export default class Map {
       this.container.appendChild(renderer.domElement)
 
       // 初始化控制器
-      // this.setController()
-      //
-      // this.setRaycaster()
-      // 初始化灯光
-      // this.setLight()
+      this.setController()
       // 初始化地图
       this.initMap()
+
+      // 初始化灯光
+      // this.setLight()
+      // this.setRaycaster()
       // this.setBackground()
 
       this.render()
@@ -167,18 +170,16 @@ export default class Map {
       const province = new THREE.Object3D()
       const coordinates = item.geometry.coordinates
       const type = item.geometry.type
-      const color = '#0465BD'
 
       // 多边形
       if (type === 'Polygon') {
         coordinates.forEach(coordinate => {
-          const mesh = this.drawExtrudeMesh(coordinate as number[][], color)
           const lineParams = {
             coordinate,
-            color,
+            color: mapLineColor,
+            transparent: true,
           } as {coordinate: number[][]; color: string}
           const lineMaterial = this.drawLineProvince(lineParams)
-          province.add(mesh)
           province.add(lineMaterial)
         })
       }
@@ -187,13 +188,12 @@ export default class Map {
       if (type === 'MultiPolygon') {
         coordinates.forEach(multiPolygon => {
           multiPolygon.forEach(polygon => {
-            const mesh = this.drawExtrudeMesh(polygon as number[][], color)
             const lineParams = {
               coordinate: polygon,
-              color,
+              color: mapLineColor,
+              transparent: true,
             } as {coordinate: number[][]; color: string}
             const lineMaterial = this.drawLineProvince(lineParams)
-            province.add(mesh)
             province.add(lineMaterial)
           })
         })
@@ -206,16 +206,20 @@ export default class Map {
 
       this.map?.add(province)
     })
+    this.scene?.add(this.map)
 
     const province = new THREE.Object3D()
-
     ChinaData.features[0].geometry.coordinates.forEach(coordinate => {
       // coordinate 多边形数据
       coordinate.forEach(rows => {
         const line = this.lineDraw(rows, 0xffffff)
+        // 设置拉伸材质
+        const mesh = this.drawExtrudeMesh(rows, materialColor)
         province.add(line)
+        province.add(mesh)
       })
     })
+    this.scene?.add(province)
 
     const positions = new Float32Array(this.lines.flat(1))
     // 设置顶点
@@ -229,9 +233,6 @@ export default class Map {
       'aOpacity',
       new THREE.BufferAttribute(this.opacitys, 1),
     )
-
-    this.scene?.add(province)
-    this.scene?.add(this.map)
 
     this.drawActionLine()
   }
@@ -285,7 +286,6 @@ export default class Map {
     this.renderer?.render(this.scene, this.camera)
     this.animationFrame = requestAnimationFrame(this.render.bind(this))
   }
-
   lineDraw(polygon: number[][], color: number | string) {
     const zIndex = 4
     const lineGeometry = new THREE.BufferGeometry()
@@ -308,7 +308,33 @@ export default class Map {
     })
     return new THREE.Line(lineGeometry, lineMaterial)
   }
-
+  drawLineProvince({
+    coordinate,
+    color,
+    zIndex = 4,
+    transparent = false,
+  }: {
+    coordinate: number[][]
+    color: string
+    zIndex?: number
+    transparent?: boolean
+  }) {
+    const lineGeometry = new THREE.BufferGeometry()
+    const pointsArray: THREE.Vector3[] = []
+    coordinate.forEach(row => {
+      const [x, y] = projection(row as [number, number]) as [number, number]
+      // 创建三维点
+      pointsArray.push(new THREE.Vector3(x, -y, zIndex))
+    })
+    // 放入多个点
+    lineGeometry.setFromPoints(pointsArray)
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color,
+      opacity: 0.15,
+      transparent,
+    })
+    return new THREE.Line(lineGeometry, lineMaterial)
+  }
   setController() {
     if (!this.camera || !this.renderer) return
 
@@ -320,7 +346,6 @@ export default class Map {
     //是否可以缩放
     this.controls.enableZoom = true
   }
-
   setLight() {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.2) // 环境光
 
@@ -362,7 +387,6 @@ export default class Map {
     this.scene?.add(pointLight2)
     this.scene?.add(pointLight3)
   }
-
   setBackground() {
     const groundMaterial = new THREE.MeshStandardMaterial({
       color: 0x031837,
@@ -379,7 +403,6 @@ export default class Map {
     ground.receiveShadow = true
     this.scene?.add(ground)
   }
-
   setRaycaster() {
     // 光线投射用于进行鼠标拾取
     this.raycaster = new THREE.Raycaster()
@@ -399,7 +422,7 @@ export default class Map {
     this.mouse.y = -(clientY / height) * 2 + 1
   }
   // 平面
-  drawExtrudeMesh(coordinate: number[][], color: string) {
+  drawExtrudeMesh(coordinate: number[][], color: string | number) {
     const shape = new THREE.Shape()
     for (let i = 0; i < coordinate.length; i++) {
       const [x, y] = projection(coordinate[i] as [number, number]) as [
@@ -423,57 +446,18 @@ export default class Map {
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
 
     // 平面部分材质
-    const material = new THREE.MeshStandardMaterial({
-      metalness: 1,
-      color: color,
-    })
-    // 拉高部分材质
-    const material1 = new THREE.MeshStandardMaterial({
-      metalness: 1,
-      roughness: 1,
-      color: color,
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.5,
     })
 
-    const mesh = new THREE.Mesh(geometry, [material, material1])
+    const mesh = new THREE.Mesh(geometry, material)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     mesh._color = color
 
-    // 有层次感
-    // if (index % 2 === 0) {
-    //   mesh.scale.set(1, 1, 1.2)
-    // }
-
     return mesh
-  }
-  drawLineProvince({
-    coordinate,
-    color,
-    zindex = 4,
-    transparent = false,
-  }: // isCountry = false,
-  {
-    coordinate: number[][]
-    color: string
-    zindex?: number
-    transparent?: boolean
-    // isCountry?: boolean // 是否是国家边界 用于划动态的线
-  }) {
-    const lineGeometry = new THREE.BufferGeometry()
-    const pointsArray: THREE.Vector3[] = []
-    coordinate.forEach(row => {
-      const [x, y] = projection(row as [number, number]) as [number, number]
-      // 创建三维点
-      pointsArray.push(new THREE.Vector3(x, -y, zindex))
-    })
-    // 放入多个点
-    lineGeometry.setFromPoints(pointsArray)
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color,
-      opacity: 0.15,
-      transparent,
-    })
-    return new THREE.Line(lineGeometry, lineMaterial)
   }
   drawActionLine() {
     // 控制 颜色和粒子大小
@@ -532,19 +516,19 @@ export default class Map {
     this.scene?.add(points)
   }
   animateAction() {
-    if (!this.opacitys) return
+    if (!this.opacitys || !this.geometry.attributes.position) return
 
-    if (this.geometry.attributes.position) {
-      this.currentPos += this.pointSpeed
-      for (let i = 0; i < this.pointSpeed; i++) {
-        this.opacitys[(this.currentPos - i) % this.lines.length] = 0
-      }
+    this.currentPos += this.pointSpeed
+    this.currentPos = this.currentPos % this.lines.length
 
-      for (let i = 0; i < 200; i++) {
-        this.opacitys[(this.currentPos + i) % this.lines.length] =
-          i / 50 > 2 ? 2 : i / 50
-      }
-      this.geometry.attributes.aOpacity.needsUpdate = true
+    for (let i = 0; i < this.pointSpeed; i++) {
+      this.opacitys[(this.currentPos - i) % this.lines.length] = 0
     }
+
+    for (let i = 0; i < 200; i++) {
+      this.opacitys[(this.currentPos + i) % this.lines.length] =
+        i / 50 > 2 ? 2 : i / 50
+    }
+    this.geometry.attributes.aOpacity.needsUpdate = true
   }
 }
