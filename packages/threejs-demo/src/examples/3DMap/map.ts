@@ -172,7 +172,6 @@ export default class Map {
             zIndex: 4.1,
           } as {coordinate: number[][]; color: string}
           const lineMaterial = this.drawLineProvince(lineParams)
-          const mesh = this.drawExtrudeMesh(coordinate, materialColor)
           province.add(lineMaterial)
         })
       }
@@ -204,17 +203,23 @@ export default class Map {
 
     // 国家地图
     const province = new THREE.Object3D()
+    const provinceMaterials = new THREE.Object3D()
     ChinaData.features[0].geometry.coordinates.forEach(coordinate => {
       // coordinate 多边形数据
       coordinate.forEach(rows => {
         const line = this.lineDraw(rows, 0xffffff)
         // 设置拉伸材质
         const mesh = this.drawExtrudeMesh(rows, materialColor)
+
+        const mesh2 = this.drawMesh(rows, 'red')
+
         province.add(line)
         province.add(mesh)
+        provinceMaterials.add(mesh2)
       })
     })
     this.scene?.add(province)
+    this.scene?.add(provinceMaterials)
 
     this.drawActionLine()
   }
@@ -403,7 +408,7 @@ export default class Map {
     this.mouse.x = (clientX / width) * 2 - 1
     this.mouse.y = -(clientY / height) * 2 + 1
   }
-  
+
   // 平面
   drawExtrudeMesh(coordinate: number[][], color: string | number) {
     const shape = new THREE.Shape()
@@ -433,6 +438,39 @@ export default class Map {
       color,
       transparent: true,
       opacity: 0.5,
+    })
+
+    const mesh = new THREE.Mesh(geometry, material)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    mesh._color = color
+
+    return mesh
+  }
+  drawMesh(coordinate: number[][], color: string | number) {
+    const shape = new THREE.Shape()
+    for (let i = 0; i < coordinate.length; i++) {
+      const [x, y] = projection(coordinate[i] as [number, number]) as [
+        number,
+        number,
+      ]
+      if (i === 0) {
+        shape.moveTo(x, -y)
+      }
+      shape.lineTo(x, -y)
+    }
+
+    // 挤压缓冲几何体（ExtrudeGeometry） 从一个形状路径中，挤压出一个BufferGeometry。
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: 0.1,
+      bevelEnabled: false,
+      bevelSegments: 1,
+      bevelThickness: 0.2,
+    })
+
+    // 平面部分材质
+    const material = new THREE.MeshBasicMaterial({
+      color,
     })
 
     const mesh = new THREE.Mesh(geometry, material)
