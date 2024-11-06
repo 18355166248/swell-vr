@@ -211,7 +211,7 @@ export default class Map {
         // 设置拉伸材质
         const mesh = this.drawExtrudeMesh(rows, materialColor)
 
-        const mesh2 = this.drawMesh(rows, 'red')
+        const mesh2 = this.drawMesh(rows, mapLineColor)
 
         province.add(line)
         province.add(mesh)
@@ -477,6 +477,7 @@ export default class Map {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     mesh._color = color
+    mesh.position.z = 4
 
     return mesh
   }
