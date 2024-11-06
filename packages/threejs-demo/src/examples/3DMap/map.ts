@@ -13,6 +13,7 @@ const HIGHT_COLOR = 'rgb(165, 243, 252)'
 const materialColor = 'rgb(6, 182, 212)'
 const mapLineColor = 'rgb(6, 182, 212)'
 const ActiveColor = '#FFFFFF'
+const ActiveSize = 2
 
 let csmHelper: CSMHelper
 
@@ -59,7 +60,7 @@ export default class Map {
   geometry = new THREE.BufferGeometry()
   opacitys?: Float32Array
   indexBol: boolean = true
-  pointSpeed = 4
+  pointSpeed = 6
   currentPos = 0
   animationFrame: number | null = null
 
@@ -171,6 +172,7 @@ export default class Map {
             zIndex: 4.1,
           } as {coordinate: number[][]; color: string}
           const lineMaterial = this.drawLineProvince(lineParams)
+          const mesh = this.drawExtrudeMesh(coordinate, materialColor)
           province.add(lineMaterial)
         })
       }
@@ -401,6 +403,7 @@ export default class Map {
     this.mouse.x = (clientX / width) * 2 - 1
     this.mouse.y = -(clientY / height) * 2 + 1
   }
+  
   // 平面
   drawExtrudeMesh(coordinate: number[][], color: string | number) {
     const shape = new THREE.Shape()
@@ -492,7 +495,7 @@ export default class Map {
       // transparent: true, // 设置透明
       uniforms: {
         uSize: {
-          value: 4,
+          value: ActiveSize,
         },
         uColor: {
           value: new THREE.Color(ActiveColor),
