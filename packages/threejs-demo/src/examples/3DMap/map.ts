@@ -12,6 +12,7 @@ import ChinaData from '../../data/map/china.json'
 const HIGHT_COLOR = 'rgb(165, 243, 252)'
 const materialColor = 'rgb(6, 182, 212)'
 const mapLineColor = 'rgb(6, 182, 212)'
+const planeColor = 'rgb(21, 94, 117)'
 const ActiveColor = '#FFFFFF'
 const ActiveSize = 2
 
@@ -161,7 +162,7 @@ export default class Map {
       const province = new THREE.Object3D()
       const coordinates = item.geometry.coordinates
       const type = item.geometry.type
-
+      const provinceIndex = 4.15
       // 多边形
       if (type === 'Polygon') {
         coordinates.forEach(coordinate => {
@@ -169,7 +170,7 @@ export default class Map {
             coordinate,
             color: mapLineColor,
             transparent: true,
-            zIndex: 4.1,
+            zIndex: provinceIndex,
           } as {coordinate: number[][]; color: string}
           const lineMaterial = this.drawLineProvince(lineParams)
           province.add(lineMaterial)
@@ -184,7 +185,7 @@ export default class Map {
               coordinate: polygon,
               color: mapLineColor,
               transparent: true,
-              zIndex: 4.1,
+              zIndex: provinceIndex,
             } as {coordinate: number[][]; color: string}
             const lineMaterial = this.drawLineProvince(lineParams)
             province.add(lineMaterial)
@@ -211,7 +212,7 @@ export default class Map {
         // 设置拉伸材质
         const mesh = this.drawExtrudeMesh(rows, materialColor)
 
-        const mesh2 = this.drawMesh(rows, mapLineColor)
+        const mesh2 = this.drawMesh(rows, planeColor)
 
         province.add(line)
         province.add(mesh)
