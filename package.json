@@ -32,7 +32,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.4.4",
     "@commitlint/config-conventional": "^17.4.4",
-    "@types/three": "^0.158.2",
+    "@types/three": "^0.169.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.36.0",
     "husky": "^8.0.3",
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "dat.gui": "^0.7.9",
-    "three": "^0.158.0"
+    "three": "^0.170.0"
   },
   "engines": {
     "node": ">=20.17.0"

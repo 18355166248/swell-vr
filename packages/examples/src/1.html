@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- 具体路径配置，你根据自己文件目录设置，我的是课件中源码形式 -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../../../node_modules/three/build/three.module.js"
+        }
+      }
+    </script>
+
+    <!-- 配置type="importmap",.html文件也能和项目开发环境一样方式引入threejs -->
+    <script type="module">
+      import * as THREE from 'three'
+      // 浏览器控制台测试，是否引入成功
+      console.log(THREE.Scene)
+    </script>
+  </body>
+</html>
