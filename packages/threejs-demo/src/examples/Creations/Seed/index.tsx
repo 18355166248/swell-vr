@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import {initReSize} from '../../utils/onresize'
+import {initReSize} from '../../../utils/onresize'
 import SeedScene from './scene'
 import {useLayoutEffect, useRef} from 'react'
 

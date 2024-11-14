@@ -3,11 +3,12 @@ import App from './App'
 import {ElementType, lazy} from 'react'
 
 const examples = import.meta.glob<ElementType>(
-  ['./examples/*/index.ts', './examples/*/index.tsx'],
+  ['./examples/Creations/*/index.ts', './examples/Creations/*/index.tsx'],
   {
     eager: true,
   },
 )
+
 const componentEnum = Object.keys(examples)
   .map(key => {
     const res = key.match(/^\.\/examples\/(.*)\/index\.[tsx|ts]/)

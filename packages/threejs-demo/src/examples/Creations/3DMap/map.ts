@@ -3,8 +3,8 @@ import * as d3 from 'd3'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import {CSM, CSMMode} from 'three/examples/jsm/csm/CSM.js'
 import {CSMHelper} from 'three/examples/jsm/csm/CSMHelper.js'
-import ChinaProvinceData from '../../data/map/china-province.json'
-import ChinaData from '../../data/map/china.json'
+import ChinaProvinceData from '../../../data/map/china-province.json'
+import ChinaData from '../../../data/map/china.json'
 
 // text-cyan-200	color: rgb(165, 243, 252);
 // text-cyan-500	color: rgb(6, 182, 212);

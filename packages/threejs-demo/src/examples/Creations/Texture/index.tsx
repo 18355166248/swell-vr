@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import {initReSize} from '../../utils/onresize'
+import {initReSize} from '../../../utils/onresize'
 import {RGBELoader} from 'three/addons/loaders/RGBELoader.js'
 import {useLayoutEffect, useRef} from 'react'
 

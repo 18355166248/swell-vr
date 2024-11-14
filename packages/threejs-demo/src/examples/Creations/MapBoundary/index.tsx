@@ -1,5 +1,5 @@
 import {useLayoutEffect, useRef} from 'react'
-import ThreeBase from '../../utils/ThreeBase'
+import ThreeBase from '../../../utils/ThreeBase'
 import * as THREE from 'three'
 import guangzhouData from './guangzhou.json'
 import {initGeoFun, latLng2px} from './geoUtil'

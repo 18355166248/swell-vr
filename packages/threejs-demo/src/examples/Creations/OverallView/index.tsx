@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import {useLayoutEffect, useRef} from 'react'
-import {initReSize} from '../../utils/onresize'
+import {initReSize} from '../../../utils/onresize'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import initGUI from './GUI'
 import XmCenterImg from './full-view.jpg'

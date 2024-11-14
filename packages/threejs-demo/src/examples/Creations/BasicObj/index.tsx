@@ -1,13 +1,12 @@
 import * as THREE from 'three'
 import {useLayoutEffect, useRef} from 'react'
-import './index.less'
-import {initReSize} from '../../utils/onresize'
+import {initReSize} from '../../../utils/onresize'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
-import {initEarth} from './earth'
 import {initLight} from './light'
-import {initMoon} from './moon'
-import initCSSRender from './CSS2D'
-import initGUI from './GUI'
+import {initSphere} from './Shpere'
+import {initTorus} from './Torus'
+import {initIcosahedron} from './Icosahedron'
+import {initStars} from './Stars'
 
 export default function Css2DLabel() {
   const domRef = useRef<HTMLDivElement>(null)
@@ -38,41 +37,51 @@ function initCss2DLabel(dom: HTMLElement) {
     10_00,
   )
   const renderer = new THREE.WebGLRenderer()
-  const textureLoader = new THREE.TextureLoader()
-  const clock = new THREE.Clock()
 
   camera.layers.enableAll()
 
   // scene
-  const axesHelper = new THREE.AxesHelper(5)
-  axesHelper.layers.enableAll()
-  scene.add(axesHelper)
-  const earth = initEarth({textureLoader})
-  earth.layers.enableAll()
-  scene.add(earth)
-  const moon = initMoon({textureLoader})
-  scene.add(moon)
+  scene.fog = new THREE.Fog(0x1a1a1a, 1, 1000)
   const light = initLight()
   light.layers.enableAll()
   scene.add(light)
-  moon.layers.enableAll()
+  const sphere = initSphere()
+  scene.add(sphere)
+  const torus = initTorus()
+  scene.add(torus)
+  const icosahedronGroup = initIcosahedron()
+  scene.add(icosahedronGroup)
+  const stars = initStars()
+  scene.add(stars)
 
   // camera
-  camera.position.set(6, 3, -10)
-  camera.lookAt(new THREE.Vector3(0, 0, 0))
-
-  // 初始化文字容器
-  const {CSSRender, destroy: destroyCssRender} = initCSSRender()
-  dom.appendChild(CSSRender.domElement)
+  camera.position.set(40, 40, 400)
+  // camera.lookAt(new THREE.Vector3(0, 0, 0))
 
   dom.appendChild(renderer.domElement)
 
+  const axis = new THREE.Vector3(0, 0, 1)
+  let rot = 0
+  // 动画
   const render = () => {
-    const elapsed = clock.getElapsedTime()
-    moon.position.set(Math.sin(elapsed) * 5, 0, Math.cos(elapsed) * 5)
     renderer.render(scene, camera)
-    // 循环渲染
-    CSSRender.render(scene, camera)
+
+    sphere.rotation.y += 0.005
+
+    torus.rotateOnAxis(axis, Math.PI / 400)
+
+    // 给网格模型添加一个转动动画
+    rot += Math.random() * 0.8
+    const radian = (rot * Math.PI) / 180
+    icosahedronGroup.position.x = 250 * Math.sin(radian)
+    icosahedronGroup.position.y = 100 * Math.sin(radian)
+    icosahedronGroup.position.z = -1000 * Math.sin(radian)
+    icosahedronGroup.rotation.x += 0.005
+    icosahedronGroup.rotation.y += 0.005
+    icosahedronGroup.rotation.z += 0.005
+
+    stars.rotation.y += 0.0009
+    stars.rotation.z += 0.0003
   }
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -80,12 +89,11 @@ function initCss2DLabel(dom: HTMLElement) {
   renderer.setAnimationLoop(render)
   // renderer.setClearColor(0x7ec0ee, 1)
 
-  const gui = initGUI(camera, dom)
-
   // control  注意: 这里的控制器交给 CSSRender 因为层级更高
-  const controls = new OrbitControls(camera, CSSRender.domElement)
-  controls.minDistance = 5
-  controls.maxDistance = 100
+  const controls = new OrbitControls(camera, renderer.domElement)
+  controls.minDistance = 100
+  controls.maxDistance = 800
+  controls.enableDamping = true
 
   const {addEventListenerResize} = initReSize(camera, renderer, render)
 
@@ -100,10 +108,6 @@ function initCss2DLabel(dom: HTMLElement) {
     renderer.forceContextLoss()
     renderer.domElement.remove()
   })
-  destroyTasks.push(() => {
-    gui.destroy()
-  })
-  destroyTasks.push(destroyCssRender)
 
   return {destroyTasks}
 }
