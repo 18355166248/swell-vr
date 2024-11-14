@@ -2,14 +2,19 @@ import {Suspense, useEffect, useMemo} from 'react'
 import './app.less'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {routerKeys} from './router'
+import {recurve} from './utils/recurve'
 
 const prefixTitle = 'ThreeJS-Demo'
 
 function App() {
   const keys = routerKeys
-  console.log('🚀 ~ App ~ keys:', keys)
   const location = useLocation()
   const navigate = useNavigate()
+
+  const paths = useMemo(() => {
+    return recurve()
+  }, [keys])
+  console.log('🚀 ~ paths ~ paths:', paths)
 
   useEffect(() => {
     if (location.pathname === '/') {
