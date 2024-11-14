@@ -3,7 +3,7 @@ import App from './App'
 import {ElementType, lazy} from 'react'
 
 const examples = import.meta.glob<ElementType>(
-  ['./examples/Creations/*/index.ts', './examples/Creations/*/index.tsx'],
+  ['./examples/*/*/index.ts', './examples/*/*/index.tsx'],
   {
     eager: true,
   },

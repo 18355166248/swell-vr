@@ -7,6 +7,7 @@ const prefixTitle = 'ThreeJS-Demo'
 
 function App() {
   const keys = routerKeys
+  console.log('🚀 ~ App ~ keys:', keys)
   const location = useLocation()
   const navigate = useNavigate()
 
