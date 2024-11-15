@@ -3,6 +3,7 @@ import './app.less'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {routerKeys} from './router'
 import {recurve} from './utils/recurve'
+import {Menu, MenuProps} from 'antd'
 
 const prefixTitle = 'ThreeJS-Demo'
 
@@ -12,7 +13,7 @@ function App() {
   const navigate = useNavigate()
 
   const paths = useMemo(() => {
-    return recurve()
+    return recurve(keys)
   }, [keys])
   console.log('🚀 ~ paths ~ paths:', paths)
 
@@ -30,13 +31,29 @@ function App() {
     document.title = `${prefixTitle}: ${active}`
   }, [active])
 
-  function goRoute(key: string) {
-    navigate(`/${key}`)
+  const onClick: MenuProps['onClick'] = e => {
+    console.log('click ', e)
+    // setCurrent(e.key)
+    navigate(e.key)
   }
 
   return (
     <div className="app">
-      <div className="tab">
+      <div className="left-menu fixed z-10 left-0 top-0 h-full">
+        <div className="inline-menu h-full  bg-[#001529] overflow-y-auto">
+          <Menu
+            mode="inline"
+            theme="dark"
+            onClick={onClick}
+            defaultSelectedKeys={['1']}
+            defaultOpenKeys={['sub1']}
+            items={paths}
+            inlineCollapsed
+          />
+          <div className="h-4"></div>
+        </div>
+      </div>
+      {/* <div className="tab">
         {keys.map(key => (
           <div
             className={`tab-item ${active === key ? 'active' : ''}`}
@@ -46,7 +63,7 @@ function App() {
             {key}
           </div>
         ))}
-      </div>
+      </div> */}
       <div className="content w-full h-full">
         <Suspense fallback={<div></div>}>
           <Outlet />

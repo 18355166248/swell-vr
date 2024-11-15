@@ -4,6 +4,17 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  .left-menu {
+    .inline-menu {
+      transition: transform 0.3s;
+      transform: translateX(-80px);
+    }
+    &:hover {
+      .inline-menu {
+        transform: translateX(0);
+      }
+    }
+  }
   .tab {
     position: fixed;
     top: 0;
