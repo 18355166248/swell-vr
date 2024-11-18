@@ -82,17 +82,33 @@ function One() {
 
     const obj = {...cameraPosition}
     // gui界面上增加交互界面，改变obj对应属性
-    gui.add(obj, 'x', 0, 300).onChange(function (value: number) {
-      cameraPosition.x = value
-      camera.position.x = value
-    })
-    gui.add(obj, 'y', 0, 300).onChange(function (value: number) {
-      cameraPosition.y = value
-      camera.position.y = value
-    })
-    gui.add(obj, 'z', 0, 300).onChange(function (value: number) {
-      cameraPosition.z = value
-      camera.position.z = value
+    gui
+      .add(obj, 'x', 0, 300)
+      .name('相机X')
+      .onChange(function (value: number) {
+        cameraPosition.x = value
+        camera.position.x = value
+      })
+    gui
+      .add(obj, 'y', 0, 300)
+      .name('相机Y')
+      .onChange(function (value: number) {
+        cameraPosition.y = value
+        camera.position.y = value
+      })
+    gui
+      .add(obj, 'z', 0, 300)
+      .name('相机Z')
+      .onChange(function (value: number) {
+        cameraPosition.z = value
+        camera.position.z = value
+      })
+    const obj1 = {
+      color: 0x00ffff,
+    }
+    // .addColor()生成颜色值改变的交互界面
+    gui.addColor(obj1, 'color').onChange(function (value) {
+      material.color.set(value)
     })
 
     // const clock = new THREE.Clock()
