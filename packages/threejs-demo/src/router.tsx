@@ -2,12 +2,9 @@ import {createBrowserRouter} from 'react-router-dom'
 import App from './App'
 import {ElementType, lazy} from 'react'
 
-const examples = import.meta.glob<ElementType>(
-  ['./examples/*/*/index.ts', './examples/*/*/index.tsx'],
-  {
-    eager: true,
-  },
-)
+const examples = import.meta.glob<ElementType>(['./examples/**/index.tsx'], {
+  eager: true,
+})
 
 const componentEnum = Object.keys(examples)
   .map(key => {

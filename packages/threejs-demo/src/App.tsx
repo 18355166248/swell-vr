@@ -5,7 +5,7 @@ import {routerKeys} from './router'
 import {recurve} from './utils/recurve'
 import {Menu, MenuProps} from 'antd'
 
-const prefixTitle = 'ThreeJS-Demo'
+const prefixTitle = 'ThreeJS'
 
 function App() {
   const keys = routerKeys
@@ -15,7 +15,6 @@ function App() {
   const paths = useMemo(() => {
     return recurve(keys)
   }, [keys])
-  console.log('🚀 ~ paths ~ paths:', paths)
 
   useEffect(() => {
     if (location.pathname === '/') {
