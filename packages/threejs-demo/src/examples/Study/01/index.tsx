@@ -6,6 +6,13 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 //引入性能监视器stats.js
 import Stats from 'three/addons/libs/stats.module.js'
 import {Slider} from 'antd'
+import * as dat from 'dat.gui'
+
+const cameraPosition = {
+  x: 150,
+  y: 150,
+  z: 150,
+}
 
 function One() {
   const oneRef = React.useRef<HTMLDivElement>(null)
@@ -23,7 +30,7 @@ function One() {
     const height = oneRef.current.clientHeight
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(100, width / height, 0.5, 3000)
-    camera.position.set(150, 150, 150)
+    camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
     // camera.position.set(10, 0, 0)
     camera.lookAt(lookAt.x, lookAt.y, lookAt.z)
 
@@ -69,6 +76,25 @@ function One() {
 
     const controls = new OrbitControls(camera, renderer.domElement)
 
+    const gui = new dat.GUI()
+    gui.domElement.style.position = 'fixed'
+    gui.domElement.style.right = '200px'
+
+    const obj = {...cameraPosition}
+    // gui界面上增加交互界面，改变obj对应属性
+    gui.add(obj, 'x', 0, 300).onChange(function (value: number) {
+      cameraPosition.x = value
+      camera.position.x = value
+    })
+    gui.add(obj, 'y', 0, 300).onChange(function (value: number) {
+      cameraPosition.y = value
+      camera.position.y = value
+    })
+    gui.add(obj, 'z', 0, 300).onChange(function (value: number) {
+      cameraPosition.z = value
+      camera.position.z = value
+    })
+
     // const clock = new THREE.Clock()
 
     function render() {
@@ -112,6 +138,7 @@ function One() {
       window.removeEventListener('resize', onResize)
       stats.end()
       stats.dom.remove()
+      gui.destroy()
     }
 
     return () => {
