@@ -1,14 +1,21 @@
-import React from 'react'
+import React, {useState} from 'react'
 import {useLayoutEffect} from 'react'
 import * as THREE from 'three'
 import {disposeList} from '../../../utils/three.dispose'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 //引入性能监视器stats.js
 import Stats from 'three/addons/libs/stats.module.js'
+import {Slider} from 'antd'
 
 function One() {
   const oneRef = React.useRef<HTMLDivElement>(null)
   const requestAnimationNumberRef = React.useRef<number>()
+  // TODO 手动设置相机的 lookAt 位置, 需要注释 controls, 两个是互斥的
+  const [lookAt, setLookAt] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  })
 
   useLayoutEffect(() => {
     if (!oneRef.current) return
@@ -16,19 +23,31 @@ function One() {
     const height = oneRef.current.clientHeight
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(100, width / height, 0.5, 3000)
-    // camera.position.set(150, 150, 150)
-    camera.position.set(10, 0, 0)
-    camera.lookAt(100, 0, 0)
+    camera.position.set(150, 150, 150)
+    // camera.position.set(10, 0, 0)
+    camera.lookAt(lookAt.x, lookAt.y, lookAt.z)
 
     const size = 5
     const distance = 20
     const geometry = new THREE.BoxGeometry(5, 5, 5)
-    const material = new THREE.MeshBasicMaterial({color: 0x00ffff})
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x00ffff,
+      side: THREE.FrontSide, // 默认只有正面可见 FrontSide DoubleSide //两面可见
+    })
+
+    // SphereGeometry：球体
+    const geometrySphere = new THREE.SphereGeometry(4) // PlaneGeometry：矩形平面
+    const geometryPlane = new THREE.PlaneGeometry(5, 5)
 
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         for (let k = 0; k < size; k++) {
-          const mesh = new THREE.Mesh(geometry, material)
+          const isInner = i >= 2 && j >= 2 && k >= 2
+          const isPlane = i === 0 || j === 0 || k === 0
+          const mesh = new THREE.Mesh(
+            isPlane ? geometryPlane : isInner ? geometrySphere : geometry,
+            material,
+          )
           mesh.position.set(i * distance, j * distance, k * distance)
           scene.add(mesh)
         }
@@ -38,9 +57,14 @@ function One() {
     const axesHelper = new THREE.AxesHelper(150)
     scene.add(axesHelper)
 
-    const renderer = new THREE.WebGLRenderer()
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+    })
+    renderer.setPixelRatio(window.devicePixelRatio)
     renderer.setSize(width, height)
+    renderer.setClearColor(0x777777, 1) //设置背景颜色
     renderer.render(scene, camera)
+
     oneRef.current.appendChild(renderer.domElement)
 
     const controls = new OrbitControls(camera, renderer.domElement)
@@ -53,6 +77,8 @@ function One() {
       // console.log('帧率FPS', 1000 / spt)
 
       requestAnimationFrame(render)
+      // 如果你使用诸如 OrbitControls 等控件，这些控件可能会覆盖你手动设置的相机方向。在这种情况下，你需要确保控件的目标位置与 lookAt 一致
+      controls.target.set(lookAt.x, lookAt.y, lookAt.z)
       controls.update()
       stats.update()
       renderer.render(scene, camera)
@@ -61,6 +87,7 @@ function One() {
     //创建stats对象
     const stats = new Stats()
     //stats.domElement:web页面上输出计算结果,一个div元素，
+    stats.dom.style.zIndex = '998'
     document.body.appendChild(stats.dom)
 
     render()
@@ -96,8 +123,49 @@ function One() {
         dispose,
       })
     }
-  }, [])
-  return <div ref={oneRef} className="w-full h-full" />
+  }, [lookAt.x, lookAt.y, lookAt.z])
+
+  function onChange(v: number, type: 'x' | 'y' | 'z') {
+    setLookAt({
+      ...lookAt,
+      [type]: v,
+    })
+  }
+
+  return (
+    <>
+      <div className="fixed right-10 top-0 w-[160px] bg-slate-400">
+        <div>
+          x
+          <Slider
+            value={lookAt.x}
+            min={-100}
+            max={100}
+            onChange={v => onChange(v, 'x')}
+          />
+        </div>
+        <div>
+          y
+          <Slider
+            value={lookAt.y}
+            min={-100}
+            max={100}
+            onChange={v => onChange(v, 'y')}
+          />
+        </div>
+        <div>
+          z
+          <Slider
+            value={lookAt.z}
+            min={-100}
+            max={100}
+            onChange={v => onChange(v, 'z')}
+          />
+        </div>
+      </div>
+      <div ref={oneRef} className="w-full h-full" />
+    </>
+  )
 }
 
 export default One

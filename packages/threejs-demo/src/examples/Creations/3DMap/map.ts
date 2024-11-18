@@ -13,7 +13,7 @@ const HIGHT_COLOR = 'rgb(165, 243, 252)'
 const materialColor = 'rgb(6, 182, 212)'
 const mapLineColor = 'rgb(6, 182, 212)'
 const planeColor = 'rgb(21, 94, 117)'
-const ActiveColor = '#FFFFFF'
+const ActiveColor = 'gold'
 const ActiveSize = 2
 
 let csmHelper: CSMHelper

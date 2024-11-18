@@ -38,7 +38,7 @@ function App() {
 
   return (
     <div className="app">
-      <div className="left-menu fixed z-10 left-0 top-0 h-full">
+      <div className="left-menu fixed z-[1000] left-0 top-0 h-full">
         <div className="inline-menu h-full  bg-[#001529] overflow-y-auto">
           <Menu
             mode="inline"
