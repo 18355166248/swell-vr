@@ -1,4 +1,4 @@
-import {Suspense, useEffect, useMemo} from 'react'
+import {Suspense, useEffect, useMemo, useRef} from 'react'
 import './app.less'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {routerKeys} from './router'
@@ -11,6 +11,8 @@ function App() {
   const keys = routerKeys
   const location = useLocation()
   const navigate = useNavigate()
+
+  const leftMenuRef = useRef<HTMLDivElement>(null)
 
   const paths = useMemo(() => {
     return recurve(keys)
@@ -38,7 +40,10 @@ function App() {
 
   return (
     <div className="app">
-      <div className="left-menu fixed z-[1000] left-0 top-0 h-full">
+      <div
+        ref={leftMenuRef}
+        className="left-menu fixed z-[1000] left-0 top-0 h-full"
+      >
         <div className="inline-menu h-full  bg-[#001529] overflow-y-auto">
           <Menu
             mode="inline"
@@ -48,6 +53,7 @@ function App() {
             defaultOpenKeys={['sub1']}
             items={paths}
             inlineCollapsed
+            getPopupContainer={() => leftMenuRef.current as HTMLElement}
           />
           <div className="h-4"></div>
         </div>

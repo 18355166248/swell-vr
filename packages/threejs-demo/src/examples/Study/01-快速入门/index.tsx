@@ -80,23 +80,27 @@ function One() {
     gui.domElement.style.position = 'fixed'
     gui.domElement.style.right = '200px'
 
+    const cameraFolder = gui.addFolder('相机')
+    const cameraPositionFolder = cameraFolder.addFolder('位置')
+    cameraFolder.open()
+    cameraPositionFolder.open()
     const obj = {...cameraPosition}
     // gui界面上增加交互界面，改变obj对应属性
-    gui
+    cameraPositionFolder
       .add(obj, 'x', 0, 300)
       .name('相机X')
       .onChange(function (value: number) {
         cameraPosition.x = value
         camera.position.x = value
       })
-    gui
+    cameraPositionFolder
       .add(obj, 'y', 0, 300)
       .name('相机Y')
       .onChange(function (value: number) {
         cameraPosition.y = value
         camera.position.y = value
       })
-    gui
+    cameraPositionFolder
       .add(obj, 'z', 0, 300)
       .name('相机Z')
       .onChange(function (value: number) {
@@ -106,8 +110,10 @@ function One() {
     const obj1 = {
       color: 0x00ffff,
     }
+    const colorFolder = gui.addFolder('颜色')
+    colorFolder.open()
     // .addColor()生成颜色值改变的交互界面
-    gui.addColor(obj1, 'color').onChange(function (value) {
+    colorFolder.addColor(obj1, 'color').onChange(function (value: string) {
       material.color.set(value)
     })
 

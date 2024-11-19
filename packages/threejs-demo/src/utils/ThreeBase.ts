@@ -4,6 +4,7 @@ import {Controller, GUI} from 'three/examples/jsm/libs/lil-gui.module.min.js'
 import {GUISetting} from '../types/three.type'
 import * as TWEEN from 'three/addons/libs/tween.module.js'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
+import Stats from 'three/addons/libs/stats.module.js'
 
 export interface ViewControl {
   width?: number
@@ -34,6 +35,8 @@ export default class ThreeBase {
   isControl: boolean = false
   controls?: OrbitControls
   threeAnim?: number
+  stats?: Stats
+  isStats: boolean = false
   constructor() {}
   init(container?: HTMLElement) {
     this.container = container || document.body
@@ -80,6 +83,13 @@ export default class ThreeBase {
     if (this.isControl) {
       this.initControl()
     }
+    if (this.isStats) {
+      //创建stats对象
+      const stats = new Stats()
+      //stats.domElement:web页面上输出计算结果,一个div元素，
+      stats.dom.style.zIndex = '998'
+      document.body.appendChild(stats.dom)
+    }
     this.animate()
 
     window.addEventListener('resize', this.onResize.bind(this))
@@ -88,29 +98,11 @@ export default class ThreeBase {
 
   initGui() {
     const gui = new GUI()
-    if (this.guiSettings) {
-      this.guiSettings.forEach(item => {
-        if (item.type == 'color') {
-          gui.addColor(this.dataObj, item.key)
-        } else if (item.type == 'select') {
-          /**
-           * gui.add( obj, 'size', [ 'Small', 'Medium', 'Large' ] )
-gui.add( obj, 'speed', { Slow: 0.1, Normal: 1, Fast: 5 } )
-           */
-          gui.add(this.dataObj, item.key, item.options)
-        } else if (item.type == 'number') {
-          /**
-           * gui.add( obj, 'number1', 0, 1 ); // min, max
-gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
-           */
-          gui.add(this.dataObj, item.key, item.min, item.max, item.step)
-        } else {
-          gui.add(this.dataObj, item.key)
-        }
-      })
-    }
+    this.gui = gui
 
-    gui.open()
+    this.recursionGuiSettings(this.guiSettings, gui)
+
+    // gui.open()
     gui.onChange(event => {
       // event.object; // object that was modified
       // event.property; // string, name of property
@@ -118,7 +110,6 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
       // event.controller; // controller that was modified
       this.onGuiAction(event)
     })
-    this.gui = gui
   }
   onGuiAction(event: {
     object: object
@@ -275,7 +266,38 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
       this.renderer?.domElement.remove()
       this.renderer = null
     }
+    this.stats?.end()
+    this.stats?.dom.remove()
+    this.gui?.destroy()
+
     window.removeEventListener('resize', this.onResize.bind(this))
     window.removeEventListener('unload', this.destroy.bind(this))
+  }
+
+  recursionGuiSettings(settings: GUISetting[], gui: GUI) {
+    settings.forEach(item => {
+      if (item.type == 'color') {
+        gui.addColor(this.dataObj, item.key)
+      } else if (item.type == 'select') {
+        /**
+         * gui.add( obj, 'size', [ 'Small', 'Medium', 'Large' ] )
+gui.add( obj, 'speed', { Slow: 0.1, Normal: 1, Fast: 5 } )
+         */
+        gui.add(this.dataObj, item.key, item.options)
+      } else if (item.type == 'number') {
+        /**
+         * gui.add( obj, 'number1', 0, 1 ); // min, max
+gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
+         */
+        gui.add(this.dataObj, item.key, item.min, item.max, item.step)
+      } else if (item.type == 'folder') {
+        if (Array.isArray(item.children) && item.children.length) {
+          const folder = gui.addFolder(item.key)
+          this.recursionGuiSettings(item.children, folder)
+        }
+      } else {
+        gui.add(this.dataObj, item.key)
+      }
+    })
   }
 }
