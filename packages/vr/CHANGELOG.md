@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1-alpha.2
+
+### Patch Changes
+
+- ces2
+
 ## 1.2.1-alpha.1
 
 ### Patch Changes

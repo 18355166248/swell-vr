@@ -1,13 +1,14 @@
 {
-  "mode": "exit",
+  "mode": "pre",
   "tag": "alpha",
   "initialVersions": {
-    "threejs-demo": "0.0.1-alpha.0",
-    "swell-vr": "1.2.1-alpha.0",
+    "threejs-demo": "0.0.1-alpha.1",
+    "swell-vr": "1.2.1-alpha.1",
     "@swellvr/vr-core": "1.0.0",
     "vr-docs": "1.0.0"
   },
   "changesets": [
+    "soft-paws-remain",
     "young-keys-fly"
   ]
 }
