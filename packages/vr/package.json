@@ -1,6 +1,6 @@
 {
   "name": "swell-vr",
-  "version": "1.2.1-alpha.0",
+  "version": "1.2.1-alpha.1",
   "description": "",
   "private": false,
   "main": "dist/swell-vr.js",
@@ -13,8 +13,7 @@
     "build": "pnpm type-check && esno ./scripts/build.ts",
     "build:watch": "cross-env WATCH=true pnpm build",
     "type-check": "tsc -noEmit",
-    "release": "standard-version",
-    "publish": "pnpm publish"
+    "release": "standard-version"
   },
   "keywords": [],
   "author": "",
