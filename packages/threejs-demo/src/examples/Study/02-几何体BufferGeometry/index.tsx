@@ -99,6 +99,9 @@ function Two() {
         this.scene?.add(
           new THREE.Line(
             geometry,
+            // new THREE.LineBasicMaterial({
+            //   color: this.dataObj.color,
+            // }),
             new THREE.MeshBasicMaterial({
               color: this.dataObj.color,
             }),

@@ -9,9 +9,6 @@
   "files": [
     "dist"
   ],
-  "publishConfig": {
-    "registry": "http://xnpm.ximalaya.com/"
-  },
   "scripts": {
     "build": "pnpm type-check && esno ./scripts/build.ts",
     "build:watch": "cross-env WATCH=true pnpm build",

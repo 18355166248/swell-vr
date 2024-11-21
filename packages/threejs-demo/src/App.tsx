@@ -29,7 +29,7 @@ function App() {
   }, [location.pathname])
 
   useEffect(() => {
-    document.title = `${prefixTitle}: ${active}`
+    document.title = `${prefixTitle}: ${decodeURIComponent(active)}`
   }, [active])
 
   const onClick: MenuProps['onClick'] = e => {
