@@ -36,7 +36,9 @@ export default class ThreeBase {
   controls?: OrbitControls
   threeAnim?: number
   stats?: Stats
-  isStats: boolean = false
+  isStats: boolean = false // 性能监视器
+  isAxesHelper: boolean = false // 辅助观察的坐标系
+  axesHelperSize = 100 // 辅助观察的坐标系大小
   constructor() {}
   init(container?: HTMLElement) {
     this.container = container || document.body
@@ -89,6 +91,9 @@ export default class ThreeBase {
       //stats.domElement:web页面上输出计算结果,一个div元素，
       stats.dom.style.zIndex = '998'
       document.body.appendChild(stats.dom)
+    }
+    if (this.isAxesHelper) {
+      this.initAxesHelper()
     }
     this.animate()
 
@@ -299,5 +304,9 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
         gui.add(this.dataObj, item.key)
       }
     })
+  }
+  initAxesHelper() {
+    const axesHelper = new THREE.AxesHelper(this.axesHelperSize)
+    this.scene?.add(axesHelper)
   }
 }
