@@ -44,7 +44,6 @@ export default class ThreeBase {
   isStats: boolean = false // 性能监视器
   isAxesHelper: boolean = false // 辅助观察的坐标系
   axesHelperSize = 100 // 辅助观察的坐标系大小
-  animate?: () => void
 
   constructor() {}
   init(container?: HTMLElement) {
@@ -67,6 +66,9 @@ export default class ThreeBase {
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setViewport(0, 0, this.width, this.height)
+    // 查WebGL渲染器文档，你可以看到.outputColorSpace的默认值就是SRGB颜色空间THREE.SRGBColorSpace，意味着新版本代码中，加载gltf，没有特殊需要，不设置.outputColorSpace也不会引起色差。
+    // this.renderer.outputColorSpace = THREE.SRGBColorSpace
+
     this.container?.appendChild(this.renderer.domElement)
 
     this.scene = new THREE.Scene()
@@ -255,7 +257,7 @@ export default class ThreeBase {
     this.animate?.()
     this.threeAnim = requestAnimationFrame(this._animate.bind(this))
   }
-
+  animate() {}
   onResize() {
     if (this.container && this.camera && this.renderer) {
       this.camera.aspect =
