@@ -18,6 +18,11 @@ export interface ViewControl {
 export default class ThreeBase {
   scene?: THREE.Scene
   camera?: THREE.PerspectiveCamera
+  cameraConfig: {fov?: number; near?: number; far?: number} = {
+    fov: 45,
+    near: 0.1,
+    far: 1000,
+  }
   container?: HTMLElement
   renderer: THREE.WebGLRenderer | null = null
   width?: number = 0
@@ -39,6 +44,8 @@ export default class ThreeBase {
   isStats: boolean = false // 性能监视器
   isAxesHelper: boolean = false // 辅助观察的坐标系
   axesHelperSize = 100 // 辅助观察的坐标系大小
+  animate?: () => void
+
   constructor() {}
   init(container?: HTMLElement) {
     this.container = container || document.body
@@ -65,10 +72,10 @@ export default class ThreeBase {
     this.scene = new THREE.Scene()
 
     this.camera = new THREE.PerspectiveCamera(
-      45,
+      this.cameraConfig.fov,
       this.width / this.height || 1,
-      0.1,
-      1000,
+      this.cameraConfig.near,
+      this.cameraConfig.far,
     )
     this.camera.position.set(0, 10, 50)
     this.camera.lookAt(0, 0, 0)
@@ -95,7 +102,7 @@ export default class ThreeBase {
     if (this.isAxesHelper) {
       this.initAxesHelper()
     }
-    this.animate()
+    this._animate()
 
     window.addEventListener('resize', this.onResize.bind(this))
     window.addEventListener('unload', this.destroy.bind(this))
@@ -235,7 +242,7 @@ export default class ThreeBase {
       this.camera.position.z = depth * (viewControl.depth || 0)
     }
   }
-  animate() {
+  _animate() {
     if (this.controls) {
       this.controls.update()
     }
@@ -245,8 +252,10 @@ export default class ThreeBase {
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera)
     }
-    this.threeAnim = requestAnimationFrame(this.animate.bind(this))
+    this.animate?.()
+    this.threeAnim = requestAnimationFrame(this._animate.bind(this))
   }
+
   onResize() {
     if (this.container && this.camera && this.renderer) {
       this.camera.aspect =
