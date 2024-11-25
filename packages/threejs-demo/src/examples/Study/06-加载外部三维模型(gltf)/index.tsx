@@ -31,6 +31,16 @@ function Three() {
           dog.scene.name = '小黄狗'
           dog.scene.position.set(5, 3, 5)
           dog.scene.scale.set(3, 3, 3)
+          dog.scene.traverse(obj => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if (obj.isMesh) {
+              const o = obj as THREE.Mesh
+              console.log('🚀 递归小黄狗 mesh ', o)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // ;(o.material as any).color.set(0x00ff00)
+            }
+          })
           // 返回的场景对象gltf.scene插入到threejs场景中
           this.scene?.add(dog.scene)
         })
