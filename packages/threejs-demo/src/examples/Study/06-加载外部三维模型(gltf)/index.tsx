@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
 // 引入gltf模型加载库GLTFLoader.js
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
-import DogGltf from './shiba/scene.gltf'
+import DogGltf from '../assets/gltf/xiaoHuangGou/scene.gltf'
 
 function Three() {
   const canvas = useRef(null)

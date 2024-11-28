@@ -44,6 +44,12 @@ export default class ThreeBase {
   isStats: boolean = false // 性能监视器
   isAxesHelper: boolean = false // 辅助观察的坐标系
   axesHelperSize = 100 // 辅助观察的坐标系大小
+  onGuiAction?: (p: {
+    object: object
+    property: string
+    value: unknown
+    controller: Controller
+  }) => void
 
   constructor() {}
   init(container?: HTMLElement) {
@@ -82,6 +88,7 @@ export default class ThreeBase {
     this.camera.position.set(0, 10, 50)
     this.camera.lookAt(0, 0, 0)
     if (this.isGui) {
+      console.log(233)
       this.initGui()
     }
 
@@ -110,9 +117,14 @@ export default class ThreeBase {
     window.addEventListener('unload', this.destroy.bind(this))
   }
 
-  initGui() {
-    const gui = new GUI()
-    this.gui = gui
+  async initGui() {
+    let _gui = this.gui
+    if (!this.gui) {
+      _gui = new GUI()
+      this.gui = _gui
+    }
+
+    const gui = _gui as GUI
 
     this.recursionGuiSettings(this.guiSettings, gui)
 
@@ -122,16 +134,16 @@ export default class ThreeBase {
       // event.property; // string, name of property
       // event.value; // new value of controller
       // event.controller; // controller that was modified
-      this.onGuiAction(event)
+      this.onGuiAction?.(event)
     })
   }
-  onGuiAction(event: {
-    object: object
-    property: string
-    value: unknown
-    controller: Controller
-  }) {
-    console.log('🚀 ~ ThreeBase ~ onGuiAction ~ event:', event)
+
+  delay(time = 1000) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(true)
+      }, time)
+    })
   }
   initRaycaster() {
     this.raycaster = new THREE.Raycaster()
@@ -285,6 +297,7 @@ export default class ThreeBase {
     this.stats?.end()
     this.stats?.dom.remove()
     this.gui?.destroy()
+    this.guiSettings = []
 
     window.removeEventListener('resize', this.onResize.bind(this))
     window.removeEventListener('unload', this.destroy.bind(this))
