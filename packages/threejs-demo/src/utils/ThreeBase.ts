@@ -93,7 +93,6 @@ export default class ThreeBase {
     this.camera.position.set(0, 10, 50)
     this.camera.lookAt(0, 0, 0)
     if (this.isGui) {
-      console.log(233)
       this.initGui()
     }
 

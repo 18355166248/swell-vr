@@ -1,4 +1,4 @@
-import {useLayoutEffect, useRef} from 'react'
+import {useLayoutEffect, useRef, useState} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
 // 引入gltf模型加载库GLTFLoader.js
@@ -12,11 +12,15 @@ import posz from '../../../assets/Bridge2/posz.jpg'
 import negz from '../../../assets/Bridge2/negz.jpg'
 import {GUISetting} from '../../../types/three.type'
 import th1Img from '../../../assets/images/th-1.jpeg'
-import {Button} from 'antd'
+import {Button, Progress} from 'antd'
 
 function Three() {
   const canvas = useRef(null)
   const threeReal = useRef<ThreeBase>()
+  const [percent, setPercent] = useState({
+    show: false,
+    num: 0,
+  })
 
   useLayoutEffect(() => {
     if (!canvas.current) return
@@ -98,6 +102,11 @@ function Three() {
       }
       // su7加载
       createChart3() {
+        setPercent({
+          show: true,
+          num: 0,
+        })
+
         // 加载环境贴图
         const textureCube = new THREE.CubeTextureLoader().load([
           posx,
@@ -109,101 +118,94 @@ function Three() {
         ])
 
         const loader = new GLTFLoader()
-        loader.load(Su7Gltf, su7 => {
-          // su7.scene.traverse(obj => {
-          //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          //   // @ts-ignore
-          //   if (obj.isMesh) {
-          //     const o = obj as THREE.Mesh
-          //     console.log(
-          //       '🚀 ~ MyThree ~ createChart3 ~ o.isMesh:',
-          //       o.material,
-          //       o,
-          //     )
-          //     // o.material.envMap
-          //   }
-          // })
-          const carBodyParent = su7.scene.getObjectByName('Object_18')
-          if (carBodyParent) {
-            const m = carBodyParent as THREE.Mesh
-            // 车外壳PBR材质设置
-            // m.material = new THREE.MeshPhysicalMaterial({
-            //   // eslint-disable-next-line no-extra-semi, @typescript-eslint/ban-ts-comment
-            //   // @ts-ignore
-            //   color: m.material.color, //默认颜色
-            //   metalness: 1, //车外壳金属度
-            //   roughness: 0.1, //车外壳粗糙度
-            //   // envMap: textureCube, //环境贴图
-            //   envMapIntensity: 2.5, //环境贴图对Mesh表面影响程度
-            // })
-            // 车外壳油漆效果
-            m.material = new THREE.MeshPhysicalMaterial({
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              color: m.material.color, //默认颜色
-              clearcoat: 1.0, //物体表面清漆层或者说透明涂层的厚度
-              clearcoatRoughness: 0.1, //透明涂层表面的粗糙度
+        loader.load(
+          Su7Gltf,
+          su7 => {
+            const carBodyParent = su7.scene.getObjectByName('Object_18')
+            if (carBodyParent) {
+              const m = carBodyParent as THREE.Mesh
+
+              // 车外壳油漆效果
+              m.material = new THREE.MeshPhysicalMaterial({
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                color: m.material.color, //默认颜色
+                clearcoat: 1.0, //物体表面清漆层或者说透明涂层的厚度
+                clearcoatRoughness: 0.1, //透明涂层表面的粗糙度
+              })
+              this.dataObj = m.material
+              const guiSettings: GUISetting[] = [
+                {
+                  type: 'folder',
+                  key: 'Su7',
+                  children: [
+                    {
+                      type: 'number',
+                      key: 'metalness',
+                      min: 0,
+                      max: 1,
+                      step: 0.1,
+                    },
+                    {
+                      type: 'number',
+                      key: 'roughness',
+                      min: 0,
+                      max: 1,
+                      step: 0.1,
+                    },
+                    {
+                      type: 'number',
+                      key: 'clearcoat',
+                      min: 0,
+                      max: 1,
+                      step: 0.1,
+                    },
+                    {
+                      type: 'number',
+                      key: 'clearcoatRoughness',
+                      min: 0,
+                      max: 1,
+                      step: 0.1,
+                    },
+                    {
+                      type: 'number',
+                      key: 'envMapIntensity',
+                      min: 0,
+                      max: 1,
+                      step: 0.1,
+                    },
+                  ],
+                },
+              ]
+              this.guiSettings = [...this.guiSettings, ...guiSettings]
+              this.initGui()
+            }
+
+            const light = new THREE.AmbientLight(0xffffff) // 柔和的白光
+
+            if (this.scene) {
+              this.scene.add(light)
+              this.scene.environment = textureCube
+
+              this.scene?.add(su7.scene)
+            }
+            this.camera?.position.set(5, 5, 5)
+
+            setTimeout(() => {
+              setPercent({
+                show: false,
+                num: 0,
+              })
+            }, 600)
+          },
+          xhr => {
+            const percent = (xhr.loaded / xhr.total) * 100
+            setPercent({
+              show: true,
+              num: percent,
             })
-            this.dataObj = m.material
-            const guiSettings: GUISetting[] = [
-              {
-                type: 'folder',
-                key: 'Su7',
-                children: [
-                  {
-                    type: 'number',
-                    key: 'metalness',
-                    min: 0,
-                    max: 1,
-                    step: 0.1,
-                  },
-                  {
-                    type: 'number',
-                    key: 'roughness',
-                    min: 0,
-                    max: 1,
-                    step: 0.1,
-                  },
-                  {
-                    type: 'number',
-                    key: 'clearcoat',
-                    min: 0,
-                    max: 1,
-                    step: 0.1,
-                  },
-                  {
-                    type: 'number',
-                    key: 'clearcoatRoughness',
-                    min: 0,
-                    max: 1,
-                    step: 0.1,
-                  },
-                  {
-                    type: 'number',
-                    key: 'envMapIntensity',
-                    min: 0,
-                    max: 1,
-                    step: 0.1,
-                  },
-                ],
-              },
-            ]
-            this.guiSettings = [...this.guiSettings, ...guiSettings]
-            this.initGui()
-            console.log(666)
-          }
-
-          const light = new THREE.AmbientLight(0xffffff) // 柔和的白光
-
-          if (this.scene) {
-            this.scene.add(light)
-            this.scene.environment = textureCube
-
-            this.scene?.add(su7.scene)
-          }
-          this.camera?.position.set(5, 5, 5)
-          this.renderer?.setClearAlpha(0.2)
-        })
+          },
+        )
       }
     }
 
@@ -234,6 +236,14 @@ function Three() {
           下载
         </Button>
       </div>
+      {percent.show && (
+        <Progress
+          percent={percent.num}
+          percentPosition={{align: 'center', type: 'inner'}}
+          size={[400, 20]}
+          className="absolute left-0 top-20 w-full flex justify-center z-20"
+        />
+      )}
       <div ref={canvas} className="w-full h-full relative z-10" />
     </div>
   )
