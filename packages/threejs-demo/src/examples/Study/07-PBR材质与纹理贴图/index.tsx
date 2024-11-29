@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
 // 引入gltf模型加载库GLTFLoader.js
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
-import Su7Gltf from '../assets/gltf/su7/scene.gltf'
+import Su7Gltf from '../../../assets/gltf/su7/scene.gltf'
 import posx from '../../../assets/Bridge2/posx.jpg'
 import negx from '../../../assets/Bridge2/negx.jpg'
 import posy from '../../../assets/Bridge2/posy.jpg'
@@ -11,9 +11,12 @@ import negy from '../../../assets/Bridge2/negy.jpg'
 import posz from '../../../assets/Bridge2/posz.jpg'
 import negz from '../../../assets/Bridge2/negz.jpg'
 import {GUISetting} from '../../../types/three.type'
+import th1Img from '../../../assets/images/th-1.jpeg'
+import {Button} from 'antd'
 
 function Three() {
   const canvas = useRef(null)
+  const threeReal = useRef<ThreeBase>()
 
   useLayoutEffect(() => {
     if (!canvas.current) return
@@ -25,6 +28,10 @@ function Three() {
         this.axesHelperSize = 4
         this.isAxesHelper = true
         this.isGui = true
+        this.rendererSettings = {
+          //想把canvas画布上内容下载到本地，需要设置为true
+          preserveDrawingBuffer: true,
+        }
         // this.dataObj = {
         //   metalness: 1.0, //金属度属性
         // }
@@ -195,6 +202,7 @@ function Three() {
             this.scene?.add(su7.scene)
           }
           this.camera?.position.set(5, 5, 5)
+          this.renderer?.setClearAlpha(0.2)
         })
       }
     }
@@ -205,12 +213,30 @@ function Three() {
     // myThree.createChart2()
     myThree.createChart3()
 
+    threeReal.current = myThree
+
     return () => {
       myThree.destroy()
     }
   }, [])
 
-  return <div ref={canvas} className="w-full h-full" />
+  function downLoadImage() {
+    threeReal.current?.downLoadImage()
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      <div className="absolute left-0 top-0 w-full h-full flex items-center">
+        <img src={th1Img} alt="" className="w-full" />
+      </div>
+      <div className="absolute left-20 top-10 z-20">
+        <Button type="primary" onClick={downLoadImage}>
+          下载
+        </Button>
+      </div>
+      <div ref={canvas} className="w-full h-full relative z-10" />
+    </div>
+  )
 }
 
 export default Three

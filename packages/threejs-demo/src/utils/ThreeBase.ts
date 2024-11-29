@@ -5,6 +5,7 @@ import {GUISetting} from '../types/three.type'
 import * as TWEEN from 'three/addons/libs/tween.module.js'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 import Stats from 'three/addons/libs/stats.module.js'
+import {WebGLRendererParameters} from 'three'
 
 export interface ViewControl {
   width?: number
@@ -25,6 +26,7 @@ export default class ThreeBase {
   }
   container?: HTMLElement
   renderer: THREE.WebGLRenderer | null = null
+  rendererSettings?: WebGLRendererParameters
   width?: number = 0
   height?: number = 0
   isGui?: boolean = false
@@ -61,6 +63,9 @@ export default class ThreeBase {
       antialias: true,
       alpha: true,
       logarithmicDepthBuffer: false,
+      ...this.rendererSettings,
+      //想把canvas画布上内容下载到本地，需要设置为true
+      // preserveDrawingBuffer:true,
     })
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.clear()
@@ -332,5 +337,16 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
   initAxesHelper() {
     const axesHelper = new THREE.AxesHelper(this.axesHelperSize)
     this.scene?.add(axesHelper)
+  }
+  downLoadImage() {
+    const canvas = this.container?.children[0] as HTMLCanvasElement | undefined
+    if (canvas && this.renderer) {
+      // 创建一个超链接元素，用来下载保存数据的文件
+      const link = document.createElement('a')
+      // 通过超链接herf属性，设置要保存到文件中的数据
+      link.href = link.href = canvas.toDataURL('image/png')
+      link.download = 'threejs.png' //下载文件名
+      link.click() //js代码触发超链接元素a的鼠标点击事件，开始下载文件到本地
+    }
   }
 }
