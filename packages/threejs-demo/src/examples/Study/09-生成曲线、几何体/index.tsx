@@ -46,11 +46,75 @@ function Three() {
         // this.camera?.rotateY(Math.PI / 2)
         // this.camera?.rotateZ(0)
       }
+
+      // createChart2() {
+      //   // Vector2表示的三个点坐标，三个点构成的轮廓相当于两端直线相连接
+      //   // const pointsArr = [
+      //   //   new THREE.Vector2(50, 60),
+      //   //   new THREE.Vector2(25, 0),
+      //   //   new THREE.Vector2(50, -60),
+      //   // ]
+      //   // // LatheGeometry：pointsArr轮廓绕y轴旋转生成几何体曲面
+      //   // // pointsArr：旋转几何体的旋转轮廓形状
+      //   // const geometry = new THREE.LatheGeometry(pointsArr, 10, 0, 1 * Math.PI)
+
+      //   const curve = new THREE.SplineCurve([
+      //     new THREE.Vector2(50, 60),
+      //     new THREE.Vector2(25, 0),
+      //     new THREE.Vector2(50, -60),
+      //   ])
+      //   //曲线上获取点,作为旋转几何体的旋转轮廓
+      //   const pointsArr = curve.getPoints(40)
+      //   // LatheGeometry：pointsArr轮廓绕y轴旋转生成几何体曲面
+      //   const geometry = new THREE.LatheGeometry(pointsArr, 30)
+
+      //   // 线条材质对象
+      //   const material = new THREE.MeshLambertMaterial({
+      //     color: 0x0000ff,
+      //     side: THREE.DoubleSide,
+      //   })
+      //   const mesh = new THREE.Mesh(geometry, material)
+      //   this.scene?.add(mesh)
+      //   this.camera?.position.set(200, 200, 200)
+      //   this.renderer?.setClearColor(0x000000)
+
+      //   const light = new THREE.DirectionalLight(0xffffff, 1)
+      //   light.position.set(0, 500, 500)
+      //   this.scene?.add(light)
+      // }
+
+      createChart3() {
+        const pointsArr = [
+          new THREE.Vector2(-50, -50),
+          new THREE.Vector2(-60, 0),
+          new THREE.Vector2(0, 50),
+          new THREE.Vector2(60, 0),
+          new THREE.Vector2(50, -50),
+        ]
+        // Shape表示一个平面多边形轮廓,参数是二维向量构成的数组pointsArr
+        const shape = new THREE.Shape(pointsArr)
+        const geometry = new THREE.ShapeGeometry(shape)
+        const material = new THREE.MeshLambertMaterial({
+          color: 0x00ff00,
+          // wireframe: true,
+        })
+        const mesh = new THREE.Mesh(geometry, material)
+
+        this.scene?.add(mesh)
+
+        const light = new THREE.DirectionalLight(0xffffff, 1)
+        light.position.set(0, 500, 500)
+        this.scene?.add(light)
+
+        this.camera?.position.set(200, 40, 200)
+      }
     }
 
     const myThree = new MyThree()
     myThree.init(canvas.current)
-    myThree.createChart()
+    // myThree.createChart()
+    // myThree.createChart2()
+    myThree.createChart3()
 
     threeReal.current = myThree
 
