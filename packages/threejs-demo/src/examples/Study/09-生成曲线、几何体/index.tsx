@@ -191,29 +191,88 @@ function Three() {
         this.camera?.position.set(300, 300, 300)
       }
       // 多边形轮廓Shape简介
+      // 多边形轮廓Shape(圆弧)
       createChart6() {
+        // 下面代码绘制了一个矩形+扇形的轮廓，圆心在(100, 0),半径50。
         const shape = new THREE.Shape()
-        shape.moveTo(10, 0) //.currentPoint变为(10,0)
-        // 绘制直线线段，起点(10,0)，结束点(100,0)
-        shape.lineTo(100, 0) //.currentPoint变为(100, 0)
-        shape.lineTo(100, 100) //.currentPoint变为(100, 100)
-        shape.lineTo(10, 100) //.currentPoint变为(10, 100)
-        // 扫描轨迹：创建轮廓的扫描轨迹(3D样条曲线)
-        const curve = new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-10, -50, -50),
-          new THREE.Vector3(10, 0, 0),
-          new THREE.Vector3(8, 50, 50),
-          new THREE.Vector3(-5, 0, 100),
-        ])
+        shape.lineTo(100, 0) //.currentPoint变为(100+50,0)
+        // 圆弧.arc参数的圆心0,0坐标是相对当前.currentPoint而言，而不是坐标原点
+        shape.arc(0, 0, 50, 0, Math.PI / 2) //.currentPoint变为圆弧线结束点坐标
+        console.log('currentPoint', shape.currentPoint)
+        // 绘制直线，直线起点：圆弧绘制结束的点  直线结束点：(0, 0)
+        shape.lineTo(0, 50)
 
         // Shape表示一个平面多边形轮廓,参数是二维向量构成的数组pointsArr
-        const geometry = new THREE.ShapeGeometry(
-          shape, //二维轮廓
-        )
+        // const geometry = new THREE.ShapeGeometry(
+        //   shape, //二维轮廓
+        // )
+        const geometry = new THREE.ExtrudeGeometry(shape, {
+          depth: 20, //拉伸长度
+          bevelEnabled: false, //禁止倒角
+          curveSegments: 20, //shape曲线对应曲线细分数
+        })
         const material = new THREE.MeshLambertMaterial({
-          color: 0x0000cc,
+          color: 0x0000c0,
         })
         const mesh = new THREE.Mesh(geometry, material)
+
+        this.scene?.add(mesh)
+
+        this.camera?.position.set(300, 300, 300)
+      }
+      // 多边形Shape(内孔.holes)
+      createChart7() {
+        const shape = new THREE.Shape()
+        // .lineTo(100, 0)绘制直线线段，线段起点：.currentPoint，线段结束点：(100,0)
+        shape.lineTo(100, 0)
+        shape.lineTo(100, 100)
+        shape.lineTo(0, 100)
+
+        // Shape内孔轮廓
+        const path1 = new THREE.Path() // 圆孔1
+        path1.absarc(30, 80, 10, Math.PI * 1, Math.PI * 2)
+        const path2 = new THREE.Path() // 圆孔2
+        path2.absarc(80, 80, 10, Math.PI * 1, Math.PI * 2)
+        const path3 = new THREE.Path() // 方形孔
+        path3.moveTo(50, 50)
+        path3.lineTo(60, 50)
+        path3.lineTo(60, 60)
+        path3.lineTo(50, 60)
+        //三个内孔轮廓分别插入到holes属性中
+        shape.holes.push(path1, path2, path3)
+
+        const geometry = new THREE.ExtrudeGeometry(shape, {
+          depth: 20, //拉伸长度
+          bevelEnabled: false, //禁止倒角
+          curveSegments: 20, //shape曲线对应曲线细分数
+        })
+        const material = new THREE.MeshLambertMaterial({
+          color: 0x0000c0,
+        })
+        const mesh = new THREE.Mesh(geometry, material)
+
+        this.scene?.add(mesh)
+
+        this.camera?.position.set(300, 300, 300)
+      }
+      // 模型边界线EdgesGeometry
+      createChart8() {
+        const geometry = new THREE.BoxGeometry(50, 50, 50)
+        const material = new THREE.MeshLambertMaterial({
+          color: 0x004444,
+          transparent: true,
+          opacity: 0.5,
+        })
+        const mesh = new THREE.Mesh(geometry, material)
+
+        // 长方体作为EdgesGeometry参数创建一个新的几何体
+        const edges = new THREE.EdgesGeometry(geometry)
+        const edgesMaterial = new THREE.LineBasicMaterial({
+          color: 0x00ffff,
+        })
+        const line = new THREE.LineSegments(edges, edgesMaterial)
+
+        mesh.add(line)
 
         this.scene?.add(mesh)
 
@@ -224,7 +283,7 @@ function Three() {
     const myThree = new MyThree()
     myThree.init(canvas.current)
     myThree.initLight()
-    myThree.createChart6()
+    myThree.createChart8()
 
     threeReal.current = myThree
 
