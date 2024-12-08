@@ -1,6 +1,8 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
+import MountainGltf from '../../../assets/gltf/low_poly_mountain/scene.gltf'
 
 function Three() {
   const canvas = useRef(null)
@@ -278,12 +280,67 @@ function Three() {
 
         this.camera?.position.set(300, 300, 300)
       }
+      // 加载山体模型修改渐变色
+      createChart9() {
+        const loader = new GLTFLoader()
+        loader.load(MountainGltf, gltf => {
+          gltf.scene.traverse(child => {
+            const mm = child as THREE.Mesh
+            if (mm.isMesh) {
+              const pos = mm.geometry.attributes.position
+              const count = pos.count
+
+              const yArr = []
+              let min = Infinity
+              let max = -Infinity
+              for (let i = 0; i < count; i++) {
+                const y = pos.getY(i)
+                if (min > y) min = y
+                if (max < y) max = y
+                yArr.push(y)
+              }
+              const height = max - min
+
+              console.log('🚀 ~ MyThree ~ createChart9 ~ height:', height)
+              mm.position.set(500, -100, 450)
+
+              const colorsArr = []
+              const color1 = new THREE.Color(0x0000ff)
+              const color2 = new THREE.Color(0x00ff00)
+              const color3 = new THREE.Color(0xff0000)
+
+              for (let i = 0; i < count; i++) {
+                const percent = (yArr[i] - min) / height
+
+                let c: THREE.Color | null = null
+                if (percent <= 0.5) {
+                  c = color1.clone().lerp(color2, percent * 2)
+                } else {
+                  c = color2.clone().lerp(color3, (percent - 0.5) * 2)
+                }
+
+                if (c) colorsArr.push(c.r, c.g, c.b)
+              }
+              const colors = new Float32Array(colorsArr)
+              mm.geometry.attributes.color = new THREE.BufferAttribute(
+                colors,
+                3,
+              )
+              mm.material = new THREE.MeshLambertMaterial({vertexColors: true})
+            }
+          })
+
+          // 修改模型材质颜色渐变
+          this.scene?.add(gltf.scene)
+          this.camera?.position.set(400, 100, 0)
+        })
+      }
     }
 
     const myThree = new MyThree()
     myThree.init(canvas.current)
     myThree.initLight()
-    myThree.createChart8()
+    myThree.createChart9()
 
     threeReal.current = myThree
 
