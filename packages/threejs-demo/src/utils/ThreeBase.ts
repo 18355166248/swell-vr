@@ -44,6 +44,7 @@ export default class ThreeBase {
   threeAnim?: number
   stats?: Stats
   isStats: boolean = false // 性能监视器
+  axesHelper?: THREE.AxesHelper
   isAxesHelper: boolean = false // 辅助观察的坐标系
   axesHelperSize = 100 // 辅助观察的坐标系大小
   onGuiAction?: (p: {
@@ -335,6 +336,7 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
   }
   initAxesHelper() {
     const axesHelper = new THREE.AxesHelper(this.axesHelperSize)
+    this.axesHelper = axesHelper
     this.scene?.add(axesHelper)
   }
   downLoadImage() {

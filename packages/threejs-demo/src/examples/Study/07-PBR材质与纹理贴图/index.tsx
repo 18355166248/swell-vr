@@ -206,6 +206,16 @@ function Three() {
             })
           },
         )
+
+        if (this.controls) {
+          this.controls.minPolarAngle = 0 //默认值0
+          this.controls.maxPolarAngle = Math.PI / 2 // 控制器看不到车辆底部
+
+          // 左右旋转范围
+          // this.controls.minAzimuthAngle = -Math.PI / 2
+          // this.controls.maxAzimuthAngle = Math.PI / 2
+        }
+        // 上下旋转范围
       }
     }
 
