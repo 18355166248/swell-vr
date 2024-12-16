@@ -37,12 +37,17 @@ function Three() {
         directionalLight.position.set(30, 20, 0)
         directionalLight.castShadow = true // 开启阴影
 
+        // 方向光阴影的投射范围
         directionalLight.shadow.camera.left = -5
         directionalLight.shadow.camera.right = 5
         directionalLight.shadow.camera.top = 20
         directionalLight.shadow.camera.bottom = -10
         directionalLight.shadow.camera.near = 0.5
         directionalLight.shadow.camera.far = 6000
+
+        // directionalLight.shadow.mapSize.set(1020, 1020)
+
+        directionalLight.shadow.radius = 3
 
         this.scene?.add(directionalLight)
 
@@ -51,6 +56,9 @@ function Three() {
           directionalLight.shadow.camera,
         )
         this.scene?.add(cameraHelper)
+
+        const ambient = new THREE.AmbientLight(0xffffff, 0.2)
+        this.scene?.add(ambient)
       }
       // 聚光源SpotLight
       createChart() {
@@ -88,7 +96,7 @@ function Three() {
         const geometry = new THREE.PlaneGeometry(50, 40)
         const material = new THREE.MeshLambertMaterial({
           color: 0x8b8970,
-          // side: THREE.DoubleSide,
+          side: THREE.DoubleSide,
         })
         const plane = new THREE.Mesh(geometry, material)
         plane.rotateX(-Math.PI / 2)
