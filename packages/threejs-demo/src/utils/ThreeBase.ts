@@ -53,6 +53,7 @@ export default class ThreeBase {
     value: unknown
     controller: Controller
   }) => void
+  needRender: boolean = true
 
   constructor() {}
   init(container?: HTMLElement) {
@@ -268,7 +269,7 @@ export default class ThreeBase {
     if (TWEEN.getAll().length) {
       TWEEN.update()
     }
-    if (this.renderer && this.scene && this.camera) {
+    if (this.renderer && this.scene && this.camera && this.needRender) {
       this.renderer.render(this.scene, this.camera)
     }
     this.animate?.()
