@@ -27,7 +27,6 @@ export default class ThreeBase {
     far: 1000,
   }
   container?: HTMLElement
-  css2Container?: HTMLElement
   renderer: THREE.WebGLRenderer | null = null
   css2Renderer: CSS2DRenderer | null = null
   isCSS2Renderer: boolean = false // 是否使用CSS2渲染器
@@ -61,9 +60,8 @@ export default class ThreeBase {
   needRender: boolean = true
 
   constructor() {}
-  init(container?: HTMLElement, css2Container?: HTMLElement) {
+  init(container?: HTMLElement) {
     this.container = container || document.body
-    this.css2Container = css2Container || document.body
     this.width = this.container?.clientWidth || 0
     this.height = this.container?.clientHeight || 0
 
@@ -369,9 +367,10 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
       css2Renderer.render(this.scene, this.camera)
       // width, height：canvas画布宽高度
       css2Renderer.setSize(this.width, this.height)
-      this.css2Container?.appendChild(css2Renderer.domElement)
+      this.container?.appendChild(css2Renderer.domElement)
       css2Renderer.domElement.style.position = 'absolute'
       css2Renderer.domElement.style.top = '0px'
+      css2Renderer.domElement.style.pointerEvents = 'none'
       this.css2Renderer = css2Renderer
     }
   }

@@ -6,7 +6,6 @@ import {CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js'
 
 function Three() {
   const canvas = useRef(null)
-  const css2Canvas = useRef(null)
   const threeReal = useRef<ThreeBase>()
 
   useLayoutEffect(() => {
@@ -65,7 +64,7 @@ function Three() {
     }
 
     const myThree = new MyThree()
-    myThree.init(canvas.current, css2Canvas.current as unknown as HTMLElement)
+    myThree.init(canvas.current)
     myThree.initLight()
     myThree.createChart()
     myThree.createHtml()
@@ -82,10 +81,6 @@ function Three() {
       <div id="tag">Tag</div>
       <div className="relative w-full h-full">
         <div ref={canvas} className="w-full h-full relative z-10" />
-        <div
-          ref={css2Canvas}
-          className="absolute top-0 left-0 z-11 pointer-events-non"
-        ></div>
       </div>
     </>
   )
