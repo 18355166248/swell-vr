@@ -6,6 +6,8 @@ import * as TWEEN from 'three/addons/libs/tween.module.js'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 import Stats from 'three/addons/libs/stats.module.js'
 import {WebGLRendererParameters} from 'three'
+// 引入CSS2渲染器CSS2DRenderer
+import {CSS2DRenderer} from 'three/addons/renderers/CSS2DRenderer.js'
 
 export interface ViewControl {
   width?: number
@@ -25,7 +27,10 @@ export default class ThreeBase {
     far: 1000,
   }
   container?: HTMLElement
+  css2Container?: HTMLElement
   renderer: THREE.WebGLRenderer | null = null
+  css2Renderer: CSS2DRenderer | null = null
+  isCSS2Renderer: boolean = false // 是否使用CSS2渲染器
   rendererSettings?: WebGLRendererParameters
   width?: number = 0
   height?: number = 0
@@ -56,8 +61,9 @@ export default class ThreeBase {
   needRender: boolean = true
 
   constructor() {}
-  init(container?: HTMLElement) {
+  init(container?: HTMLElement, css2Container?: HTMLElement) {
     this.container = container || document.body
+    this.css2Container = css2Container || document.body
     this.width = this.container?.clientWidth || 0
     this.height = this.container?.clientHeight || 0
 
@@ -116,6 +122,9 @@ export default class ThreeBase {
     }
     if (this.isAxesHelper) {
       this.initAxesHelper()
+    }
+    if (this.isCSS2Renderer) {
+      this.initCSS2Renderer()
     }
     this._animate()
 
@@ -194,35 +203,36 @@ export default class ThreeBase {
     if (!this.container) return
     this.mouse = new THREE.Vector2()
     this.container.style.cursor = 'pointer'
-    this.container.addEventListener('pointerdown', event => {
-      if (!this.container || !this.mouse || !this.camera || !this.raycaster)
-        return
-      console.log('click')
-      event.preventDefault()
+    this.container.addEventListener('pointerdown', this.mouseClickAction)
+  }
+  // 箭头函数 不然this拿不到值
+  mouseClickAction = (event: PointerEvent) => {
+    if (!this.container || !this.mouse || !this.camera || !this.raycaster)
+      return
+    event.preventDefault()
 
-      this.mouse.x =
-        ((event.offsetX - this.container.offsetLeft) /
-          this.container.offsetWidth) *
-          2 -
-        1
-      this.mouse.y =
-        -(
-          (event.offsetY - this.container.offsetTop) /
-          this.container.offsetHeight
-        ) *
-          2 +
-        1
-      const vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1).unproject(
-        this.camera,
-      )
+    this.mouse.x =
+      ((event.offsetX - this.container.offsetLeft) /
+        this.container.offsetWidth) *
+        2 -
+      1
+    this.mouse.y =
+      -(
+        (event.offsetY - this.container.offsetTop) /
+        this.container.offsetHeight
+      ) *
+        2 +
+      1
+    const vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1).unproject(
+      this.camera,
+    )
 
-      this.raycaster.set(
-        this.camera.position,
-        vector.sub(this.camera.position).normalize(),
-      )
-      this.raycaster.setFromCamera(this.mouse, this.camera)
-      this.raycasterAction()
-    })
+    this.raycaster.set(
+      this.camera.position,
+      vector.sub(this.camera.position).normalize(),
+    )
+    this.raycaster.setFromCamera(this.mouse, this.camera)
+    this.raycasterAction()
   }
   mouseHoverAction() {}
   raycasterAction() {}
@@ -295,10 +305,13 @@ export default class ThreeBase {
     this.controls && this.controls.dispose()
     if (this.renderer) {
       this.renderer.renderLists && this.renderer.renderLists.dispose()
-      this.renderer.dispose && this.renderer.dispose()
+      this.renderer.dispose()
       this.renderer.forceContextLoss()
-      this.renderer?.domElement.remove()
+      this.renderer.domElement.remove()
       this.renderer = null
+    }
+    if (this.css2Renderer) {
+      this.css2Renderer.domElement.remove()
     }
     this.stats?.end()
     this.stats?.dom.remove()
@@ -307,6 +320,9 @@ export default class ThreeBase {
 
     window.removeEventListener('resize', this.onResize.bind(this))
     window.removeEventListener('unload', this.destroy.bind(this))
+    if (this.container && this.isRayCaster) {
+      this.container.removeEventListener('pointerdown', this.mouseClickAction)
+    }
   }
 
   recursionGuiSettings(settings: GUISetting[], gui: GUI) {
@@ -339,6 +355,25 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
     const axesHelper = new THREE.AxesHelper(this.axesHelperSize)
     this.axesHelper = axesHelper
     this.scene?.add(axesHelper)
+  }
+  initCSS2Renderer() {
+    if (
+      this.scene &&
+      this.camera &&
+      this.width &&
+      this.height &&
+      this.container
+    ) {
+      // 创建一个CSS2渲染器CSS2DRenderer
+      const css2Renderer = new CSS2DRenderer()
+      css2Renderer.render(this.scene, this.camera)
+      // width, height：canvas画布宽高度
+      css2Renderer.setSize(this.width, this.height)
+      this.css2Container?.appendChild(css2Renderer.domElement)
+      css2Renderer.domElement.style.position = 'absolute'
+      css2Renderer.domElement.style.top = '0px'
+      this.css2Renderer = css2Renderer
+    }
   }
   downLoadImage() {
     const canvas = this.container?.children[0] as HTMLCanvasElement | undefined
