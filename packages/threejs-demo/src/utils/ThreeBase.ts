@@ -285,11 +285,15 @@ export default class ThreeBase {
   }
   animate() {}
   onResize() {
-    if (this.container && this.camera && this.renderer) {
+    if (this.container && this.camera && this.renderer && this.css2Renderer) {
       this.camera.aspect =
         this.container.offsetWidth / this.container.offsetHeight
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(
+        this.container.offsetWidth,
+        this.container.offsetHeight,
+      )
+      this.css2Renderer.setSize(
         this.container.offsetWidth,
         this.container.offsetHeight,
       )
