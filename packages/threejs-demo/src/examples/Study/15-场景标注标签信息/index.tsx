@@ -43,7 +43,7 @@ function Three() {
       }
       initLight() {
         //光源设置
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
         directionalLight.position.set(0, 30, 0)
         directionalLight.castShadow = true // 开启阴影
 
