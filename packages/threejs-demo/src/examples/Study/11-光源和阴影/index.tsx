@@ -20,7 +20,7 @@ function Three() {
         this.isControl = true
         this.axesHelperSize = 20
         this.isAxesHelper = true
-        this.isGui = true
+        // this.isGui = true
         this.rendererSettings = {
           //想把canvas画布上内容下载到本地，需要设置为true
           preserveDrawingBuffer: true,
@@ -34,12 +34,12 @@ function Three() {
       initLight() {
         //光源设置
         const directionalLight = new THREE.DirectionalLight(0xe0eeee, 1.0)
-        directionalLight.position.set(30, 20, 0)
+        directionalLight.position.set(5, 20, 0)
         directionalLight.castShadow = true // 开启阴影
 
         // 方向光阴影的投射范围
-        directionalLight.shadow.camera.left = -5
-        directionalLight.shadow.camera.right = 5
+        directionalLight.shadow.camera.left = -10
+        directionalLight.shadow.camera.right = 10
         directionalLight.shadow.camera.top = 20
         directionalLight.shadow.camera.bottom = -10
         directionalLight.shadow.camera.near = 0.5
@@ -96,10 +96,11 @@ function Three() {
         const geometry = new THREE.PlaneGeometry(50, 40)
         const material = new THREE.MeshLambertMaterial({
           color: 0x8b8970,
-          side: THREE.DoubleSide,
+          // side: THREE.DoubleSide,
         })
         const plane = new THREE.Mesh(geometry, material)
         plane.rotateX(-Math.PI / 2)
+        plane.position.set(0, -10, 0)
         plane.receiveShadow = true // 设置接收阴影的投影面
         this.scene?.add(plane)
       }
