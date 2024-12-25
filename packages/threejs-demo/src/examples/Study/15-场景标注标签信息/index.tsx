@@ -46,32 +46,32 @@ function Three() {
       }
       initLight() {
         //光源设置
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
-        directionalLight.position.set(0, 30, 0)
-        directionalLight.castShadow = true // 开启阴影
+        const ambient = new THREE.AmbientLight(0xffffff, 0.3)
+        this.scene?.add(ambient)
 
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
+        // directionalLight.position.set(0, 30, 0)
+        directionalLight.castShadow = true // 开启阴影
+        console.log(1, directionalLight.shadow.camera)
         // 方向光阴影的投射范围
-        directionalLight.shadow.camera.left = -10
-        directionalLight.shadow.camera.right = 10
-        directionalLight.shadow.camera.top = 10
-        directionalLight.shadow.camera.bottom = -10
-        directionalLight.shadow.camera.near = 0.5
-        directionalLight.shadow.camera.far = 6000
+        // directionalLight.shadow.camera.left = -10
+        // directionalLight.shadow.camera.right = 10
+        // directionalLight.shadow.camera.top = 10
+        // directionalLight.shadow.camera.bottom = -10
+        // directionalLight.shadow.camera.near = 0.5
+        // directionalLight.shadow.camera.far = 6000
 
         // directionalLight.shadow.mapSize.set(1020, 1020)
 
-        directionalLight.shadow.radius = 3
+        // directionalLight.shadow.radius = 3
 
         this.scene?.add(directionalLight)
 
         // CameraHelper可视化.shadow.camera
-        // const cameraHelper = new THREE.CameraHelper(
-        //   directionalLight.shadow.camera,
-        // )
-        // this.scene?.add(cameraHelper)
-
-        const ambient = new THREE.AmbientLight(0xffffff, 0.2)
-        this.scene?.add(ambient)
+        const cameraHelper = new THREE.CameraHelper(
+          directionalLight.shadow.camera,
+        )
+        this.scene?.add(cameraHelper)
       }
       initPlane() {
         // 创建一个虚拟平面并放置在远处
@@ -86,7 +86,7 @@ function Three() {
         mesh.receiveShadow = true // 设置接收阴影的投影面
         mesh.position.set(0, -8, -5)
         mesh.rotateX(-Math.PI / 2) // 旋转90度
-        this.scene?.add(mesh)
+        // this.scene?.add(mesh)
       }
 
       createChart() {
@@ -126,10 +126,6 @@ function Three() {
               const action = this.mixer?.clipAction(clip)
               if (action) {
                 action.play()
-                console.log(
-                  '🚀 ~ MyThree ~ createChart ~ action.play:',
-                  action.play,
-                )
               }
             })
           }
