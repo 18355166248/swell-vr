@@ -41,18 +41,18 @@ function Three() {
       animate(): void {
         if (this.mixer) {
           // 动画
-          this.mixer?.update(0.02)
+          this.mixer?.update(0.01)
         }
       }
       initLight() {
         //光源设置
-        const ambient = new THREE.AmbientLight(0xffffff, 0.3)
+        const ambient = new THREE.AmbientLight(0xffffff, 2.5)
         this.scene?.add(ambient)
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
-        // directionalLight.position.set(0, 30, 0)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3)
+        directionalLight.rotateX(Math.PI / 2)
+        directionalLight.position.set(0, 0, 0)
         directionalLight.castShadow = true // 开启阴影
-        console.log(1, directionalLight.shadow.camera)
         // 方向光阴影的投射范围
         // directionalLight.shadow.camera.left = -10
         // directionalLight.shadow.camera.right = 10
@@ -68,10 +68,10 @@ function Three() {
         this.scene?.add(directionalLight)
 
         // CameraHelper可视化.shadow.camera
-        const cameraHelper = new THREE.CameraHelper(
-          directionalLight.shadow.camera,
-        )
-        this.scene?.add(cameraHelper)
+        // const cameraHelper = new THREE.CameraHelper(
+        //   directionalLight.shadow.camera,
+        // )
+        // this.scene?.add(cameraHelper)
       }
       initPlane() {
         // 创建一个虚拟平面并放置在远处
@@ -86,12 +86,11 @@ function Three() {
         mesh.receiveShadow = true // 设置接收阴影的投影面
         mesh.position.set(0, -8, -5)
         mesh.rotateX(-Math.PI / 2) // 旋转90度
-        // this.scene?.add(mesh)
+        this.scene?.add(mesh)
       }
 
       createChart() {
         if (this.scene && this.camera) {
-          // this.scene.background = new THREE.Color(0xfffaf0)
           const background = createBackground({
             aspect: this.camera.aspect,
             grainScale: 0.001,
@@ -140,7 +139,7 @@ function Three() {
 
     const myThree = new MyThree()
     myThree.init(canvas.current)
-    myThree.initPlane()
+    // myThree.initPlane()
     myThree.initLight()
     myThree.createChart()
 
