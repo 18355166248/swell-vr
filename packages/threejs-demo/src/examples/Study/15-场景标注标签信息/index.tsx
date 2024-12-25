@@ -51,15 +51,15 @@ function Three() {
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 3)
         directionalLight.rotateX(Math.PI / 2)
-        directionalLight.position.set(0, 0, 0)
+        directionalLight.position.set(0, 30, 0)
         directionalLight.castShadow = true // 开启阴影
         // 方向光阴影的投射范围
-        // directionalLight.shadow.camera.left = -10
-        // directionalLight.shadow.camera.right = 10
-        // directionalLight.shadow.camera.top = 10
-        // directionalLight.shadow.camera.bottom = -10
-        // directionalLight.shadow.camera.near = 0.5
-        // directionalLight.shadow.camera.far = 6000
+        directionalLight.shadow.camera.left = -10
+        directionalLight.shadow.camera.right = 10
+        directionalLight.shadow.camera.top = 10
+        directionalLight.shadow.camera.bottom = -10
+        directionalLight.shadow.camera.near = 0.5
+        directionalLight.shadow.camera.far = 6000
 
         // directionalLight.shadow.mapSize.set(1020, 1020)
 
@@ -139,7 +139,7 @@ function Three() {
 
     const myThree = new MyThree()
     myThree.init(canvas.current)
-    // myThree.initPlane()
+    myThree.initPlane()
     myThree.initLight()
     myThree.createChart()
 
