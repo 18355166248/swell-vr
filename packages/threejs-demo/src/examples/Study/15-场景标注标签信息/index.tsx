@@ -4,6 +4,10 @@ import ThreeBase from '../../../utils/ThreeBase'
 import CartoonGltf from '../../../assets/gltf/cartoon_plane/scene.gltf'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
+// 引入CSS2模型对象CSS2DObject
+import {CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js'
+import Tag from './Tag'
+import ReactDOM from 'react-dom/client'
 
 function Three() {
   const canvas = useRef(null)
@@ -42,6 +46,9 @@ function Three() {
         if (this.mixer) {
           // 动画
           this.mixer?.update(0.01)
+        }
+        if (this.scene && this.camera && this.css2Renderer) {
+          this.css2Renderer.render(this.scene, this.camera)
         }
       }
       initLight() {
@@ -111,8 +118,27 @@ function Three() {
             if (obj.isMesh) {
               const o = obj as THREE.Mesh
               o.castShadow = true // 开启阴影
+
+              // if (o.name === 'Object_4') {
+              //   console.log('螺旋桨', o, o.parent)
+              //   this.createTag(o, '螺旋桨')
+              // }
+              // if (o.name === 'Object_12') {
+              //   console.log('驾驶舱', o, o.parent)
+              //   this.createTag(o, '驾驶舱')
+              // }
+              // if (o.name === 'Object_14') {
+              //   console.log('尾翼', o, o.parent)
+              //   this.createTag(o, '尾翼')
+              // }
             }
           })
+
+          const planeTail = gltf.scene.getObjectByName('Plane-Tail_4')
+          if (planeTail) {
+            console.log('尾翼', planeTail)
+            this.createTag(planeTail, '尾翼')
+          }
 
           this.scene?.add(gltf.scene)
 
@@ -134,6 +160,13 @@ function Three() {
           // 设置渲染器，允许光源阴影渲染
           this.renderer.shadowMap.enabled = true
         }
+      }
+      createTag(mesh: THREE.Object3D<THREE.Object3DEventMap>, name: string) {
+        const div = document.createElement('div')
+        // div.style.position = 'absolute'
+        ReactDOM.createRoot(div).render(<Tag name={name} />)
+        const label = new CSS2DObject(div)
+        mesh.add(label)
       }
     }
 
