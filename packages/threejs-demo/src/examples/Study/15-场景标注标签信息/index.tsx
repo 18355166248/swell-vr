@@ -27,6 +27,8 @@ function Three() {
         THREE.MeshLambertMaterial,
         THREE.Object3DEventMap
       >
+      mixer?: THREE.AnimationMixer
+      clips?: THREE.AnimationClip[]
       constructor() {
         super()
         this.isControl = true
@@ -37,8 +39,9 @@ function Three() {
         this.isCSS2Renderer = true
       }
       animate(): void {
-        if (this.camera && this.scene && this.css2Renderer) {
-          this.css2Renderer.render(this.scene, this.camera)
+        if (this.mixer) {
+          // 动画
+          this.mixer?.update(0.02)
         }
       }
       initLight() {
@@ -113,6 +116,23 @@ function Three() {
           })
 
           this.scene?.add(gltf.scene)
+
+          // animation
+          if (this.scene) {
+            this.clips = gltf.animations
+            this.mixer = new THREE.AnimationMixer(this.scene)
+
+            this.clips.forEach(clip => {
+              const action = this.mixer?.clipAction(clip)
+              if (action) {
+                action.play()
+                console.log(
+                  '🚀 ~ MyThree ~ createChart ~ action.play:',
+                  action.play,
+                )
+              }
+            })
+          }
         })
 
         if (this.renderer) {
