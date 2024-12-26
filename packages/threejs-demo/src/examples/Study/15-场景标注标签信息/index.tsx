@@ -4,10 +4,7 @@ import ThreeBase from '../../../utils/ThreeBase'
 import CartoonGltf from '../../../assets/gltf/cartoon_plane/cartoon_plane_biaozhu.glb'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
-// 引入CSS2模型对象CSS2DObject
-import {CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js'
 import Tag from './Tag'
-import ReactDOM from 'react-dom/client'
 
 function Three() {
   const canvas = useRef(null)
@@ -179,14 +176,6 @@ function Three() {
           this.renderer.shadowMap.enabled = true
         }
       }
-      createTag(mesh: THREE.Object3D<THREE.Object3DEventMap>, name: string) {
-        const div = document.createElement('div')
-        // div.style.position = 'absolute'
-        ReactDOM.createRoot(div).render(<Tag name={name} />)
-        const label = new CSS2DObject(div)
-        label.name = 'tag'
-        mesh.add(label)
-      }
 
       raycasterAction() {
         if (this.raycaster) {
@@ -199,7 +188,7 @@ function Three() {
           list.forEach(b => {
             if (b.tagMesh) {
               b.tagMesh.children.forEach(c => {
-                if (c.name === 'tag') {
+                if (c.name === this.tagKey) {
                   c.removeFromParent()
                 }
               })
@@ -210,7 +199,7 @@ function Three() {
               const obj = intersects[0].object
               const body = list.find(b => b.name === obj.name)
               if (body && body.tagMesh) {
-                this.createTag(body.tagMesh, body.name)
+                this.createTag(body.tagMesh, <Tag name={body.name} />)
               }
 
               this.outlinePass.selectedObjects = [intersects[0].object]

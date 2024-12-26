@@ -14,6 +14,9 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js'
 import {OutlinePass} from 'three/addons/postprocessing/OutlinePass.js'
 // 引入渲染器通道RenderPass
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js'
+// 引入CSS2模型对象CSS2DObject
+import {CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js'
+import ReactDOM from 'react-dom/client'
 
 export interface ViewControl {
   width?: number
@@ -72,6 +75,7 @@ export default class ThreeBase {
     controller: Controller
   }) => void
   needRender: boolean = true
+  tagKey = 'tag-key'
 
   constructor() {}
   init(container?: HTMLElement) {
@@ -418,6 +422,16 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
       this.outlinePass = outlinePass
       this.composer = composer
     }
+  }
+  createTag(
+    mesh: THREE.Object3D<THREE.Object3DEventMap>,
+    Tag: React.ReactNode,
+  ) {
+    const div = document.createElement('div')
+    ReactDOM.createRoot(div).render(Tag)
+    const label = new CSS2DObject(div)
+    label.name = this.tagKey
+    mesh.add(label)
   }
   downLoadImage() {
     const canvas = this.container?.children[0] as HTMLCanvasElement | undefined
