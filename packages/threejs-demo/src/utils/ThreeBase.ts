@@ -8,6 +8,12 @@ import Stats from 'three/addons/libs/stats.module.js'
 import {WebGLRendererParameters} from 'three'
 // 引入CSS2渲染器CSS2DRenderer
 import {CSS2DRenderer} from 'three/addons/renderers/CSS2DRenderer.js'
+// 引入后处理扩展库EffectComposer.js
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js'
+// 引入OutlinePass通道
+import {OutlinePass} from 'three/addons/postprocessing/OutlinePass.js'
+// 引入渲染器通道RenderPass
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js'
 
 export interface ViewControl {
   width?: number
@@ -51,6 +57,14 @@ export default class ThreeBase {
   axesHelper?: THREE.AxesHelper
   isAxesHelper: boolean = false // 辅助观察的坐标系
   axesHelperSize = 100 // 辅助观察的坐标系大小
+  composer?: EffectComposer
+  outlinePass?: OutlinePass
+  isOutlinePass: boolean = false // 轮廓渲染
+  outlinePassParams = {
+    color: 0x00ffff,
+    edgeThickness: 2,
+    edgeStrength: 2,
+  }
   onGuiAction?: (p: {
     object: object
     property: string
@@ -123,6 +137,9 @@ export default class ThreeBase {
     }
     if (this.isCSS2Renderer) {
       this.initCSS2Renderer()
+    }
+    if (this.isOutlinePass) {
+      this.initOutlinePass()
     }
     this._animate()
 
@@ -376,6 +393,30 @@ gui.add( obj, 'number2', 0, 100, 10 ); // min, max, step
       css2Renderer.domElement.style.top = '0px'
       css2Renderer.domElement.style.pointerEvents = 'none'
       this.css2Renderer = css2Renderer
+    }
+  }
+  initOutlinePass() {
+    if (
+      this.renderer &&
+      this.scene &&
+      this.camera &&
+      this.width &&
+      this.height
+    ) {
+      // 创建后处理对象EffectComposer，WebGL渲染器作为参数
+      const composer = new EffectComposer(this.renderer)
+      const renderPass = new RenderPass(this.scene, this.camera)
+      composer.addPass(renderPass)
+
+      // 创建OutlinePass通道
+      const v2 = new THREE.Vector2(this.width, this.height)
+      const outlinePass = new OutlinePass(v2, this.scene, this.camera)
+      outlinePass.visibleEdgeColor.set(this.outlinePassParams.color)
+      outlinePass.edgeThickness = this.outlinePassParams.edgeThickness
+      outlinePass.edgeStrength = this.outlinePassParams.edgeStrength
+      composer.addPass(outlinePass)
+      this.outlinePass = outlinePass
+      this.composer = composer
     }
   }
   downLoadImage() {

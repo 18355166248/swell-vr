@@ -31,8 +31,28 @@ function Three() {
         THREE.MeshLambertMaterial,
         THREE.Object3DEventMap
       >
+      planeBody: Record<
+        string,
+        {
+          name: string
+          tag: string
+          tagMesh?: THREE.Object3D<THREE.Object3DEventMap>
+        }
+      > = {
+        door: {
+          name: '机舱门',
+          tag: '机舱标注',
+        },
+        empennage: {
+          name: '尾翼',
+          tag: '尾翼标注',
+        },
+      }
+      // 飞机身体模块
+      planeBodyList: THREE.Object3D<THREE.Object3DEventMap>[] = []
       mixer?: THREE.AnimationMixer
       clips?: THREE.AnimationClip[]
+
       constructor() {
         super()
         this.isControl = true
@@ -41,6 +61,10 @@ function Three() {
         this.cameraConfig.fov = 450
         this.cameraConfig.far = 20000
         this.isCSS2Renderer = true
+        this.isRayCaster = true
+        this.isOutlinePass = true
+        this.outlinePassParams.color = 0xffe4b5
+        this.outlinePassParams.edgeStrength = 3
       }
       animate(): void {
         if (this.mixer) {
@@ -50,6 +74,8 @@ function Three() {
         if (this.scene && this.camera && this.css2Renderer) {
           this.css2Renderer.render(this.scene, this.camera)
         }
+
+        this.composer?.render()
       }
       initLight() {
         //光源设置
@@ -118,27 +144,19 @@ function Three() {
             if (obj.isMesh) {
               const o = obj as THREE.Mesh
               o.castShadow = true // 开启阴影
-
-              // if (o.name === 'Object_4') {
-              //   console.log('螺旋桨', o, o.parent)
-              //   this.createTag(o, '螺旋桨')
-              // }
-              // if (o.name === 'Object_12') {
-              //   console.log('驾驶舱', o, o.parent)
-              //   this.createTag(o, '驾驶舱')
-              // }
-              // if (o.name === 'Object_14') {
-              //   console.log('尾翼', o, o.parent)
-              //   this.createTag(o, '尾翼')
-              // }
             }
           })
 
-          const planeTail = gltf.scene.getObjectByName('尾翼标注')
-          if (planeTail) {
-            console.log('尾翼标注', planeTail)
-            this.createTag(planeTail, '尾翼')
-          }
+          Object.values(this.planeBody).forEach(b => {
+            const bPlane = gltf.scene.getObjectByName(b.name)
+            const bTag = gltf.scene.getObjectByName(b.tag)
+            if (bPlane) {
+              this.planeBodyList.push(bPlane)
+            }
+            if (bTag) {
+              b.tagMesh = bTag
+            }
+          })
 
           this.scene?.add(gltf.scene)
 
@@ -166,7 +184,43 @@ function Three() {
         // div.style.position = 'absolute'
         ReactDOM.createRoot(div).render(<Tag name={name} />)
         const label = new CSS2DObject(div)
+        label.name = 'tag'
         mesh.add(label)
+      }
+
+      raycasterAction() {
+        if (this.raycaster) {
+          // 射线交叉计算拾取模型
+          const intersects = this.raycaster.intersectObjects(this.planeBodyList)
+          console.log('intersects', intersects)
+          const list = Object.values(this.planeBody)
+
+          // 销毁历史tag
+          list.forEach(b => {
+            if (b.tagMesh) {
+              b.tagMesh.children.forEach(c => {
+                if (c.name === 'tag') {
+                  c.removeFromParent()
+                }
+              })
+            }
+          })
+          if (intersects.length > 0) {
+            if (this.outlinePass) {
+              const obj = intersects[0].object
+              const body = list.find(b => b.name === obj.name)
+              if (body && body.tagMesh) {
+                this.createTag(body.tagMesh, body.name)
+              }
+
+              this.outlinePass.selectedObjects = [intersects[0].object]
+            }
+          } else {
+            if (this.outlinePass) {
+              this.outlinePass.selectedObjects = []
+            }
+          }
+        }
       }
     }
 
