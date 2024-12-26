@@ -1,7 +1,7 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
-import CartoonGltf from '../../../assets/gltf/cartoon_plane/cartoon_palne_biaozhu.glb'
+import CartoonGltf from '../../../assets/gltf/cartoon_plane/cartoon_plane_biaozhu.glb'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
 // 引入CSS2模型对象CSS2DObject
@@ -136,7 +136,7 @@ function Three() {
 
           const planeTail = gltf.scene.getObjectByName('尾翼标注')
           if (planeTail) {
-            console.log('尾翼', planeTail)
+            console.log('尾翼标注', planeTail)
             this.createTag(planeTail, '尾翼')
           }
 
