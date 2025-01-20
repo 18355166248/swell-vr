@@ -20,7 +20,7 @@ function Three() {
     if (!canvas.current) return
 
     class MyThree extends ThreeBase {
-      composer?: EffectComposer
+      declare composer?: EffectComposer
       mapCenter = {x: 0, y: 0, z: 0}
       pointsArr: THREE.Vector3[] = []
       i = 0 // 管道累加数
