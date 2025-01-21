@@ -283,6 +283,7 @@ function Three() {
                         }
                       })
                       .start()
+                      .easing(this.TWEEN.Easing.Quadratic.Out) //进入和结束都设置缓动
                   }
                 }
               }
