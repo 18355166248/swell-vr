@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import MachineIndustry from '../../../assets/gltf/machine_industry/scene.gltf'
-import {Controller} from 'three/examples/jsm/libs/lil-gui.module.min.js'
 
 class MyThree extends ThreeBase {
   mapCenter = {x: 0, y: 0, z: 0}
