@@ -431,7 +431,6 @@ export default class Map {
       bevelThickness: 0.2,
     }
 
-    // 挤压缓冲几何体（ExtrudeGeometry） 从一个形状路径中，挤压出一个BufferGeometry。
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
 
     // 平面部分材质
@@ -461,7 +460,6 @@ export default class Map {
       shape.lineTo(x, -y)
     }
 
-    // 挤压缓冲几何体（ExtrudeGeometry） 从一个形状路径中，挤压出一个BufferGeometry。
     const geometry = new THREE.ExtrudeGeometry(shape, {
       depth: 0.1,
       bevelEnabled: false,
@@ -469,9 +467,47 @@ export default class Map {
       bevelThickness: 0.2,
     })
 
-    // 平面部分材质
-    const material = new THREE.MeshBasicMaterial({
-      color,
+    // 创建边缘高亮的 ShaderMaterial
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        centerColor: {value: new THREE.Color(0xdcdcdc)}, // 浅色
+        edgeColor: {value: new THREE.Color(0x0f5ff)}, // 深色
+        highlightColor: {value: new THREE.Color(0xffff00)}, // 边缘高亮颜色
+        center: {value: new THREE.Vector2(0, 0)},
+        radius: {value: 100.0},
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        void main() {
+          vUv = uv;
+          vPosition = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 centerColor;
+        uniform vec3 edgeColor;
+        uniform vec3 highlightColor; // 边缘高亮颜色
+        uniform vec2 center;
+        uniform float radius;
+        varying vec2 vUv;
+        varying vec3 vPosition;
+
+        void main() {
+          float dist = length(vPosition.xy - center);
+          float t = smoothstep(0.0, radius, dist);
+          vec3 color = mix(centerColor, edgeColor, t);
+
+          // 添加边缘高亮效果
+          if (dist < radius) {
+            color = mix(color, highlightColor, 0.5); // 调整高亮强度
+          }
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+      side: THREE.DoubleSide,
     })
 
     const mesh = new THREE.Mesh(geometry, material)
