@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.2
+
+### Patch Changes
+
+- 测试 4
+
+## 1.2.1
+
+### Patch Changes
+
+- 测试 4
+- 0568687: ces2
+- 3130871: 测试
+
 ## 1.2.1-alpha.2
 
 ### Patch Changes
