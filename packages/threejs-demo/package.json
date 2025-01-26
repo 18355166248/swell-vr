@@ -1,7 +1,7 @@
 {
   "name": "threejs-demo",
   "private": true,
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,7 +20,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.18.0",
-    "swell-vr": "1.2.2",
+    "swell-vr": "1.2.6",
     "three-vignette-background": "^1.0.3"
   },
   "devDependencies": {

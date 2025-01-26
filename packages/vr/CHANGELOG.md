@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.6
+
+### Patch Changes
+
+- fb6aa55: 预发布测试 2
+- 47bdd2c: 预发布 4
+- d811172: 预发布测试 6
+- 808c840: 预发布测试 3
+- f9de1b0: 预发布测试 5
+- 发布正式版本
+
 ## 1.2.6-alpha.4
 
 ### Patch Changes
