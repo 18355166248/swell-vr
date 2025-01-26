@@ -3,12 +3,13 @@
   "tag": "alpha",
   "initialVersions": {
     "threejs-demo": "0.0.1-alpha.2",
-    "swell-vr": "1.2.6-alpha.0",
-    "@swellvr/vr-core": "1.0.1-alpha.0",
+    "swell-vr": "1.2.6-alpha.1",
+    "@swellvr/vr-core": "1.0.1-alpha.1",
     "vr-docs": "1.0.0"
   },
   "changesets": [
     "moody-parents-poke",
+    "odd-ghosts-notice",
     "silent-taxis-appear"
   ]
 }

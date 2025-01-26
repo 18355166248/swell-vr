@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.6-alpha.2
+
+### Patch Changes
+
+- 预发布 4
+
 ## 1.2.6-alpha.1
 
 ### Patch Changes
