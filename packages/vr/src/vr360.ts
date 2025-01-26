@@ -17,8 +17,8 @@ import {
 } from './helper'
 // 引入轨道控制器扩展库OrbitControls
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
-import {initReSize} from './utils/onresize'
 import * as TWEEN from '@tweenjs/tween.js'
+import { initReSize } from './utils/onresize'
 
 // 空间管理器事件列表
 const extendsSpaceEventNames = spaceEventNames.filter(
