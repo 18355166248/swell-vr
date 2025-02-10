@@ -1,7 +1,7 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
-import CartoonGltf from '../../../assets/gltf/cartoon_plane/cartoon_plane_biaozhu.glb'
+import Iphone13ProMaxGltf from '../../../assets/gltf/iphone_13_pro_max/scene.gltf'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
 import Tag from './Tag'
@@ -133,7 +133,7 @@ function Three() {
           this.controls.minDistance = 20
         }
         const loader = new GLTFLoader()
-        loader.load(CartoonGltf, gltf => {
+        loader.load(Iphone13ProMaxGltf, gltf => {
           console.log(gltf.scene)
           gltf.scene.traverse(obj => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
