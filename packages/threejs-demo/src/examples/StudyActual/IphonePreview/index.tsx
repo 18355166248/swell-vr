@@ -262,7 +262,7 @@ function Three() {
 
           this.scene?.add(gltf.scene)
 
-          // animation
+          // 动画
           if (this.scene) {
             this.clips = gltf.animations
             this.mixer = new THREE.AnimationMixer(this.scene)
