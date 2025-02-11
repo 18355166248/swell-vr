@@ -3,8 +3,9 @@ import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
 import Iphone13ProMaxGltf from '../../../assets/gltf/iphone_13_pro_max/scene.gltf'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
+import {FontLoader} from 'three/examples/jsm/loaders/FontLoader.js'
+import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
-import {CSS2DObject} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import Tag from './Tag'
 import posx from '../../../assets/Bridge2/posx.jpg'
 import negx from '../../../assets/Bridge2/negx.jpg'
@@ -12,6 +13,7 @@ import posy from '../../../assets/Bridge2/posy.jpg'
 import negy from '../../../assets/Bridge2/negy.jpg'
 import posz from '../../../assets/Bridge2/posz.jpg'
 import negz from '../../../assets/Bridge2/negz.jpg'
+import helvetiker_bold from 'three/examples/fonts/helvetiker_bold.typeface.json'
 
 function Three() {
   const canvas = useRef(null)
@@ -137,8 +139,8 @@ function Three() {
           0, // 圆弧中心点
           0.4,
           0.4, // x和y方向的半径改为0.4
-          Math.PI / 9, // 起始角度 (20度)
-          Math.PI * 2 - Math.PI / 9, // 结束角度 (340度)
+          -Math.PI / 3, // 起始角度 (-60度)
+          Math.PI * 1.3333, // 结束角度 (234度)
           false, // 是否逆时针
           0, // 旋转角度
         )
@@ -160,25 +162,44 @@ function Three() {
         arcLine.rotation.x = Math.PI / 2 // 旋转90度使其垂直
         arcLine.position.set(0, -0.49, 0) // 调整位置更靠近底部
 
-        // 创建文字标签
-        const textDiv = document.createElement('div')
-        textDiv.className = 'text-label'
-        textDiv.textContent = '720°'
-        textDiv.style.color = 'white'
-        textDiv.style.fontWeight = 'bold'
-        textDiv.style.fontSize = '38px'
-        textDiv.style.fontFamily = 'Arial'
-        textDiv.style.userSelect = 'none'
-        textDiv.style.whiteSpace = 'nowrap'
-
-        const label = new CSS2DObject(textDiv)
-        label.position.set(0.4, 0, 0) // 调整文字位置到圆弧上方缺口处
-
-        arcLine.add(label)
+        const textMesh = this.createText720()
+        arcLine.add(textMesh)
 
         if (this.scene) {
           this.scene.add(arcLine)
         }
+      }
+      createText720() {
+        // 使用FontLoader创建3D文字
+        const fontLoader = new FontLoader()
+        const font = fontLoader.parse(helvetiker_bold)
+
+        const textGeometry = new TextGeometry('720°', {
+          font: font,
+          size: 0.1,
+          height: 0.01,
+          curveSegments: 12,
+        })
+
+        // 计算文字几何体的中心点
+        textGeometry.computeBoundingBox()
+
+        const textWidth =
+          textGeometry.boundingBox!.max.x - textGeometry.boundingBox!.min.x
+
+        // 创建文字材质
+        const textMaterial = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+        })
+
+        // 创建文字网格
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial)
+
+        // 调整文字位置，使其居中显示在缺口处
+        textMesh.position.set(textWidth / 2, -0.36, 0)
+        textMesh.rotation.x = -Math.PI / 2 // 保持文字朝向正面
+        textMesh.rotation.y = Math.PI
+        return textMesh
       }
       createChart() {
         if (this.scene && this.camera) {
@@ -189,7 +210,8 @@ function Three() {
           })
           this.scene.add(background)
 
-          this.camera.position.set(0.54, 0.03, -0.83)
+          // this.camera.position.set(0.54, 0.03, -0.83)
+          this.camera.position.set(0, 0, -1)
 
           // 添加圆弧线
           this.createArcLine()
