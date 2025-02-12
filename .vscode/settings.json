@@ -147,5 +147,7 @@
     "ZLZYLX",
     "ZZMM"
   ],
-  "marscode.chatLanguage": "cn"
+  "marscode.chatLanguage": "cn",
+  "commentTranslate.source": "Bing",
+  "commentTranslate.targetLanguage": "en"
 }
