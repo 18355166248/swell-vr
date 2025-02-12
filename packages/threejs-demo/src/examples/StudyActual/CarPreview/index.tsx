@@ -1,10 +1,13 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
-import CartoonGltf from '../../../assets/gltf/cartoon_plane/cartoon_plane_biaozhu.glb'
+import opelGtRetopoGltf from '../../../assets/gltf/opel_gt_retopo/scene1.gltf'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
 import Tag from './Tag'
+import pointWhite from '../../../assets/images/point-white.png'
+
+const basePointScale = 1
 
 function Three() {
   const canvas = useRef(null)
@@ -28,27 +31,14 @@ function Three() {
         THREE.MeshLambertMaterial,
         THREE.Object3DEventMap
       >
-      planeBody: Record<
-        string,
-        {
-          name: string
-          tag: string
-          tagMesh?: THREE.Object3D<THREE.Object3DEventMap>
-        }
-      > = {
-        door: {
-          name: '机舱门',
-          tag: '机舱标注',
-        },
-        empennage: {
-          name: '尾翼',
-          tag: '尾翼标注',
-        },
-      }
-      // 飞机身体模块
-      planeBodyList: THREE.Object3D<THREE.Object3DEventMap>[] = []
+
       mixer?: THREE.AnimationMixer
-      clips?: THREE.AnimationClip[]
+      clock = new THREE.Clock()
+      driverDoorAction?: THREE.AnimationAction
+      pointGroupScale = basePointScale
+      pointGroupScaleFlag = true // 波点缩放动画
+      meshObjList: THREE.Object3D<THREE.Object3DEventMap>[] = []
+      pointGroup: THREE.Sprite<THREE.Object3DEventMap>[] = []
 
       constructor() {
         super()
@@ -59,18 +49,39 @@ function Three() {
         this.cameraConfig.far = 20000
         this.isCSS2Renderer = true
         this.isRayCaster = true
-        this.isOutlinePass = true
-        this.outlinePassParams.color = 0xffe4b5
-        this.outlinePassParams.edgeStrength = 3
       }
       animate(): void {
         if (this.mixer) {
+          const delta = this.clock.getDelta()
           // 动画
-          this.mixer?.update(0.01)
+          this.mixer.update(delta)
         }
         if (this.scene && this.camera && this.css2Renderer) {
           this.css2Renderer.render(this.scene, this.camera)
         }
+
+        if (this.pointGroupScaleFlag) {
+          this.pointGroupScale += 0.005
+        }
+        if (!this.pointGroupScaleFlag) {
+          this.pointGroupScale -= 0.005
+        }
+
+        if (this.pointGroupScale >= basePointScale) {
+          this.pointGroupScaleFlag = false
+        }
+
+        if (this.pointGroupScale <= basePointScale - 0.2) {
+          this.pointGroupScaleFlag = true
+        }
+
+        this.pointGroup.forEach(element => {
+          element.scale.set(
+            this.pointGroupScale,
+            this.pointGroupScale,
+            this.pointGroupScale,
+          )
+        })
 
         this.composer?.render()
       }
@@ -103,21 +114,6 @@ function Three() {
         // )
         // this.scene?.add(cameraHelper)
       }
-      initPlane() {
-        // 创建一个虚拟平面并放置在远处
-        const planeGeometry = new THREE.CircleGeometry(15, 50)
-        const planeMaterial = new THREE.MeshLambertMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.3,
-        })
-
-        const mesh = new THREE.Mesh(planeGeometry, planeMaterial)
-        mesh.receiveShadow = true // 设置接收阴影的投影面
-        mesh.position.set(0, -8, -5)
-        mesh.rotateX(-Math.PI / 2) // 旋转90度
-        this.scene?.add(mesh)
-      }
 
       createChart() {
         if (this.scene && this.camera) {
@@ -133,8 +129,8 @@ function Three() {
           this.controls.minDistance = 20
         }
         const loader = new GLTFLoader()
-        loader.load(CartoonGltf, gltf => {
-          console.log(gltf.scene)
+        loader.load(opelGtRetopoGltf, gltf => {
+          console.log(gltf)
           gltf.scene.traverse(obj => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
@@ -144,31 +140,48 @@ function Three() {
             }
           })
 
-          Object.values(this.planeBody).forEach(b => {
-            const bPlane = gltf.scene.getObjectByName(b.name)
-            const bTag = gltf.scene.getObjectByName(b.tag)
-            if (bPlane) {
-              this.planeBodyList.push(bPlane)
-            }
-            if (bTag) {
-              b.tagMesh = bTag
+          // 提取指定动画
+          const animations = gltf.animations
+          console.log('🚀 ~ MyThree ~ createChart ~ animations:', animations)
+          if (this.scene && animations.length > 0) {
+            // 提取合适的轨道
+            const driverDoorTracksToPlay: THREE.VectorKeyframeTrack[] = []
+            // 遍历所有动画剪辑中的所有轨道，筛选出需要的轨道
+            animations.forEach(clip => {
+              clip.tracks.forEach(track => {
+                if (
+                  (track instanceof THREE.VectorKeyframeTrack ||
+                    track instanceof THREE.QuaternionKeyframeTrack) &&
+                  track.name.includes('driverDoor.')
+                ) {
+                  driverDoorTracksToPlay.push(track)
+                }
+              })
+            })
+            const driverDoorClip = new THREE.AnimationClip(
+              'driverDoor',
+              25,
+              driverDoorTracksToPlay,
+            )
+
+            this.mixer = new THREE.AnimationMixer(gltf.scene)
+
+            this.driverDoorAction = this.mixer.clipAction(driverDoorClip)
+            this.driverDoorAction?.play()
+          }
+
+          const pointNames = ['引擎盖', '左车门']
+          pointNames.forEach(name => {
+            const meshObj = gltf.scene.getObjectByName(name)
+            if (meshObj) {
+              this.meshObjList.push(meshObj)
+              const point = this.createSpritePoint()
+              meshObj.add(point)
+              this.pointGroup.push(point)
             }
           })
 
           this.scene?.add(gltf.scene)
-
-          // animation
-          if (this.scene) {
-            this.clips = gltf.animations
-            this.mixer = new THREE.AnimationMixer(this.scene)
-
-            this.clips.forEach(clip => {
-              const action = this.mixer?.clipAction(clip)
-              if (action) {
-                action.play()
-              }
-            })
-          }
         })
 
         if (this.renderer) {
@@ -180,42 +193,38 @@ function Three() {
       raycasterAction() {
         if (this.raycaster) {
           // 射线交叉计算拾取模型
-          const intersects = this.raycaster.intersectObjects(this.planeBodyList)
-          console.log('intersects', intersects)
-          const list = Object.values(this.planeBody)
+          const intersects = this.raycaster.intersectObjects(this.meshObjList)
 
-          // 销毁历史tag
-          list.forEach(b => {
-            if (b.tagMesh) {
-              b.tagMesh.children.forEach(c => {
-                if (c.name === this.tagKey) {
-                  c.removeFromParent()
-                }
-              })
-            }
-          })
+          console.log(
+            '🚀 ~ MyThree ~ raycasterAction ~ intersects:',
+            intersects,
+          )
+
           if (intersects.length > 0) {
-            if (this.outlinePass) {
-              const obj = intersects[0].object
-              const body = list.find(b => b.name === obj.name)
-              if (body && body.tagMesh) {
-                this.createTag(body.tagMesh, <Tag name={body.name} />)
-              }
-
-              this.outlinePass.selectedObjects = [intersects[0].object]
-            }
-          } else {
-            if (this.outlinePass) {
-              this.outlinePass.selectedObjects = []
-            }
+            console.log(
+              '🚀 ~ this.driverDoorAction.play',
+              this.driverDoorAction?.play,
+            )
+            this.driverDoorAction?.play()
           }
         }
+      }
+      // 创建波点
+      createSpritePoint() {
+        const map = new THREE.TextureLoader().load(pointWhite)
+        const material = new THREE.SpriteMaterial({
+          map,
+          color: 0xffffff,
+          transparent: true,
+        })
+        const sprite = new THREE.Sprite(material)
+        sprite.scale.set(basePointScale, basePointScale, basePointScale)
+        return sprite
       }
     }
 
     const myThree = new MyThree()
     myThree.init(canvas.current)
-    myThree.initPlane()
     myThree.initLight()
     myThree.createChart()
 
