@@ -4,7 +4,6 @@ import ThreeBase from '../../../utils/ThreeBase'
 import opelGtRetopoGltf from '../../../assets/gltf/opel_gt_retopo/scene1.gltf'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import createBackground from '../../../utils/three-vignette-background/three-vignette.js'
-import Tag from './Tag'
 import pointWhite from '../../../assets/images/point-white.png'
 
 const basePointScale = 1
@@ -167,7 +166,10 @@ function Three() {
             this.mixer = new THREE.AnimationMixer(gltf.scene)
 
             this.driverDoorAction = this.mixer.clipAction(driverDoorClip)
-            this.driverDoorAction?.play()
+            this.driverDoorAction.loop = THREE.LoopOnce
+            this.driverDoorAction.time = 11
+
+            // this.driverDoorAction.play()
           }
 
           const pointNames = ['引擎盖', '左车门']
@@ -188,6 +190,10 @@ function Three() {
           // 设置渲染器，允许光源阴影渲染
           this.renderer.shadowMap.enabled = true
         }
+
+        if (this.camera) {
+          this.camera.position.set(10, 10, 20)
+        }
       }
 
       raycasterAction() {
@@ -200,12 +206,37 @@ function Three() {
             intersects,
           )
 
-          if (intersects.length > 0) {
-            console.log(
-              '🚀 ~ this.driverDoorAction.play',
-              this.driverDoorAction?.play,
-            )
-            this.driverDoorAction?.play()
+          if (intersects.length > 0 && this.driverDoorAction) {
+            // 根据动画当前时间判断门的状态
+            const isOpen = this.driverDoorAction.time >= 13
+            this.driverDoorAction.timeScale = 1 // 正向播放
+
+            console.log('isOpen', isOpen)
+
+            if (isOpen) {
+              // 如果门是开的，播放关门动画
+              this.driverDoorAction.time = 24
+            } else {
+              // 如果门是关的，播放开门动画
+              this.driverDoorAction.time = 12
+            }
+
+            this.driverDoorAction.play()
+
+            if (this.driverDoorAction.paused) {
+              setTimeout(() => {
+                if (this.driverDoorAction) {
+                  this.driverDoorAction.paused = false
+                  this.driverDoorAction.reset()
+                }
+              }, 2000)
+            } else {
+              setTimeout(() => {
+                if (this.driverDoorAction) {
+                  this.driverDoorAction.paused = true
+                }
+              }, 2000)
+            }
           }
         }
       }
