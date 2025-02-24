@@ -1,33 +1,78 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function cg(t: any): number[][] {
-  let e
-  return (
-    'Point' == t.type
-      ? (e = [t.coordinates])
-      : 'LineString' == t.type || 'MultiPoint' == t.type
-      ? (e = t.coordinates)
-      : 'Polygon' == t.type || 'MultiLineString' == t.type
-      ? (e = t.coordinates.reduce(function (t: any, e: any) {
-          return t.concat(e)
-        }, []))
-      : 'MultiPolygon' == t.type
-      ? (e = t.coordinates.reduce(function (t: any, e: any) {
-          return t.concat(
-            e.reduce(function (t: any, e: any) {
-              return t.concat(e)
+/**
+ * 提取 GeoJSON 数据中的坐标数组
+ * 支持以下 GeoJSON 类型:
+ * - Point
+ * - LineString
+ * - MultiPoint
+ * - Polygon
+ * - MultiLineString
+ * - MultiPolygon
+ * - Feature
+ * - GeometryCollection
+ * - FeatureCollection
+ *
+ * @param geoJson GeoJSON 数据对象
+ * @returns 坐标数组的数组 [[lng, lat], ...]
+ */
+export function extractGeoJsonCoordinates(geoJson: any): number[][] {
+  let coordinates: number[][]
+
+  switch (geoJson.type) {
+    case 'Point':
+      coordinates = [geoJson.coordinates]
+      break
+
+    case 'LineString':
+    case 'MultiPoint':
+      coordinates = geoJson.coordinates
+      break
+
+    case 'Polygon':
+    case 'MultiLineString':
+      coordinates = geoJson.coordinates.reduce(
+        (acc: number[][], curr: number[][]) => {
+          return acc.concat(curr)
+        },
+        [],
+      )
+      break
+
+    case 'MultiPolygon':
+      coordinates = geoJson.coordinates.reduce(
+        (acc: number[][], polygon: number[][][]) => {
+          return acc.concat(
+            polygon.reduce((polyAcc: number[][], ring: number[][]) => {
+              return polyAcc.concat(ring)
             }, []),
           )
-        }, []))
-      : 'Feature' == t.type
-      ? (e = cg(t.geometry))
-      : 'GeometryCollection' == t.type
-      ? (e = t.geometries.reduce(function (t: any, e: any) {
-          return t.concat(cg(e))
-        }, []))
-      : 'FeatureCollection' == t.type &&
-        (e = t.features.reduce(function (t: any, e: any) {
-          return t.concat(cg(e))
-        }, [])),
-    e
-  )
+        },
+        [],
+      )
+      break
+
+    case 'Feature':
+      coordinates = extractGeoJsonCoordinates(geoJson.geometry)
+      break
+
+    case 'GeometryCollection':
+      coordinates = geoJson.geometries.reduce(
+        (acc: number[][], geometry: any) => {
+          return acc.concat(extractGeoJsonCoordinates(geometry))
+        },
+        [],
+      )
+      break
+
+    case 'FeatureCollection':
+      coordinates = geoJson.features.reduce((acc: number[][], feature: any) => {
+        return acc.concat(extractGeoJsonCoordinates(feature))
+      }, [])
+      break
+
+    default:
+      coordinates = []
+  }
+
+  return coordinates
 }
