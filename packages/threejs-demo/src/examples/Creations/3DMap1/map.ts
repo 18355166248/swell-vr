@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
-import ChinaData from '../../../data/map/china.json'
+import AnhuiData from './anhui.json'
 import {extractGeoJsonCoordinates} from './utils'
 
 export default class Map {
@@ -22,18 +22,11 @@ export default class Map {
       this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
 
       const renderer = this.renderer
-      renderer.shadowMap.enabled = true // 开启阴影
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
-      this.renderer.toneMapping = THREE.ACESFilmicToneMapping
-      this.renderer.toneMappingExposure = 1.25
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       renderer.setSize(this.width, this.height)
       renderer.setClearColor(0xffffff, 0)
 
       this.scene = new THREE.Scene()
-
-      // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
-      // this.scene.add(ambientLight)
 
       this.camera = new THREE.PerspectiveCamera(
         60,
@@ -49,8 +42,6 @@ export default class Map {
 
       this.container.appendChild(renderer.domElement)
 
-      // 初始化控制器
-      this.setController()
       // 初始化地图
       this.initMap()
 
@@ -79,11 +70,11 @@ export default class Map {
         fill: true,
         fillColor: 'red',
         shadowColor: 'red',
-        shadowBlur: 100,
-        shadowBlurScale: 0.02,
+        shadowBlur: 60,
+        shadowBlurScale: 0.1,
       },
-      canvasWidth: 400,
-      canvasHeight: 400,
+      canvasWidth: 1024,
+      canvasHeight: 768,
     })
   }
 
@@ -95,7 +86,7 @@ export default class Map {
   initInnerShadow({
     drawStyle,
     canvasWidth = 1024,
-    canvasHeight = 1024,
+    canvasHeight = 768,
   }: {
     drawStyle: {
       fill: boolean
@@ -107,77 +98,100 @@ export default class Map {
     canvasWidth?: number
     canvasHeight?: number
   }) {
+    const mapScale = 9.0
     // 创建画布和上下文
     const mapCanvas = document.createElement('canvas')
     mapCanvas.width = canvasWidth
     mapCanvas.height = canvasHeight
+    mapCanvas.style.width = canvasWidth + 'px'
+    mapCanvas.style.height = canvasHeight + 'px'
     const mapContext = mapCanvas.getContext('2d') as CanvasRenderingContext2D
 
-    // 遍历所有地理特征（省份）
-    const provinces = ChinaData.features
-    provinces.forEach(province => {
-      // 获取省份的边界框
-      const boundingBox = this.bbox(province)
-      const topLeft = this.convertToPixelCoordinates(
-        boundingBox[0],
-        boundingBox[1],
-        1,
-      )
-      const bottomRight = this.convertToPixelCoordinates(
-        boundingBox[2],
-        boundingBox[3],
-        1,
-      )
+    // 计算地图完整边界
+    const a = this.bbox(AnhuiData)
+    const allTopLeft = this.convertToPixelCoordinates(a[0], a[1], mapScale)
+    const allBottomRight = this.convertToPixelCoordinates(a[2], a[3], mapScale)
 
-      // 计算绘制区域的宽度和高度
-      const areaWidth = Math.abs(topLeft[0] - bottomRight[0])
-      const areaHeight = Math.abs(topLeft[1] - bottomRight[1])
+    // 计算地图边界的宽度和高度
+    const mapWidth = Math.abs(allTopLeft[0] - allBottomRight[0])
+    const mapHeight = Math.abs(allTopLeft[1] - allBottomRight[1])
 
-      if (areaWidth > 0 && areaHeight > 0) {
-        drawStyle.shadowBlur =
-          Math.min(areaWidth, areaHeight) * drawStyle.shadowBlurScale
-        // 遍历省份的每个多边形区域
-        const polygons = province.geometry.coordinates
-        for (
-          let polygonIndex = 0;
-          polygonIndex < polygons.length;
-          polygonIndex++
-        ) {
-          const polygon = polygons[polygonIndex]
+    // 计算缩放比例，使地图能够适应canvas
+    const scaleX = canvasWidth / mapWidth
+    const scaleY = canvasHeight / mapHeight
+    const scale = Math.min(scaleX, scaleY) * 0.9 // 稍微缩小一点，留出边距
 
-          // 绘制单个多边形的内阴影
-          const shadowCanvas = this.drawInnerShadow({
-            feature: polygon,
-            zoom: 1,
-            style: drawStyle,
-            width: areaWidth,
-            height: areaHeight,
-            offset: [topLeft[0], bottomRight[1]],
-          })
+    // 计算居中偏移
+    const offsetX = (canvasWidth - mapWidth * scale) / 2
+    const offsetY = (canvasHeight - mapHeight * scale) / 2
 
-          // 将阴影效果绘制到主画布上
-          mapContext.drawImage(
-            shadowCanvas,
-            Math.abs(0),
-            Math.abs(0),
-            shadowCanvas.width,
-            shadowCanvas.height,
-          )
-        }
+    // 遍历省份的每个多边形区域
+    const polygons = AnhuiData.geometry.coordinates
+    for (let polygonIndex = 0; polygonIndex < polygons.length; polygonIndex++) {
+      const polygon = polygons[polygonIndex]
+
+      // 绘制单个多边形的内阴影
+      const shadowCanvas = this.drawInnerShadowScaled({
+        feature: polygon,
+        zoom: mapScale,
+        style: drawStyle,
+        width: canvasWidth,
+        height: canvasHeight,
+        offset: [allTopLeft[0], allBottomRight[1]],
+        scale: scale,
+        canvasOffset: [offsetX, offsetY],
+      })
+
+      if (shadowCanvas) {
+        // 将阴影效果绘制到主画布上
+        mapContext.drawImage(
+          shadowCanvas,
+          0,
+          0,
+          shadowCanvas.width,
+          shadowCanvas.height,
+        )
       }
-    })
+    }
 
     // 生成最终的图片数据URL
-    const resultImageUrl = mapCanvas.toDataURL('image/png', 0.9)
-    console.log('Generated map shadow image URL:', resultImageUrl)
+    // this.downloadImage(mapCanvas, 'map')
+
+    this.drawMesh(mapCanvas, canvasWidth, canvasHeight)
+  }
+
+  drawMesh(
+    mapCanvas: HTMLCanvasElement,
+    canvasWidth: number,
+    canvasHeight: number,
+  ) {
+    // 将图片数据转换为纹理 铺满屏幕
+    const texture = new THREE.Texture(mapCanvas)
+    texture.needsUpdate = true
+
+    // 创建一个适合屏幕的大平面
+    // 计算宽高比以保持纹理不变形
+    const aspectRatio = canvasWidth / canvasHeight
+    const planeWidth = 200 // 增大平面尺寸
+    const planeHeight = planeWidth / aspectRatio
+
+    const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight)
+    const planeMaterial = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true, // 启用透明度
+      side: THREE.DoubleSide, // 双面可见
+    })
+
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial)
+
+    // 保存对地图对象的引用
+    this.scene?.add(plane)
   }
 
   /**
-   * 为单个地理区域绘制内阴影效果
-   * @param params 绘制参数
-   * @returns 包含阴影效果的Canvas元素
+   * 为单个地理区域绘制内阴影效果，并支持缩放和居中
    */
-  drawInnerShadow(params: {
+  drawInnerShadowScaled(params: {
     feature: number[][][] // 地理区域坐标数据
     zoom: number // 缩放级别
     style: {
@@ -190,8 +204,11 @@ export default class Map {
     width: number // 画布宽度
     height: number // 画布高度
     offset: number[] // 坐标偏移量
+    scale: number // 缩放比例
+    canvasOffset: number[] // 画布上的偏移，用于居中
   }) {
-    const {feature, zoom, style, width, height, offset} = params
+    const {feature, zoom, style, width, height, offset, scale, canvasOffset} =
+      params
 
     // 创建新的画布和上下文
     const shadowCanvas = document.createElement('canvas')
@@ -207,7 +224,6 @@ export default class Map {
     const pathPoints: [number, number][][] = [[]]
 
     // 转换地理坐标为像素坐标
-    pathPoints[0].push([0, 0])
     for (let i = 0; i < feature[0].length; i++) {
       const point = feature[0][i]
       const pixelCoord = this.convertToPixelCoordinates(
@@ -215,10 +231,15 @@ export default class Map {
         point[1],
         zoom,
       )
-      pathPoints[0].push([pixelCoord[0] - offset[0], pixelCoord[1] - offset[1]])
+      // 应用缩放和偏移
+      const scaledX = (pixelCoord[0] - offset[0]) * scale + canvasOffset[0]
+      const scaledY = (pixelCoord[1] - offset[1]) * scale + canvasOffset[1]
+      pathPoints[0].push([scaledX, scaledY])
     }
 
-    // 设置合成模式并开始绘制路径
+    if (pathPoints[0].length <= 10) return null
+
+    // 设置合成模式为源出
     ctx.globalCompositeOperation = 'source-out'
     ctx.beginPath()
 
@@ -237,12 +258,27 @@ export default class Map {
     }
 
     // 应用阴影和填充样式
-    ctx.shadowBlur = style.shadowBlur
+    ctx.shadowBlur = style.shadowBlur * scale // 根据缩放调整阴影模糊值
     ctx.shadowColor = style.shadowColor
     ctx.fillStyle = style.fillColor
     ctx.fill()
 
     return shadowCanvas
+  }
+
+  downloadImage(canvas: HTMLCanvasElement, fileName: string = 'map') {
+    // 生成图片数据URL（PNG格式，默认质量0.9）
+    const dataUrl = canvas.toDataURL('image/png', 0.9)
+
+    // 创建隐藏的下载链接
+    const link = document.createElement('a')
+    link.href = dataUrl
+    link.download = `${fileName}.png` // 自定义文件名
+    // 自定义下载的目录
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   /**
@@ -312,74 +348,5 @@ export default class Map {
     this.camera.updateMatrixWorld()
     this.controls?.update()
     this.renderer?.render(this.scene, this.camera)
-  }
-
-  setController() {
-    if (!this.camera || !this.renderer) return
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.minDistance = 20
-    this.controls.maxDistance = 400
-    // 使动画循环使用时阻尼或自转 意思是否有惯性
-    this.controls.enableDamping = true
-    //是否可以缩放
-    this.controls.enableZoom = true
-  }
-  setLight() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2) // 环境光
-
-    const light = new THREE.DirectionalLight(0xffffff, 0.5) // 平行光
-    light.position.set(20, -50, 20)
-
-    light.castShadow = true
-    light.shadow.mapSize.width = 1024
-    light.shadow.mapSize.height = 1024
-
-    // 半球光
-    const hemiLight = new THREE.HemisphereLight('#80edff', '#75baff', 0.3)
-    // 这个也是默认位置
-    hemiLight.position.set(20, -50, 0)
-
-    const pointLight = new THREE.PointLight(0xffffff, 0.5)
-    pointLight.position.set(20, -50, 50)
-
-    pointLight.castShadow = true
-    pointLight.shadow.mapSize.width = 1024
-    pointLight.shadow.mapSize.height = 1024
-
-    const pointLight2 = new THREE.PointLight(0xffffff, 0.5)
-    pointLight2.position.set(50, -50, 20)
-    pointLight2.castShadow = true
-    pointLight2.shadow.mapSize.width = 1024
-    pointLight2.shadow.mapSize.height = 1024
-
-    const pointLight3 = new THREE.PointLight(0xffffff, 0.5)
-    pointLight3.position.set(-50, -50, 20)
-    pointLight3.castShadow = true
-    pointLight3.shadow.mapSize.width = 1024
-    pointLight3.shadow.mapSize.height = 1024
-
-    this.scene?.add(light)
-    this.scene?.add(ambientLight)
-    this.scene?.add(hemiLight)
-    this.scene?.add(pointLight)
-    this.scene?.add(pointLight2)
-    this.scene?.add(pointLight3)
-  }
-  setBackground() {
-    const groundMaterial = new THREE.MeshStandardMaterial({
-      color: 0x031837,
-      metalness: 0,
-      roughness: 1,
-      opacity: 0.5,
-      transparent: true,
-    })
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(1000, 1000),
-      groundMaterial,
-    )
-    ground.rotation.z = 0
-    ground.receiveShadow = true
-    this.scene?.add(ground)
   }
 }
