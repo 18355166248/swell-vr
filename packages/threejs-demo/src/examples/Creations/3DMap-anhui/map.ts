@@ -3,6 +3,9 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import AnhuiData from './anhui.json'
 import {extractGeoJsonCoordinates} from './utils'
 
+// 安徽省的地理中心点（仅使用纬度计算经度校正）
+const centerLatitude = Number(AnhuiData.properties.centroid[1].toFixed(3))
+
 export default class Map {
   width: number
   height: number
@@ -73,8 +76,8 @@ export default class Map {
         shadowBlur: 60,
         shadowBlurScale: 0.1,
       },
-      canvasWidth: 200,
-      canvasHeight: 200,
+      canvasWidth: 1093,
+      canvasHeight: 1271,
     })
   }
 
@@ -175,9 +178,6 @@ export default class Map {
    * @returns 最佳地图缩放系数
    */
   calculateOptimalMapScale(canvasWidth: number, canvasHeight: number): number {
-    // 安徽省的地理中心点（仅使用纬度计算经度校正）
-    const centerLatitude = 31.8
-
     // 获取安徽省的边界框
     const bounds = this.bbox(AnhuiData)
 
