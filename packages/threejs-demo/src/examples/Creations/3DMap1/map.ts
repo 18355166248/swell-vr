@@ -73,8 +73,8 @@ export default class Map {
         shadowBlur: 60,
         shadowBlurScale: 0.1,
       },
-      canvasWidth: 1024,
-      canvasHeight: 768,
+      canvasWidth: 200,
+      canvasHeight: 200,
     })
   }
 
@@ -98,7 +98,10 @@ export default class Map {
     canvasWidth?: number
     canvasHeight?: number
   }) {
-    const mapScale = 9.0
+    // 根据画布尺寸计算最佳地图缩放值
+    const mapScale = this.calculateOptimalMapScale(canvasWidth, canvasHeight)
+    console.log('🚀 ~ Map ~ mapScale:', mapScale)
+
     // 创建画布和上下文
     const mapCanvas = document.createElement('canvas')
     mapCanvas.width = canvasWidth
@@ -116,14 +119,19 @@ export default class Map {
     const mapWidth = Math.abs(allTopLeft[0] - allBottomRight[0])
     const mapHeight = Math.abs(allTopLeft[1] - allBottomRight[1])
 
+    // 确保地图尺寸足够大
+    const minSize = 300
+    const adjustedMapWidth = Math.max(mapWidth, minSize)
+    const adjustedMapHeight = Math.max(mapHeight, minSize)
+
     // 计算缩放比例，使地图能够适应canvas
-    const scaleX = canvasWidth / mapWidth
-    const scaleY = canvasHeight / mapHeight
+    const scaleX = canvasWidth / adjustedMapWidth
+    const scaleY = canvasHeight / adjustedMapHeight
     const scale = Math.min(scaleX, scaleY) * 0.9 // 稍微缩小一点，留出边距
 
     // 计算居中偏移
-    const offsetX = (canvasWidth - mapWidth * scale) / 2
-    const offsetY = (canvasHeight - mapHeight * scale) / 2
+    const offsetX = (canvasWidth - adjustedMapWidth * scale) / 2
+    const offsetY = (canvasHeight - adjustedMapHeight * scale) / 2
 
     // 遍历省份的每个多边形区域
     const polygons = AnhuiData.geometry.coordinates
@@ -158,6 +166,51 @@ export default class Map {
     // this.downloadImage(mapCanvas, 'map')
 
     this.drawMesh(mapCanvas, canvasWidth, canvasHeight)
+  }
+
+  /**
+   * 计算最佳地图缩放比例，基于安徽省地理中心点和画布尺寸
+   * @param canvasWidth 画布宽度
+   * @param canvasHeight 画布高度
+   * @returns 最佳地图缩放系数
+   */
+  calculateOptimalMapScale(canvasWidth: number, canvasHeight: number): number {
+    // 安徽省的地理中心点（仅使用纬度计算经度校正）
+    const centerLatitude = 31.8
+
+    // 获取安徽省的边界框
+    const bounds = this.bbox(AnhuiData)
+
+    // 计算经纬度范围
+    const lonRange = Math.abs(bounds[2] - bounds[0])
+    const latRange = Math.abs(bounds[3] - bounds[1])
+
+    // 考虑纬度对经度距离的影响
+    const correctedLonRange =
+      lonRange * Math.cos((centerLatitude * Math.PI) / 180)
+
+    // 计算地理范围和画布的比例关系
+    // 这里的系数300是经验值，表示在比例为1时经度1度对应的像素数
+    const geoToPixelRatio = 300
+
+    // 计算理想宽度和高度（像素）
+    const idealWidth = correctedLonRange * geoToPixelRatio
+    const idealHeight = latRange * geoToPixelRatio
+
+    // 计算画布与理想尺寸的比例
+    const widthRatio = canvasWidth / idealWidth
+    const heightRatio = canvasHeight / idealHeight
+
+    // 取较小值以确保地图完全适应画布
+    const baseScale = Math.min(widthRatio, heightRatio) * 0.85 // 0.85是留白系数
+
+    // 基础缩放系数和地图缩放系数的关系
+    // 缩放系数越大，地图越详细，但适应画布的能力越差
+    // 所以我们使用反比关系
+    const mapScale = 1.5 / baseScale
+
+    // 确保mapScale在有效范围内
+    return Math.max(0.8, Math.min(mapScale, 9.0))
   }
 
   drawMesh(
@@ -293,22 +346,34 @@ export default class Map {
     latitude: number,
     zoomLevel: number,
   ): [number, number] {
-    // 计算x坐标（经度转换）
-    const x =
-      ((longitude + 180) / 360) * this.calculateTileSize(zoomLevel) * 256
+    // 确保缩放级别有一个合理的最小值
+    const effectiveZoom = Math.max(zoomLevel, 1.5)
 
-    // 计算y坐标（纬度转换）
-    const latRad = (latitude * Math.PI) / 180
-    const mercatorY =
-      0.5 -
-      Math.log((1 + Math.sin(latRad)) / (1 - Math.sin(latRad))) / (4 * Math.PI)
-    const y = mercatorY * this.calculateTileSize(zoomLevel) * 256
+    // 安徽省的大致中心点
+    const centerLongitude = 117.2
+    const centerLatitude = 31.8
+
+    // 相对于中心点的经纬度差值
+    const deltaLon = longitude - centerLongitude
+    const deltaLat = latitude - centerLatitude
+
+    // 根据缩放级别调整系数，较小的缩放级别使用更大的系数确保细节可见
+    const scaleFactor = effectiveZoom < 3 ? 800 / effectiveZoom : 256
+
+    // 使用更均匀的投影变换，减少地图变形
+    const x =
+      deltaLon * scaleFactor * Math.cos((centerLatitude * Math.PI) / 180)
+    const y = -deltaLat * scaleFactor // 纬度反转以匹配屏幕坐标系
 
     return [Math.floor(x), Math.floor(y)]
   }
 
   // 计算指定缩放级别下的瓦片大小
   calculateTileSize(zoomLevel: number): number {
+    // 为小缩放级别提供更大的基础值，保证足够的分辨率
+    if (zoomLevel <= 2) {
+      return Math.pow(4, zoomLevel)
+    }
     return Math.pow(2, zoomLevel)
   }
 
