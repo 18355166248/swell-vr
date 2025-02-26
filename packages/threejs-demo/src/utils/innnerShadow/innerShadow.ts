@@ -1,86 +1,19 @@
-import * as THREE from 'three'
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
-import AnhuiData from './anhui.json'
-import {extractGeoJsonCoordinates} from './utils'
+import {mapDataType} from './types'
+import {convertToPixelCoordinates, extractGeoJsonCoordinates} from './utils'
 
-// 安徽省的地理中心点（仅使用纬度计算经度校正）
-const centerLatitude = Number(AnhuiData.properties.centroid[1].toFixed(3))
-
-export default class Map {
-  width: number
-  height: number
-  renderer: THREE.WebGLRenderer | null = null
-  destroyTasks: (() => void)[] = []
-  scene?: THREE.Scene
-  camera?: THREE.PerspectiveCamera
-  map?: THREE.Object3D<THREE.Object3DEventMap>
-  controls?: OrbitControls
-
-  constructor(private readonly container: HTMLDivElement) {
-    this.width = this.container.clientWidth
-    this.height = this.container.clientHeight
+export class InnerShadow {
+  data: mapDataType
+  centerLatitude: number
+  mapScale = 1
+  scale = 1
+  allTopLeft: [number, number] = [0, 0]
+  allBottomRight: [number, number] = [0, 0]
+  offsetX = 0
+  offsetY = 0
+  constructor(outData: mapDataType) {
+    this.data = outData
+    this.centerLatitude = Number(outData.properties.centroid[1].toFixed(3))
   }
-  init() {
-    if (!this.renderer) {
-      this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
-
-      const renderer = this.renderer
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-      renderer.setSize(this.width, this.height)
-      renderer.setClearColor(0xffffff, 0)
-
-      this.scene = new THREE.Scene()
-
-      this.camera = new THREE.PerspectiveCamera(
-        60,
-        this.width / this.height,
-        0.1,
-        50_00,
-      )
-
-      this.camera.position.set(0, -30, 190)
-      this.camera.lookAt(0, 0, 0)
-
-      this.scene.position.y = 8
-
-      this.container.appendChild(renderer.domElement)
-
-      // 初始化地图
-      this.initMap()
-
-      this.render()
-
-      this.container.appendChild(renderer.domElement)
-
-      this.destroyTasks.push(() => {
-        if (this.renderer) {
-          this.renderer.renderLists && this.renderer.renderLists.dispose()
-          this.renderer.dispose && this.renderer.dispose()
-          this.renderer.forceContextLoss()
-          this.renderer?.domElement.remove()
-          this.renderer = null
-        }
-
-        this.controls && this.controls.dispose()
-        this.scene?.remove(...this.scene.children)
-      })
-    }
-  }
-
-  initMap() {
-    this.initInnerShadow({
-      drawStyle: {
-        fill: true,
-        fillColor: 'red',
-        shadowColor: 'red',
-        shadowBlur: 60,
-        shadowBlurScale: 0.1,
-      },
-      canvasWidth: 1093,
-      canvasHeight: 1271,
-    })
-  }
-
   /**
    * 初始化地图内阴影效果
    * 该方法通过Canvas绘制中国地图的内部阴影效果
@@ -103,6 +36,7 @@ export default class Map {
   }) {
     // 根据画布尺寸计算最佳地图缩放值
     const mapScale = this.calculateOptimalMapScale(canvasWidth, canvasHeight)
+    this.mapScale = mapScale
     console.log('🚀 ~ Map ~ mapScale:', mapScale)
 
     // 创建画布和上下文
@@ -114,9 +48,11 @@ export default class Map {
     const mapContext = mapCanvas.getContext('2d') as CanvasRenderingContext2D
 
     // 计算地图完整边界
-    const a = this.bbox(AnhuiData)
-    const allTopLeft = this.convertToPixelCoordinates(a[0], a[1], mapScale)
-    const allBottomRight = this.convertToPixelCoordinates(a[2], a[3], mapScale)
+    const a = this.bbox(this.data)
+    const allTopLeft = convertToPixelCoordinates(a[0], a[1], mapScale)
+    this.allTopLeft = allTopLeft
+    const allBottomRight = convertToPixelCoordinates(a[2], a[3], mapScale)
+    this.allBottomRight = allBottomRight
 
     // 计算地图边界的宽度和高度
     const mapWidth = Math.abs(allTopLeft[0] - allBottomRight[0])
@@ -131,13 +67,16 @@ export default class Map {
     const scaleX = canvasWidth / adjustedMapWidth
     const scaleY = canvasHeight / adjustedMapHeight
     const scale = Math.min(scaleX, scaleY) * 0.9 // 稍微缩小一点，留出边距
+    this.scale = scale
 
     // 计算居中偏移
     const offsetX = (canvasWidth - adjustedMapWidth * scale) / 2
+    this.offsetX = offsetX
     const offsetY = (canvasHeight - adjustedMapHeight * scale) / 2
+    this.offsetY = offsetY
 
     // 遍历省份的每个多边形区域
-    const polygons = AnhuiData.geometry.coordinates
+    const polygons = this.data.geometry.coordinates
     for (let polygonIndex = 0; polygonIndex < polygons.length; polygonIndex++) {
       const polygon = polygons[polygonIndex]
 
@@ -167,8 +106,7 @@ export default class Map {
 
     // 生成最终的图片数据URL
     // this.downloadImage(mapCanvas, 'map')
-
-    this.drawMesh(mapCanvas, canvasWidth, canvasHeight)
+    return mapCanvas
   }
 
   /**
@@ -179,7 +117,7 @@ export default class Map {
    */
   calculateOptimalMapScale(canvasWidth: number, canvasHeight: number): number {
     // 获取安徽省的边界框
-    const bounds = this.bbox(AnhuiData)
+    const bounds = this.bbox(this.data)
 
     // 计算经纬度范围
     const lonRange = Math.abs(bounds[2] - bounds[0])
@@ -187,7 +125,7 @@ export default class Map {
 
     // 考虑纬度对经度距离的影响
     const correctedLonRange =
-      lonRange * Math.cos((centerLatitude * Math.PI) / 180)
+      lonRange * Math.cos((this.centerLatitude * Math.PI) / 180)
 
     // 计算地理范围和画布的比例关系
     // 这里的系数300是经验值，表示在比例为1时经度1度对应的像素数
@@ -211,34 +149,6 @@ export default class Map {
 
     // 确保mapScale在有效范围内
     return Math.max(0.8, Math.min(mapScale, 9.0))
-  }
-
-  drawMesh(
-    mapCanvas: HTMLCanvasElement,
-    canvasWidth: number,
-    canvasHeight: number,
-  ) {
-    // 将图片数据转换为纹理 铺满屏幕
-    const texture = new THREE.Texture(mapCanvas)
-    texture.needsUpdate = true
-
-    // 创建一个适合屏幕的大平面
-    // 计算宽高比以保持纹理不变形
-    const aspectRatio = canvasWidth / canvasHeight
-    const planeWidth = 200 // 增大平面尺寸
-    const planeHeight = planeWidth / aspectRatio
-
-    const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight)
-    const planeMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true, // 启用透明度
-      side: THREE.DoubleSide, // 双面可见
-    })
-
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial)
-
-    // 保存对地图对象的引用
-    this.scene?.add(plane)
   }
 
   /**
@@ -279,14 +189,11 @@ export default class Map {
     // 转换地理坐标为像素坐标
     for (let i = 0; i < feature[0].length; i++) {
       const point = feature[0][i]
-      const pixelCoord = this.convertToPixelCoordinates(
-        point[0],
-        point[1],
-        zoom,
-      )
+      const pixelCoord = convertToPixelCoordinates(point[0], point[1], zoom)
       // 应用缩放和偏移
       const scaledX = (pixelCoord[0] - offset[0]) * scale + canvasOffset[0]
       const scaledY = (pixelCoord[1] - offset[1]) * scale + canvasOffset[1]
+
       pathPoints[0].push([scaledX, scaledY])
     }
 
@@ -334,40 +241,6 @@ export default class Map {
     document.body.removeChild(link)
   }
 
-  /**
-   * 将地理坐标转换为像素坐标
-   * @param longitude 经度
-   * @param latitude 纬度
-   * @param zoomLevel 缩放级别
-   * @returns 像素坐标 [x, y]
-   */
-  convertToPixelCoordinates(
-    longitude: number,
-    latitude: number,
-    zoomLevel: number,
-  ): [number, number] {
-    // 确保缩放级别有一个合理的最小值
-    const effectiveZoom = Math.max(zoomLevel, 1.5)
-
-    // 安徽省的大致中心点
-    const centerLongitude = 117.2
-    const centerLatitude = 31.8
-
-    // 相对于中心点的经纬度差值
-    const deltaLon = longitude - centerLongitude
-    const deltaLat = latitude - centerLatitude
-
-    // 根据缩放级别调整系数，较小的缩放级别使用更大的系数确保细节可见
-    const scaleFactor = effectiveZoom < 3 ? 800 / effectiveZoom : 256
-
-    // 使用更均匀的投影变换，减少地图变形
-    const x =
-      deltaLon * scaleFactor * Math.cos((centerLatitude * Math.PI) / 180)
-    const y = -deltaLat * scaleFactor // 纬度反转以匹配屏幕坐标系
-
-    return [Math.floor(x), Math.floor(y)]
-  }
-
   // 计算指定缩放级别下的瓦片大小
   calculateTileSize(zoomLevel: number): number {
     // 为小缩放级别提供更大的基础值，保证足够的分辨率
@@ -405,13 +278,5 @@ export default class Map {
         Math.max(point[1], boundingBox[3]), // 更新 maxY
       ]
     }, bounds) as [number, number, number, number]
-  }
-
-  render(): void {
-    if (!this.scene || !this.camera) return
-
-    this.camera.updateMatrixWorld()
-    this.controls?.update()
-    this.renderer?.render(this.scene, this.camera)
   }
 }

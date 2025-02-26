@@ -301,6 +301,10 @@ export default class ThreeBase {
     if (this.renderer && this.scene && this.camera && this.needRender) {
       this.renderer.render(this.scene, this.camera)
     }
+    if (this.scene && this.camera && this.css2Renderer) {
+      this.css2Renderer.render(this.scene, this.camera)
+    }
+    this.composer?.render()
     this.animate?.()
     this.threeAnim = requestAnimationFrame(this._animate.bind(this))
   }

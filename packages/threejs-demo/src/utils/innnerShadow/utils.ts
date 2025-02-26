@@ -76,3 +76,37 @@ export function extractGeoJsonCoordinates(geoJson: any): number[][] {
 
   return coordinates
 }
+
+/**
+ * 墨卡托投影
+ * 将地理坐标转换为像素坐标
+ * @param longitude 经度
+ * @param latitude 纬度
+ * @param zoomLevel 缩放级别
+ * @returns 像素坐标 [x, y]
+ */
+export function convertToPixelCoordinates(
+  longitude: number,
+  latitude: number,
+  zoomLevel: number,
+): [number, number] {
+  // 确保缩放级别有一个合理的最小值
+  const effectiveZoom = Math.max(zoomLevel, 1.5)
+
+  // 安徽省的大致中心点
+  const centerLongitude = 117.2
+  const centerLatitude = 31.8
+
+  // 相对于中心点的经纬度差值
+  const deltaLon = longitude - centerLongitude
+  const deltaLat = latitude - centerLatitude
+
+  // 根据缩放级别调整系数，较小的缩放级别使用更大的系数确保细节可见
+  const scaleFactor = effectiveZoom < 3 ? 800 / effectiveZoom : 256
+
+  // 使用更均匀的投影变换，减少地图变形
+  const x = deltaLon * scaleFactor * Math.cos((centerLatitude * Math.PI) / 180)
+  const y = -deltaLat * scaleFactor // 纬度反转以匹配屏幕坐标系
+
+  return [Math.floor(x), Math.floor(y)]
+}
