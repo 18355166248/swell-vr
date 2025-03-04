@@ -149,5 +149,6 @@
   ],
   "marscode.chatLanguage": "cn",
   "commentTranslate.source": "Bing",
-  "commentTranslate.targetLanguage": "en"
+  "commentTranslate.targetLanguage": "en",
+  "liveServer.settings.port": 5501
 }

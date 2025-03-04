@@ -64,13 +64,23 @@ function Three() {
           canvasHeight: this.height,
         })
 
+        const pixelCoord = convertToPixelCoordinates(
+          AnhuiData.properties.centroid[0],
+          AnhuiData.properties.centroid[1],
+          this.innerShadow.mapScale,
+        )
+
         const group = new THREE.Group()
         AnhuiData.geometry.coordinates.forEach(feature => {
           const coordinates = feature[0]
-          const mesh = this.drawExtrudeMesh(coordinates, 'pink')
+          const mesh = this.drawExtrudeMesh(
+            coordinates,
+            'rgba(179, 65, 185, 0.5)',
+            [0, 0],
+          )
           group.add(mesh)
         })
-        // group.position.set(-210, -6640, -11)
+        group.position.set(-200, 480, -10.5)
         this.scene?.add(group)
 
         this.drawInnerShadowMesh(innerShadowCanvas)
@@ -95,7 +105,11 @@ function Three() {
       }
 
       // 平面
-      drawExtrudeMesh(coordinate: number[][], color: string | number) {
+      drawExtrudeMesh(
+        coordinate: number[][],
+        color: string | number,
+        pixelCoord: [number, number],
+      ) {
         const {mapScale, scale, allTopLeft, allBottomRight, offsetX, offsetY} =
           this.innerShadow
         const offset: [number, number] = [allTopLeft[0], allBottomRight[1]]
@@ -131,9 +145,9 @@ function Three() {
           for (let pointIndex = 0; pointIndex < path.length; pointIndex++) {
             const point = path[pointIndex]
             if (pointIndex === 0) {
-              shape.moveTo(point[0], point[1])
+              shape.moveTo(point[0] - pixelCoord[0], point[1] - pixelCoord[1])
             } else {
-              shape.lineTo(point[0], point[1])
+              shape.lineTo(point[0] - pixelCoord[0], point[1] - pixelCoord[1])
             }
           }
         }
