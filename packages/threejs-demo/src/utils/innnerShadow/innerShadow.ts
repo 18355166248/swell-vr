@@ -66,7 +66,7 @@ export class InnerShadow {
     // 计算缩放比例，使地图能够适应canvas
     const scaleX = canvasWidth / adjustedMapWidth
     const scaleY = canvasHeight / adjustedMapHeight
-    const scale = Math.min(scaleX, scaleY) * 0.9 // 稍微缩小一点，留出边距
+    const scale = Math.min(scaleX, scaleY) * 1 // 稍微缩小一点，留出边距
     this.scale = scale
 
     // 计算居中偏移
@@ -83,7 +83,7 @@ export class InnerShadow {
       // 绘制单个多边形的内阴影
       const shadowCanvas = this.drawInnerShadowScaled({
         feature: polygon,
-        zoom: mapScale,
+        mapScale,
         style: drawStyle,
         width: canvasWidth,
         height: canvasHeight,
@@ -156,7 +156,7 @@ export class InnerShadow {
    */
   drawInnerShadowScaled(params: {
     feature: number[][][] // 地理区域坐标数据
-    zoom: number // 缩放级别
+    mapScale: number // 缩放级别
     style: {
       // 绘制样式
       fill: boolean
@@ -170,8 +170,16 @@ export class InnerShadow {
     scale: number // 缩放比例
     canvasOffset: number[] // 画布上的偏移，用于居中
   }) {
-    const {feature, zoom, style, width, height, offset, scale, canvasOffset} =
-      params
+    const {
+      feature,
+      mapScale,
+      style,
+      width,
+      height,
+      offset,
+      scale,
+      canvasOffset,
+    } = params
 
     // 创建新的画布和上下文
     const shadowCanvas = document.createElement('canvas')
@@ -189,12 +197,12 @@ export class InnerShadow {
     // 转换地理坐标为像素坐标
     for (let i = 0; i < feature[0].length; i++) {
       const point = feature[0][i]
-      const pixelCoord = convertToPixelCoordinates(point[0], point[1], zoom)
+      const pixelCoord = convertToPixelCoordinates(point[0], point[1], mapScale)
       // 应用缩放和偏移
-      const scaledX = (pixelCoord[0] - offset[0]) * scale + canvasOffset[0]
-      const scaledY = (pixelCoord[1] - offset[1]) * scale + canvasOffset[1]
+      const pathX = (pixelCoord[0] - offset[0]) * scale + canvasOffset[0]
+      const pathY = (pixelCoord[1] - offset[1]) * scale + canvasOffset[1]
 
-      pathPoints[0].push([scaledX, scaledY])
+      pathPoints[0].push([pathX, pathY])
     }
 
     if (pathPoints[0].length <= 10) return null

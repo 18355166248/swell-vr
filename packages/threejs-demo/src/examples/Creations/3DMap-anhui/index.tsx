@@ -55,35 +55,35 @@ function Three() {
         const innerShadowCanvas = this.innerShadow.initInnerShadow({
           drawStyle: {
             fill: true,
-            fillColor: 'red',
-            shadowColor: 'red',
+            fillColor: 'rgba(34,117,211,1)',
+            shadowColor: 'rgba(34,117,211,1)',
             shadowBlur: 60,
             shadowBlurScale: 0.1,
           },
           canvasWidth: this.width,
           canvasHeight: this.height,
         })
-
-        const pixelCoord = convertToPixelCoordinates(
-          AnhuiData.properties.centroid[0],
-          AnhuiData.properties.centroid[1],
-          this.innerShadow.mapScale,
-        )
-
+        const innerShadowMesh = this.drawInnerShadowMesh(innerShadowCanvas)
+        innerShadowMesh.position.z = 2
         const group = new THREE.Group()
+
+        group.add(innerShadowMesh)
+
+        const extrudeGroup = new THREE.Group()
+
         AnhuiData.geometry.coordinates.forEach(feature => {
           const coordinates = feature[0]
           const mesh = this.drawExtrudeMesh(
             coordinates,
-            'rgba(179, 65, 185, 0.5)',
-            [0, 0],
+            'rgb(255, 204, 255, 0.5)',
           )
-          group.add(mesh)
+          extrudeGroup.add(mesh)
         })
-        group.position.set(-200, 480, -10.5)
-        this.scene?.add(group)
+        extrudeGroup.position.x = -4
+        extrudeGroup.position.y = -15
 
-        this.drawInnerShadowMesh(innerShadowCanvas)
+        this.scene?.add(group)
+        this.scene?.add(extrudeGroup)
       }
 
       drawInnerShadowMesh(mapCanvas: HTMLCanvasElement) {
@@ -94,25 +94,24 @@ function Three() {
 
         const planeMaterial = new THREE.MeshBasicMaterial({
           map: texture,
+          opacity: 1,
           transparent: true, // 启用透明度
-          side: THREE.DoubleSide, // 双面可见
+          // side: THREE.DoubleSide, // 双面可见
+          depthWrite: true, // 关闭深度写入
+          depthTest: true, // 开启深度测试
         })
 
         const plane = new THREE.Mesh(planeGeometry, planeMaterial)
-
+        plane.renderOrder = 1 // 值越大，渲染越靠后
         // 保存对地图对象的引用
-        this.scene?.add(plane)
+        return plane
       }
 
-      // 平面
-      drawExtrudeMesh(
-        coordinate: number[][],
-        color: string | number,
-        pixelCoord: [number, number],
-      ) {
-        const {mapScale, scale, allTopLeft, allBottomRight, offsetX, offsetY} =
-          this.innerShadow
-        const offset: [number, number] = [allTopLeft[0], allBottomRight[1]]
+      // 侧面
+      drawExtrudeMesh(coordinate: number[][], color: string | number) {
+        const {mapScale, scale, offsetX, offsetY} = this.innerShadow
+        console.log('🚀 ~ MyThree ~ useLayoutEffect ~ offsetX:', offsetX)
+        console.log('🚀 ~ MyThree ~ useLayoutEffect ~ offsetY:', offsetY)
 
         // 准备坐标点数组
         const pathPoints: [number, number][][] = [[]]
@@ -129,13 +128,14 @@ function Three() {
           )
 
           // 应用缩放和偏移
-          const scaledX = (pixelCoord[0] - offset[0]) * scale + offsetX
-
+          // const scaledX = (pixelCoord[0] - offset[0]) * scale
+          const pathX = pixelCoord[0] * scale
           // 为了保持地图正确方向，在这里对 Y 坐标进行反转
-          const scaledY = (pixelCoord[1] - offset[1]) * scale + offsetY
+          // const scaledY = (pixelCoord[1] - offset[1]) * scale
+          const pathY = pixelCoord[1] * scale
 
           // 将坐标保存到数组，但在创建Three.js的形状时进行Y轴反转
-          pathPoints[0].push([scaledX, -scaledY])
+          pathPoints[0].push([pathX, -pathY])
         }
 
         const shape = new THREE.Shape()
@@ -145,15 +145,15 @@ function Three() {
           for (let pointIndex = 0; pointIndex < path.length; pointIndex++) {
             const point = path[pointIndex]
             if (pointIndex === 0) {
-              shape.moveTo(point[0] - pixelCoord[0], point[1] - pixelCoord[1])
+              shape.moveTo(point[0], point[1])
             } else {
-              shape.lineTo(point[0] - pixelCoord[0], point[1] - pixelCoord[1])
+              shape.lineTo(point[0], point[1])
             }
           }
         }
         shape.closePath()
         const extrudeSettings = {
-          depth: 10,
+          depth: -10,
           bevelEnabled: false,
           bevelSegments: 1,
           bevelThickness: 0.2,
@@ -166,9 +166,12 @@ function Three() {
           color,
           transparent: true,
           opacity: 0.5,
+          side: THREE.DoubleSide,
+          depthWrite: false, // 关闭深度写入
         })
 
         const mesh = new THREE.Mesh(geometry, material)
+        mesh.renderOrder = 2 // 值越大，渲染越靠后
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         mesh._color = color

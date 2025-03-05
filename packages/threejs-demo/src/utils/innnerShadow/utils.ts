@@ -106,7 +106,8 @@ export function convertToPixelCoordinates(
 
   // 使用更均匀的投影变换，减少地图变形
   const x = deltaLon * scaleFactor * Math.cos((centerLatitude * Math.PI) / 180)
-  const y = -deltaLat * scaleFactor // 纬度反转以匹配屏幕坐标系
+  // 纬度反转以匹配屏幕坐标系
+  const y = -deltaLat * scaleFactor
 
   return [Math.floor(x), Math.floor(y)]
 }

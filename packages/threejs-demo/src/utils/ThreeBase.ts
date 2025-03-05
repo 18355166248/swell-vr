@@ -84,9 +84,9 @@ export default class ThreeBase {
     this.height = this.container?.clientHeight || 0
 
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      logarithmicDepthBuffer: false,
+      antialias: true, // 抗锯齿
+      alpha: true, // 透明度
+      logarithmicDepthBuffer: false, // 深度缓冲区
       ...this.rendererSettings,
       //想把canvas画布上内容下载到本地，需要设置为true
       // preserveDrawingBuffer:true,
