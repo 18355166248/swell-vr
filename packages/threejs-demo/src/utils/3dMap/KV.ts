@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {geoToCartesian, geoToCartesianAlt} from './oA'
 import {projectCoords} from './projectCoords'
 import * as turf from '@turf/turf'
@@ -24,7 +25,20 @@ const JV = {
  * @param {Object} t.viewClip - 视图裁剪配置
  * @returns {Object} 地图视图配置和相机状态
  */
-function KV(t) {
+function KV(t: {
+  geojson: any
+  geojsonProj: any
+  geojsonUtil: any
+  worldBboxSize: number
+  heightScale: number
+  pitch: number
+  rotation: number
+  offset: number[]
+  viewClip: {
+    bbox: number[]
+    direction: string
+  }
+}) {
   // 解构输入参数
   const {
     geojson: geoData,
@@ -116,10 +130,10 @@ function KV(t) {
  */
 function calculateClippedBbox(
   originalBbox: [number, number, number, number],
-  clipBbox: [number, number, number, number],
+  clipBbox: number[],
   direction: string,
-) {
-  const resultBbox = [0, 0, 0, 0]
+): [number, number, number, number] {
+  const resultBbox: [number, number, number, number] = [0, 0, 0, 0]
 
   switch (direction) {
     case 'bottom-right':
@@ -164,7 +178,11 @@ function calculateClippedBbox(
  * @param {number} heightFactor - 高度比例因子
  * @returns {Object} 包含边界框各种计算参数的对象
  */
-function calculateBboxOptions(bbox, worldSize, heightFactor) {
+function calculateBboxOptions(
+  bbox: number[],
+  worldSize: number,
+  heightFactor: number,
+) {
   // 计算投影坐标系中的中心点
   const centerProj = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 0]
 
