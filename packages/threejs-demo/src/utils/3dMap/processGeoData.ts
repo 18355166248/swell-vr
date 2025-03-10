@@ -1,15 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {merge} from 'lodash-es'
 import {lV} from './lV'
-import * as turf from '@turf/turf'
-import {Qf} from './Qf'
-
-// 扩展Window接口
-declare global {
-  interface Window {
-    ZV: typeof processGeoData
-  }
-}
+import {transformGeoJSON} from './transformGeoJSON'
+import {projectCoords} from './projectCoords'
 
 const DEFAULT_CONFIG = {
   useProcess: !0,
@@ -17,13 +10,13 @@ const DEFAULT_CONFIG = {
 }
 
 interface MapData {
-  __geojson_process_proj__: any
-  __geojson_process__: any
-  __geojson__: any
-  __raw_geojson__: any
   type: string
   data: any
-  simplify: {
+  __geojson_process_proj__?: any
+  __geojson_process__?: any
+  __geojson__?: any
+  __raw_geojson__?: any
+  simplify?: {
     enabled: boolean
     tolerance: number
   }
@@ -34,11 +27,7 @@ interface MapData {
  * @param {Object} config - 配置选项
  * @returns {Object|null} - 处理后的地图数据对象或null
  */
-async function processGeoData(
-  mapData: MapData,
-  config?: typeof DEFAULT_CONFIG,
-) {
-  console.log('🚀 ~ processGeoData ~ mapData:', mapData)
+function processGeoData(mapData: MapData, config?: typeof DEFAULT_CONFIG) {
   // 检查数据是否存在
   if (!(null == mapData ? void 0 : mapData.data)) return null
 
@@ -92,12 +81,13 @@ async function processGeoData(
 
   // 如果启用了投影选项，对GeoJSON数据进行投影转换
   if (enableProjection) {
-    mapData.__geojson_process_proj__ = turf.coordEach(
+    mapData.__geojson_process_proj__ = transformGeoJSON(
       enableProcessing ? mapData.__geojson_process__ : mapData.__geojson__,
-      Qf,
+      projectCoords,
     )
   }
 
   return mapData
 }
-window.ZV = processGeoData
+
+export {processGeoData}
