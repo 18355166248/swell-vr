@@ -65,9 +65,10 @@ class ThreeMap {
     this.initMap()
   }
   async initMap() {
+    const color = new THREE.Color('#080c11')
+
     // 调整地图比例
     this.scaleAdaptation()
-    const color = new THREE.Color('#76e805')
 
     this.extrudeTopMaterial = new THREE.MeshStandardMaterial({
       color,
@@ -88,8 +89,8 @@ class ThreeMap {
       bottomOpacity: sideBottomOpacity,
       topOpacity: sideTopOpacity,
     } = processGradientColor(colorConfig)!
-    
     // 创建侧面渐变材质
+
     this.extrudeSideMaterial = new THREE.ShaderMaterial({
       uniforms: {
         type: {
@@ -184,7 +185,7 @@ class ThreeMap {
           // eslint-disable-next-line no-case-declarations
           const topMesh = new THREE.Mesh(topGeometry, this.extrudeTopMaterial!)
 
-          topMesh.renderOrder = 10
+          topMesh.renderOrder = 3
           topMesh.scale.z = baseHeight
           topMesh.position.z = 0
           topMesh.userData.faceType = 'top'
