@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {max} from 'lodash-es'
 import {geoToCartesian, geoToCartesianAlt} from './oA'
-import {projectCoords} from './projectCoords'
+import {projectCoords, unprojectCoords} from './projectCoords'
 import * as turf from '@turf/turf'
 
 const JV = {
@@ -28,13 +29,13 @@ const JV = {
 function KV(t: {
   geojson: any
   geojsonProj: any
-  geojsonUtil: any
+  project: (coords: number[]) => number[]
   worldBboxSize: number
   heightScale: number
   pitch: number
   rotation: number
   offset: number[]
-  viewClip: {
+  viewClip?: {
     bbox: number[]
     direction: string
   }
@@ -191,7 +192,10 @@ function calculateBboxOptions(
   const corner2 = [bbox[2], bbox[3]]
 
   // 使用窗口函数转换坐标
-  const transformedBbox = [...window.Zf(corner1), ...window.Zf(corner2)]
+  const transformedBbox = [
+    ...unprojectCoords(corner1),
+    ...unprojectCoords(corner2),
+  ]
 
   // 计算转换后边界框的中心
   const center = [
@@ -215,7 +219,7 @@ function calculateBboxOptions(
 
   // 计算实际的边界框大小
   const bboxSize =
-    window.ef([width / constantWidth, height / constantHeight]) *
+    (max([width / constantWidth, height / constantHeight]) as number) *
     constantBboxSize
 
   // 计算边界框比例和基础高度

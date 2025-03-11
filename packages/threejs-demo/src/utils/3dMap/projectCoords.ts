@@ -76,4 +76,24 @@ function projectCoords(coords: any) {
 }
 // window.Qf = projectCoords; // 保持原有的全局导出名称
 
-export {projectCoords}
+/**
+ * 坐标反投影函数
+ * 将投影坐标转换回经纬度坐标
+ * @param {Array} coords - 输入投影坐标 [x, y, ?altitude]
+ * @returns {Array} 反投影后的经纬度坐标 [longitude, latitude, ?altitude]
+ */
+function unprojectCoords(coords: any) {
+  const projector = MapProjection
+  if (void 0 === coords[2]) {
+    // 二维坐标反投影
+    return projector.unproject(coords[0], coords[1])
+  }
+  {
+    // 三维坐标反投影，保留高度值
+    const unprojectedCoords = projector.unproject(coords[0], coords[1])
+    return unprojectedCoords.push(coords[2]), unprojectedCoords
+  }
+}
+
+// Qf Zf
+export {projectCoords, unprojectCoords}

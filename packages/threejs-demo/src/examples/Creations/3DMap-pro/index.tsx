@@ -16,18 +16,17 @@ function Three() {
       pointsArr: THREE.Vector3[] = []
       i = 0 // 管道累加数
       group?: THREE.Group<THREE.Object3DEventMap>
-      map: ThreeMap
+      map?: ThreeMap
 
       constructor() {
         super()
         this.isControl = true
-        this.axesHelperSize = 200
+        this.axesHelperSize = 40
         this.isAxesHelper = true
         this.cameraConfig.fov = 450
-        this.cameraConfig.far = 20000
+        this.cameraConfig.far = 650000
         this.isCSS2Renderer = true
         this.isRayCaster = true
-        this.map = new ThreeMap({data: ChinaData})
       }
       animate(): void {
         // console.log(this.camera?.position)
@@ -43,7 +42,23 @@ function Three() {
 
         this.scene?.add(directionalLight)
       }
-      initMap() {}
+      initMap() {
+        if (this.scene && this.renderer && this.camera && this.controls) {
+          console.log(this.camera)
+          this.camera.position.set(
+            127341.46718482752,
+            1170.6685647963968,
+            49496.650606293035,
+          )
+          this.map = new ThreeMap({
+            data: ChinaData,
+            sceneSystem: this.scene,
+            renderSystem: this.renderer,
+            cameraSystem: this.camera,
+            controlsSystem: this.controls,
+          })
+        }
+      }
     }
 
     const myThree = new MyThree()
