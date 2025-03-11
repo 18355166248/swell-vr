@@ -21,7 +21,7 @@ function Three() {
       constructor() {
         super()
         this.isControl = true
-        this.axesHelperSize = 40
+        this.axesHelperSize = 50000
         this.isAxesHelper = true
         this.cameraConfig.fov = 450
         this.cameraConfig.far = 650000
