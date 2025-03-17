@@ -85,9 +85,11 @@ function KV(t: {
   const cameraPosition = geoToCartesian(cameraPitch, cameraRotation).map(
     value => value * scaledSize,
   )
+  console.log('🚀 ~ cameraPosition:', cameraPosition)
   cameraPosition[0] += bboxCenter[0]
   cameraPosition[1] += bboxCenter[1]
   cameraPosition[2] += bboxCenter[2]
+  console.log('🚀 ~ cameraPosition:', cameraPosition)
 
   // 计算相机上方向
   const cameraUp = geoToCartesianAlt(cameraPitch, cameraRotation)
@@ -106,11 +108,12 @@ function KV(t: {
         bboxCenter[1] + cameraOffset[1] * bboxOptions.size.bboxSize,
         0,
       ],
-      position: [
-        cameraPosition[0] + cameraOffset[0] * bboxOptions.size.bboxSize,
-        cameraPosition[1] + cameraOffset[1] * bboxOptions.size.bboxSize,
-        cameraPosition[2],
-      ],
+      // position: [
+      //   cameraPosition[0] + cameraOffset[0] * bboxOptions.size.bboxSize,
+      //   cameraPosition[1] + cameraOffset[1] * bboxOptions.size.bboxSize,
+      //   cameraPosition[2],
+      // ],
+      position: [127341.46718482752, 1170.6685647963968, 49496.650606293035],
       up: cameraUp,
     },
     layerFitValue: {

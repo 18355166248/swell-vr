@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as THREE from 'three'
@@ -63,12 +64,40 @@ class ThreeMap {
     this.viewportSystem.sceneSystem.add(this.districtFillGroup)
 
     this.initMap()
+
+    this.districtFillGroup.updateWorldMatrix(true, true)
+    const box = new THREE.Box3().setFromObject(this.districtFillGroup)
+    const size = new THREE.Vector3()
+    box.getSize(size)
+    const planeGeo = new THREE.PlaneGeometry(size.x, size.y)
+    const planeMat = new THREE.MeshBasicMaterial({color: 0xffff00})
+    const backgroundPlane = new THREE.Mesh(planeGeo, planeMat)
+    this.districtFillGroup.add(backgroundPlane)
+    console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
   }
   async initMap() {
     const color = new THREE.Color('#080c11')
 
     // 调整地图比例
     this.scaleAdaptation()
+
+    console.log(this.gis.globalOpts.cameraStatus.target)
+
+    this.viewportSystem.cameraSystem.position.set(
+      this.gis.globalOpts.cameraStatus.position[0],
+      this.gis.globalOpts.cameraStatus.position[1],
+      this.gis.globalOpts.cameraStatus.position[2],
+    )
+    this.viewportSystem.cameraSystem.up.set(
+      this.gis.globalOpts.cameraStatus.up[0],
+      this.gis.globalOpts.cameraStatus.up[1],
+      this.gis.globalOpts.cameraStatus.up[2],
+    )
+    this.viewportSystem.controlsSystem.target.set(
+      this.gis.globalOpts.cameraStatus.target[0],
+      this.gis.globalOpts.cameraStatus.target[1],
+      this.gis.globalOpts.cameraStatus.target[2],
+    )
 
     this.extrudeTopMaterial = new THREE.MeshStandardMaterial({
       color,
@@ -94,7 +123,7 @@ class ThreeMap {
     this.extrudeSideMaterial = new THREE.ShaderMaterial({
       uniforms: {
         type: {
-          type: 'int',
+          // type: 'int',
           value: (colorType => {
             switch (colorType) {
               case 'linear':
@@ -107,14 +136,14 @@ class ThreeMap {
           })(colorConfig.type),
         },
         bottomColor: {
-          type: 'vec3',
+          // type: 'vec3',
           value: {
             color: sideBottomColor,
             opacity: sideBottomOpacity,
           },
         },
         topColor: {
-          type: 'vec3',
+          // type: 'vec3',
           value: {
             color: sideTopColor,
             opacity: sideTopOpacity,
@@ -134,7 +163,8 @@ class ThreeMap {
   initExtrude() {
     // 处理区域拉伸效果
     const {bboxOption, boundaryProj} = this.gis.globalOpts
-    const processedData = bV(boundaryProj, bboxOption)
+    console.log('🚀 ~ ThreeMap ~ initExtrude ~ bboxOption:', bboxOption)
+    const processedData = bV(mockData, bboxOption.bboxProj)
 
     // 初始化索引和位置计数器
     let indexOffset = 0,
@@ -211,7 +241,6 @@ class ThreeMap {
 
         case 1: // 侧面
           // 创建侧面几何体
-          // eslint-disable-next-line no-case-declarations
           const sideGeometry = RV({
             index: processedData.index.slice(
               indexOffset,
@@ -232,7 +261,6 @@ class ThreeMap {
           })
 
           // 创建侧面网格
-          // eslint-disable-next-line no-case-declarations
           const sideMesh = new THREE.Mesh(
             sideGeometry,
             this.extrudeSideMaterial!,
@@ -269,6 +297,7 @@ class ThreeMap {
       offset: [0, 0, 0],
       // offset: [0.027833236052840063, -0.0586515564517673, 0.9499718963036327],
     })
+    console.log('🚀 ~ ThreeMap ~ scaleAdaptation ~ p:', p)
     this.gis.globalOpts = p
   }
 }

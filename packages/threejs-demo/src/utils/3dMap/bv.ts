@@ -111,15 +111,15 @@ function gV(t, e, i, n = [], r = !0) {
  * @param {Object} params - 输入参数，包含coordinates(坐标)、bbox(边界框)和height(高度)
  */
 function yV(targetGeometry, params) {
-  const {coordinates, bbox, height} = params,
-    // 将多边形坐标扁平化为顶点数组
-    {vertices, holes, dimensions} = flatten(coordinates),
-    // 对顶点进行三角剖分，生成三角形索引
-    triangulatedIndices = earcut(vertices, holes, dimensions),
-    // 从目标几何体中提取各个属性数组
-    {index, position, normal, uv} = targetGeometry,
-    // 计算边界框的宽度和高度，用于纹理坐标映射
-    bboxWidth = bbox[2] - bbox[0],
+  const {coordinates, bbox, height} = params
+  // 将多边形坐标扁平化为顶点数组
+  const {vertices, holes, dimensions} = flatten(coordinates)
+  // 对顶点进行三角剖分，生成三角形索引
+  const triangulatedIndices = earcut(vertices, holes, dimensions)
+  // 从目标几何体中提取各个属性数组
+  const {index, position, normal, uv} = targetGeometry
+  // 计算边界框的宽度和高度，用于纹理坐标映射
+  const bboxWidth = bbox[2] - bbox[0],
     bboxHeight = bbox[3] - bbox[1],
     // 记录当前顶点数量，用于索引偏移
     vertexOffset = position.length / 3
@@ -279,7 +279,7 @@ function vV(targetGeometry, params) {
   // 第二步：处理每个轮廓，生成侧面三角形
   for (i = 0; i < tempHoles.length; i++) {
     // 获取当前轮廓的起始和结束位置
-    ;[contourStart, contourEnd] = tempHoles[i]
+    const [contourStart, contourEnd] = tempHoles[i]
 
     // 判断是否为外部轮廓
     isFirstContour = i === 0

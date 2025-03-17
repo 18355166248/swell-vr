@@ -45,11 +45,24 @@ function Three() {
       initMap() {
         if (this.scene && this.renderer && this.camera && this.controls) {
           console.log(this.camera)
-          this.camera.position.set(
-            127341.46718482752,
-            1170.6685647963968,
-            49496.650606293035,
-          )
+
+          // this.camera.position.set(
+          //   127341.46718482752,
+          //   1170.6685647963968,
+          //   49496.650606293035,
+          // )
+          // this.camera.rotation.set(
+          //   0.6853770380192793,
+          //   0.14510441736113688,
+          //   0.1750452624403592,
+          // )
+          // this.camera.up.set(
+          //   -0.17232250515387304,
+          //   0.746410773670208,
+          //   0.6427876096865393,
+          // )
+          // this.controls.target.set(117998.66024086998, 41638.81144064294, 0)
+
           this.map = new ThreeMap({
             data: ChinaData,
             sceneSystem: this.scene,
