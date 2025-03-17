@@ -113,6 +113,7 @@ function KV(t: {
       //   cameraPosition[1] + cameraOffset[1] * bboxOptions.size.bboxSize,
       //   cameraPosition[2],
       // ],
+      // 相机位置
       position: [127341.46718482752, 1170.6685647963968, 49496.650606293035],
       up: cameraUp,
     },

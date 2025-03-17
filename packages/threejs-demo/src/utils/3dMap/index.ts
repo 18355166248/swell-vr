@@ -11,7 +11,6 @@ import {projectCoords} from './projectCoords'
 import {Vf} from './constant'
 import {bV} from './bv'
 import RV from './RV'
-import {mockData} from './mock'
 
 class ThreeMap {
   public bgGeoData: any
@@ -76,7 +75,7 @@ class ThreeMap {
     console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
   }
   async initMap() {
-    const color = new THREE.Color('#080c11')
+    const color = new THREE.Color('#e91a0b')
 
     // 调整地图比例
     this.scaleAdaptation()
@@ -99,6 +98,7 @@ class ThreeMap {
       this.gis.globalOpts.cameraStatus.target[2],
     )
 
+    // 创建顶部材质
     this.extrudeTopMaterial = new THREE.MeshStandardMaterial({
       color,
       transparent: true,
@@ -163,8 +163,7 @@ class ThreeMap {
   initExtrude() {
     // 处理区域拉伸效果
     const {bboxOption, boundaryProj} = this.gis.globalOpts
-    console.log('🚀 ~ ThreeMap ~ initExtrude ~ bboxOption:', bboxOption)
-    const processedData = bV(mockData, bboxOption.bboxProj)
+    const processedData = bV(boundaryProj, bboxOption.bboxProj)
 
     // 初始化索引和位置计数器
     let indexOffset = 0,
@@ -216,7 +215,7 @@ class ThreeMap {
           const topMesh = new THREE.Mesh(topGeometry, this.extrudeTopMaterial!)
 
           topMesh.renderOrder = 3
-          topMesh.scale.z = baseHeight
+          // topMesh.scale.z = baseHeight
           topMesh.position.z = 0
           topMesh.userData.faceType = 'top'
           topMesh.name = 'map-top'
