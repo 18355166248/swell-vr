@@ -11,6 +11,7 @@ import {projectCoords} from './projectCoords'
 import {Vf} from './constant'
 import {bV} from './bv'
 import RV from './RV'
+import {createDistrictInnerShadow} from './createDistrictInnerShadow'
 
 class ThreeMap {
   public bgGeoData: any
@@ -33,6 +34,35 @@ class ThreeMap {
     globalOpts: {},
   }
   districtFillGroup = new THREE.Group()
+  districtStyle: {
+    enabled: boolean
+    heightScale: number
+    fill: {
+      color: string
+      map: string
+      normalScale: number
+      metalness: number
+      roughness: number
+      opacity: number
+    }
+    innerShadow: {
+      enabled: boolean
+      shadowColor: string
+      shadowBlurScale: number
+    }
+    boundaryStreamer: {
+      enabled: boolean
+      lineLength: number
+      lineWidth: number
+      lineHeadColor: string
+      lineColor: string
+      lineHeadRatio: number
+      speed: number
+    }
+    sideConfig: {map: null; colorConfig: {type: string; range: string[]}}
+    stroke: {color: string; opacity: number; width: number}
+    bottomStroke: {color: string; opacity: number; width: number}
+  }
   constructor({
     data,
     sceneSystem,
@@ -46,6 +76,7 @@ class ThreeMap {
     cameraSystem: THREE.Camera
     controlsSystem: OrbitControls
   }) {
+    this.districtStyle = districtStyle
     this.bgGeoData = processGeoData({
       type: 'geojson',
       data,
@@ -64,15 +95,17 @@ class ThreeMap {
 
     this.initMap()
 
-    this.districtFillGroup.updateWorldMatrix(true, true)
-    const box = new THREE.Box3().setFromObject(this.districtFillGroup)
-    const size = new THREE.Vector3()
-    box.getSize(size)
-    const planeGeo = new THREE.PlaneGeometry(size.x, size.y)
-    const planeMat = new THREE.MeshBasicMaterial({color: 0xffff00})
-    const backgroundPlane = new THREE.Mesh(planeGeo, planeMat)
-    this.districtFillGroup.add(backgroundPlane)
-    console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
+    createDistrictInnerShadow(this)
+
+    // this.districtFillGroup.updateWorldMatrix(true, true)
+    // const box = new THREE.Box3().setFromObject(this.districtFillGroup)
+    // const size = new THREE.Vector3()
+    // box.getSize(size)
+    // const planeGeo = new THREE.PlaneGeometry(size.x, size.y)
+    // const planeMat = new THREE.MeshBasicMaterial({color: 0xffff00})
+    // const backgroundPlane = new THREE.Mesh(planeGeo, planeMat)
+    // this.districtFillGroup.add(backgroundPlane)
+    // console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
   }
   async initMap() {
     const color = new THREE.Color('#e91a0b')
@@ -111,7 +144,7 @@ class ThreeMap {
       depthWrite: true,
     })
     // 获取侧面颜色配置
-    const {colorConfig} = districtStyle.sideConfig
+    const {colorConfig} = this.districtStyle.sideConfig
     const {
       bottomColor: sideBottomColor,
       topColor: sideTopColor,
@@ -215,7 +248,7 @@ class ThreeMap {
           const topMesh = new THREE.Mesh(topGeometry, this.extrudeTopMaterial!)
 
           topMesh.renderOrder = 3
-          // topMesh.scale.z = baseHeight
+          topMesh.scale.z = baseHeight
           topMesh.position.z = 0
           topMesh.userData.faceType = 'top'
           topMesh.name = 'map-top'
@@ -278,7 +311,7 @@ class ThreeMap {
     }
   }
   scaleAdaptation() {
-    const {heightScale} = districtStyle
+    const {heightScale} = this.districtStyle
     const p = KV({
       geojson: {
         type: 'FeatureCollection',
