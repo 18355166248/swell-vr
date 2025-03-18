@@ -108,7 +108,7 @@ class ThreeMap {
     // console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
   }
   async initMap() {
-    const color = new THREE.Color('#e91a0b')
+    const color = new THREE.Color('#cccccc')
 
     // 调整地图比例
     this.scaleAdaptation()

@@ -3,6 +3,8 @@ import {ThreeMap} from '.'
 import {Vf} from './constant'
 import MV from './MV'
 import * as THREE from 'three'
+import convertToTileCoordinates from './convertToTileCoordinates'
+import * as turf from '@turf/turf'
 
 /**
  * 创建内阴影效果的画布
@@ -21,7 +23,7 @@ function createInnerShadowCanvas(config: any) {
 
   // 创建画布和获取2D上下文
   const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
 
   // 设置画布尺寸
   canvas.width = canvasWidth
@@ -31,7 +33,7 @@ function createInnerShadowCanvas(config: any) {
 
   // 获取地理特征的坐标
   const coordinates = geoFeature.geometry.coordinates
-  const processedCoords = []
+  const processedCoords: number[][][] = []
   let ringIndex, pointIndex, projectedPoint
 
   // 初始化第一个环
@@ -40,11 +42,12 @@ function createInnerShadowCanvas(config: any) {
   // 处理坐标点，将地理坐标转换为画布坐标
   for (let i = 0; i < coordinates[0].length; i++) {
     const point = coordinates[0][i]
-    projectedPoint = wV(point[0], point[1], zoomLevel)
-    processedCoords[0].push([
+    projectedPoint = convertToTileCoordinates(point[0], point[1], zoomLevel)
+    const v = [
       projectedPoint[0] - canvasOffset[0],
       projectedPoint[1] - canvasOffset[1],
-    ])
+    ]
+    processedCoords[0].push(v)
   }
 
   // 设置合成操作并开始绘制路径
@@ -96,7 +99,7 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
       mapInstance.gis.globalOpts
 
     // 生成内阴影纹理
-    const shadowTexture = (function generateShadowTexture(options) {
+    const shadowTextureCanvas = (function generateShadowTexture(options) {
       // 解构配置参数
       const {
         geojson: geoJsonData, // 地图数据
@@ -122,12 +125,12 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
       const {zoom: currentZoom} = mapView
 
       // 计算边界框的像素坐标
-      const topLeftPixel = window.wV(
+      const topLeftPixel = convertToTileCoordinates(
         boundingBox[0],
         boundingBox[1],
         currentZoom,
       )
-      const bottomRightPixel = window.wV(
+      const bottomRightPixel = convertToTileCoordinates(
         boundingBox[2],
         boundingBox[3],
         currentZoom,
@@ -145,7 +148,7 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
       resultCanvas.style.height = canvasHeight + 'px'
 
       // 获取画布上下文
-      const canvasContext = resultCanvas.getContext('2d')
+      const canvasContext = resultCanvas.getContext('2d')!
 
       // 设置绘制样式
       const drawStyle = {
@@ -156,7 +159,7 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
       }
 
       // 扁平化GeoJSON 地图数据
-      const flattenedGeoJson = am.flatten(Object.assign({}, geoJsonData))
+      const flattenedGeoJson = turf.flatten(Object.assign({}, geoJsonData))
       let featureIndex, currentFeature
 
       // 处理每个地理特征
@@ -168,13 +171,13 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
         currentFeature = flattenedGeoJson.features[featureIndex]
 
         // 计算特征的边界框
-        const featureBbox = am.bbox(currentFeature)
-        const featureTopLeft = window.wV(
+        const featureBbox = turf.bbox(currentFeature)
+        const featureTopLeft = convertToTileCoordinates(
           featureBbox[0],
           featureBbox[1],
           currentZoom,
         )
-        const featureBottomRight = window.wV(
+        const featureBottomRight = convertToTileCoordinates(
           featureBbox[2],
           featureBbox[3],
           currentZoom,
@@ -237,7 +240,7 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
     if (mapInstance.extrudeInnerShadowMaterial) {
       // 更新材质的纹理贴图 Es = Texture
       mapInstance.extrudeInnerShadowMaterial.map = new THREE.Texture(
-        shadowTexture,
+        shadowTextureCanvas,
       )
       mapInstance.extrudeInnerShadowMaterial.opacity = 1
       mapInstance.extrudeInnerShadowMaterial.needsUpdate = true
