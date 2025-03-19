@@ -238,8 +238,8 @@ export function createDistrictInnerShadow(mapInstance: ThreeMap) {
     })
 
     if (mapInstance.extrudeInnerShadowMaterial) {
-      // 更新材质的纹理贴图 Es = Texture
-      mapInstance.extrudeInnerShadowMaterial.map = new THREE.Texture(
+      // 更新材质的纹理贴图 Es = Texture 和 CanvasTexture 区别就是 CanvasTexture 会自动设置 needsUpdate = true
+      mapInstance.extrudeInnerShadowMaterial.map = new THREE.CanvasTexture(
         shadowTextureCanvas,
       )
       mapInstance.extrudeInnerShadowMaterial.opacity = 1

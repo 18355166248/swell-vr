@@ -267,8 +267,8 @@ class ThreeMap {
           )
 
           innerShadowMesh.renderOrder = 10
-          innerShadowMesh.scale.z = 1.11 * baseHeight
-          innerShadowMesh.position.z = 10
+          innerShadowMesh.scale.z = 1.01 * baseHeight
+          innerShadowMesh.position.z = 0
           innerShadowMesh.userData.faceType = 'map-innerShadow'
           innerShadowMesh.name = 'map-innerShadow'
           innerShadowMesh.frustumCulled = false
@@ -310,7 +310,7 @@ class ThreeMap {
           sideMesh.userData.invertedRelection = true
           sideMesh.castShadow = true
           sideMesh.frustumCulled = false
-        // this.districtFillGroup.add(sideMesh)
+          this.districtFillGroup.add(sideMesh)
       }
       console.log(
         '🚀 ~ ThreeMap ~ initExtrude ~ this.districtFillGroup:',
