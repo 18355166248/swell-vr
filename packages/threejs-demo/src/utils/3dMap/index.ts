@@ -12,6 +12,7 @@ import {Vf} from './constant'
 import {bV} from './bv'
 import RV from './RV'
 import {createDistrictInnerShadow} from './createDistrictInnerShadow'
+import {updateMaterialProperties} from './updateMaterialProperties'
 
 class ThreeMap {
   public bgGeoData: any
@@ -95,7 +96,11 @@ class ThreeMap {
 
     this.initMap()
 
+    // 创建内阴影
     createDistrictInnerShadow(this)
+
+    // 更新材质属性
+    updateMaterialProperties(this, 'extrude')
 
     // this.districtFillGroup.updateWorldMatrix(true, true)
     // const box = new THREE.Box3().setFromObject(this.districtFillGroup)
@@ -108,12 +113,10 @@ class ThreeMap {
     // console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
   }
   async initMap() {
-    const color = new THREE.Color('#cccccc')
+    const color = new THREE.Color('#00FFFF')
 
     // 调整地图比例
     this.scaleAdaptation()
-
-    console.log(this.gis.globalOpts.cameraStatus.target)
 
     this.viewportSystem.cameraSystem.position.set(
       this.gis.globalOpts.cameraStatus.position[0],
@@ -136,7 +139,8 @@ class ThreeMap {
       color,
       transparent: true,
       depthTest: true,
-      depthWrite: true,
+      // 禁用深度写入：对透明或半透明材质设置depthWrite: false，避免深度缓冲干扰
+      depthWrite: false,
     })
     this.extrudeInnerShadowMaterial = new THREE.MeshStandardMaterial({
       transparent: true,
@@ -262,9 +266,9 @@ class ThreeMap {
             this.extrudeInnerShadowMaterial!,
           )
 
-          innerShadowMesh.renderOrder = 8
-          innerShadowMesh.scale.z = 1.01 * baseHeight
-          innerShadowMesh.position.z = 0
+          innerShadowMesh.renderOrder = 10
+          innerShadowMesh.scale.z = 1.11 * baseHeight
+          innerShadowMesh.position.z = 10
           innerShadowMesh.userData.faceType = 'map-innerShadow'
           innerShadowMesh.name = 'map-innerShadow'
           innerShadowMesh.frustumCulled = false
@@ -306,8 +310,12 @@ class ThreeMap {
           sideMesh.userData.invertedRelection = true
           sideMesh.castShadow = true
           sideMesh.frustumCulled = false
-          this.districtFillGroup.add(sideMesh)
+        // this.districtFillGroup.add(sideMesh)
       }
+      console.log(
+        '🚀 ~ ThreeMap ~ initExtrude ~ this.districtFillGroup:',
+        this.districtFillGroup,
+      )
     }
   }
   scaleAdaptation() {
@@ -329,7 +337,6 @@ class ThreeMap {
       offset: [0, 0, 0],
       // offset: [0.027833236052840063, -0.0586515564517673, 0.9499718963036327],
     })
-    console.log('🚀 ~ ThreeMap ~ scaleAdaptation ~ p:', p)
     this.gis.globalOpts = p
   }
 }

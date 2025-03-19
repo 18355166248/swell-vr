@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {projectCoords} from './projectCoords'
 
 class SV {
@@ -10,44 +11,44 @@ class SV {
   _getMapSize(t: number) {
     return Math.pow(2, t)
   }
-  getResolution(t, e) {
+  getResolution(t: number, e: number) {
     return (12756274 * Math.PI * Math.cos(t)) / 256 / this._getMapSize(e)
   }
-  _lngToTileX(t, e) {
+  _lngToTileX(t: number, e: number) {
     const i = (t + 180) / 360
     let n = Math.floor(i * this._getMapSize(e))
     return (n = Math.min(n, Math.pow(2, e) - 1)), n
   }
-  _latToTileY(t, e) {
+  _latToTileY(t: number, e: number) {
     const i = (t * Math.PI) / 180,
       n = (1 - Math.log(Math.tan(i) + 1 / Math.cos(i)) / Math.PI) / 2
     return Math.floor(n * this._getMapSize(e))
   }
-  lnglatToTile(t, e, i) {
+  lnglatToTile(t: number, e: number, i: number) {
     return {
       tileX: this._lngToTileX(t, i),
       tileY: this._latToTileY(e, i),
     }
   }
-  _lngToPixelX(t, e) {
+  _lngToPixelX(t: number, e: number) {
     const i = (t + 180) / 360
     return Math.floor((i * this._getMapSize(e) * 256) % 256)
   }
-  _latToPixelY(t, e) {
+  _latToPixelY(t: number, e: number) {
     const i = Math.sin((t * Math.PI) / 180),
       n = 0.5 - Math.log((1 + i) / (1 - i)) / (4 * Math.PI)
     return Math.floor((n * this._getMapSize(e) * 256) % 256)
   }
-  lnglatToPixel(t, e, i) {
+  lnglatToPixel(t: number, e: number, i: number) {
     return {
       pixelX: this._lngToPixelX(t, i),
       pixelY: this._latToPixelY(e, i),
     }
   }
-  _pixelXTolng(t, e, i) {
+  _pixelXTolng(t: number, e: number, i: number) {
     return ((e + t / 256) / this._getMapSize(i)) * 360 - 180
   }
-  _pixelYToLat(t, e, i) {
+  _pixelYToLat(t: number, e: number, i: number) {
     const n = t / 256
     let r
     return (
@@ -59,14 +60,14 @@ class SV {
       Math.PI
     )
   }
-  pixelToLnglat(t, e, i, n, r) {
+  pixelToLnglat(t: number, e: number, i: number, n: number, r: number) {
     return {
       lng: this._pixelXTolng(t, i, r),
       lat: this._pixelYToLat(e, n, r),
     }
   }
 }
-function MV(t) {
+function MV(t: any) {
   const {
       tileUrl: e,
       maxZoom: i,

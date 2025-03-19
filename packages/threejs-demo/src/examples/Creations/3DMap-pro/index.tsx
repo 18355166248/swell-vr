@@ -33,7 +33,7 @@ function Three() {
       }
       initLight() {
         //光源设置
-        const ambient = new THREE.AmbientLight(0xffffff, 2.5)
+        const ambient = new THREE.AmbientLight(0xffffff, 10)
         this.scene?.add(ambient)
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 3)

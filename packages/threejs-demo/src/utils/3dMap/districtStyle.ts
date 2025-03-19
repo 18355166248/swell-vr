@@ -4,6 +4,8 @@ const districtStyle = {
   fill: {
     color: 'rgba(21,41,81,0.9)',
     map: '',
+    normalMap:
+      'https://lf-digitaltwin-cim.bytetos.com/obj/bytedcimplus/nextzen/{z}/{x}/{y}.png',
     normalScale: 20,
     metalness: 0.2,
     roughness: 0.8,

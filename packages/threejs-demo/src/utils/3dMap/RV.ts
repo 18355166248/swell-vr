@@ -6,7 +6,6 @@ function RV(t: {
   normal: number[]
   uv: number[]
 }) {
-  console.log("🚀 ~ t:", t)
   const e = new THREE.BufferGeometry()
   return (
     e.setIndex(new THREE.BufferAttribute(new Uint32Array(t.index), 1)),
