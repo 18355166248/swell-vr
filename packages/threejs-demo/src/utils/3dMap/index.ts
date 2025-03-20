@@ -13,6 +13,9 @@ import {bV} from './bv'
 import RV from './RV'
 import {createDistrictInnerShadow} from './createDistrictInnerShadow'
 import {updateMaterialProperties} from './updateMaterialProperties'
+import eV from './eV'
+import {subDistrictStyle} from './subDistrictStyle'
+import {renderSubDistricts} from './HV'
 
 class ThreeMap {
   public bgGeoData: any
@@ -35,6 +38,7 @@ class ThreeMap {
     globalOpts: {},
   }
   districtFillGroup = new THREE.Group()
+  poiGroup = new eV()
   districtStyle: {
     enabled: boolean
     heightScale: number
@@ -64,20 +68,30 @@ class ThreeMap {
     stroke: {color: string; opacity: number; width: number}
     bottomStroke: {color: string; opacity: number; width: number}
   }
+  // 子区域信息数组
+  subDistrictInfoArr = []
+  subDistrictStyle: {stroke: {color: string; opacity: number; width: number}}
+  containerDom: HTMLDivElement
+  data: any
   constructor({
     data,
     sceneSystem,
     renderSystem,
     cameraSystem,
     controlsSystem,
+    containerDom,
   }: {
     data: any
     sceneSystem: THREE.Scene
     renderSystem: THREE.WebGLRenderer
     cameraSystem: THREE.Camera
     controlsSystem: OrbitControls
+    containerDom: HTMLDivElement
   }) {
+    this.data = data
     this.districtStyle = districtStyle
+    this.subDistrictStyle = subDistrictStyle
+    this.containerDom = containerDom
     this.bgGeoData = processGeoData({
       type: 'geojson',
       data,
@@ -94,7 +108,11 @@ class ThreeMap {
 
     this.viewportSystem.sceneSystem.add(this.districtFillGroup)
 
+    this.initLayerGroup()
+
     this.initMap()
+
+    renderSubDistricts(this)
 
     // 创建内阴影
     createDistrictInnerShadow(this)
@@ -111,6 +129,9 @@ class ThreeMap {
     // const backgroundPlane = new THREE.Mesh(planeGeo, planeMat)
     // this.districtFillGroup.add(backgroundPlane)
     // console.log(`宽度：${size.x}, 高度：${size.y}, 深度：${size.z}`)
+  }
+  initLayerGroup() {
+    this.viewportSystem.sceneSystem.add(this.poiGroup)
   }
   async initMap() {
     const color = new THREE.Color('#00FFFF')
@@ -339,6 +360,7 @@ class ThreeMap {
     })
     this.gis.globalOpts = p
   }
+  initPoi() {}
 }
 
 export {ThreeMap}

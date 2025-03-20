@@ -5,7 +5,7 @@ import ChinaData from './china-parse.json'
 import {ThreeMap} from '../../../utils/3dMap'
 
 function Three() {
-  const canvas = useRef(null)
+  const canvas = useRef<HTMLDivElement>(null)
   const threeReal = useRef<ThreeBase>()
 
   useLayoutEffect(() => {
@@ -50,6 +50,7 @@ function Three() {
             renderSystem: this.renderer,
             cameraSystem: this.camera,
             controlsSystem: this.controls,
+            containerDom: canvas.current!,
           })
         }
       }
