@@ -2,7 +2,9 @@ import {cloneDeep} from 'lodash-es'
 import * as THREE from 'three'
 import {ThreeMap} from '.'
 import {projectCoords} from './projectCoords'
-
+import {LineMaterial} from 'three/examples/jsm/lines/LineMaterial.js'
+import {LineGeometry} from 'three/examples/jsm/lines/LineGeometry.js'
+import {Feature, SubDistrictInfo} from './types'
 /**
  * 渲染城市/区县等子区域数据
  * @param {Object} map - 地图实例
@@ -20,7 +22,7 @@ async function renderSubDistricts(map: ThreeMap, renderMode = 'all') {
     const {subDistrictStyle} = map
     if (subDistrictStyle.stroke && subDistrictStyle.stroke.width) {
       // 创建线材质(LineMaterial)
-      const material = new THREE.LineBasicMaterial({
+      const material = new LineMaterial({
         color: new THREE.Color(subDistrictStyle.stroke.color).getHex(),
         transparent: true,
         opacity: subDistrictStyle.stroke.opacity,
@@ -46,40 +48,44 @@ async function renderSubDistricts(map: ThreeMap, renderMode = 'all') {
   })
 
   // 处理每个子区域数据
-  map.data.forEach(district => {
-    console.log('🚀 ~ HV ~ district:', district)
+  map.subDistrictData.features.forEach(district => {
     const districtName = district.properties.name
     const districtAlias = districtName
 
-    // 获取中心点坐标（经纬度转换为平面坐标）
-    const centroid = projectCoords([
-      district.properties.centroidx,
-      district.properties.centroidy,
-    ])
+    const center = district.properties.centroid || district.properties.center
+    if (center) {
+      // 获取中心点坐标（经纬度转换为平面坐标）
+      const centroid = projectCoords([center[0], center[1]])
 
-    // 构建区域信息对象
-    const districtInfo = {
-      adcode: district.properties.id,
-      name: districtName,
-      alias: districtAlias,
-      lng: district.properties.centroidx,
-      lat: district.properties.centroidy,
-      centroid: centroid,
-    }
-
-    // 处理每个子区域的多边形坐标数据
-    district.geometry.coordinates.forEach((coordinates, polygonIndex) => {
-      if (districtAlias) {
-        renderDistrictPolygon(coordinates, polygonIndex, district, districtInfo)
+      // 构建区域信息对象
+      const districtInfo = {
+        adcode: district.properties.adcode,
+        name: districtName,
+        alias: districtAlias,
+        lng: center[0],
+        lat: center[1],
+        centroid: centroid,
       }
-    })
 
-    // 将唯一的区域信息添加到数组中
-    if (
-      districtAlias &&
-      !map.subDistrictInfoArr.find(item => item.adcode == districtInfo.adcode)
-    ) {
-      map.subDistrictInfoArr.push(districtInfo)
+      // 处理每个子区域的多边形坐标数据
+      district.geometry.coordinates.forEach((coordinates, polygonIndex) => {
+        if (districtAlias) {
+          renderDistrictPolygon(
+            coordinates,
+            polygonIndex,
+            district,
+            districtInfo,
+          )
+        }
+      })
+
+      // 将唯一的区域信息添加到数组中
+      if (
+        districtAlias &&
+        !map.subDistrictInfoArr.find(item => item.adcode == districtInfo.adcode)
+      ) {
+        map.subDistrictInfoArr.push(districtInfo)
+      }
     }
   })
 
@@ -91,10 +97,10 @@ async function renderSubDistricts(map: ThreeMap, renderMode = 'all') {
    * @param {Object} districtInfo - 区域信息
    */
   function renderDistrictPolygon(
-    coordinates,
-    polygonIndex,
-    district,
-    districtInfo,
+    coordinates: number[][],
+    polygonIndex: number,
+    district: Feature,
+    districtInfo: SubDistrictInfo,
   ) {
     if (coordinates.length > 2) {
       let lineGeometry
@@ -115,16 +121,12 @@ async function renderSubDistricts(map: ThreeMap, renderMode = 'all') {
 
       // 渲染边界线
       if (strokeMaterial) {
-        lineGeometry = new THREE.BufferGeometry()
-        lineGeometry.setAttribute(
-          'position',
-          new THREE.BufferAttribute(linePositions, 3),
-        )
-
+        lineGeometry = new LineGeometry()
+        lineGeometry.setPositions(linePositions)
         // 更新分辨率
         strokeMaterial.resolution.set(
-          map.gis.props.containerDom.clientWidth,
-          map.gis.props.containerDom.clientHeight,
+          map.containerDom.clientWidth,
+          map.containerDom.clientHeight,
         )
 
         // 创建线条(Line2)并添加到边界线组

@@ -16,6 +16,7 @@ import {updateMaterialProperties} from './updateMaterialProperties'
 import eV from './eV'
 import {subDistrictStyle} from './subDistrictStyle'
 import {renderSubDistricts} from './HV'
+import {CityData, ProvinceData, SubDistrictInfo} from './types'
 
 class ThreeMap {
   public bgGeoData: any
@@ -38,6 +39,8 @@ class ThreeMap {
     globalOpts: {},
   }
   districtFillGroup = new THREE.Group()
+  subDistrictStrokeGroup = new THREE.Group()
+  subDistrictFillGroup = new THREE.Group()
   poiGroup = new eV()
   districtStyle: {
     enabled: boolean
@@ -69,12 +72,14 @@ class ThreeMap {
     bottomStroke: {color: string; opacity: number; width: number}
   }
   // 子区域信息数组
-  subDistrictInfoArr = []
+  subDistrictInfoArr: SubDistrictInfo[] = []
   subDistrictStyle: {stroke: {color: string; opacity: number; width: number}}
   containerDom: HTMLDivElement
-  data: any
+  data: CityData
+  subDistrictData: ProvinceData
   constructor({
     data,
+    subDistrictData,
     sceneSystem,
     renderSystem,
     cameraSystem,
@@ -82,6 +87,7 @@ class ThreeMap {
     containerDom,
   }: {
     data: any
+    subDistrictData: any
     sceneSystem: THREE.Scene
     renderSystem: THREE.WebGLRenderer
     cameraSystem: THREE.Camera
@@ -89,6 +95,7 @@ class ThreeMap {
     containerDom: HTMLDivElement
   }) {
     this.data = data
+    this.subDistrictData = subDistrictData
     this.districtStyle = districtStyle
     this.subDistrictStyle = subDistrictStyle
     this.containerDom = containerDom
@@ -107,6 +114,8 @@ class ThreeMap {
     }
 
     this.viewportSystem.sceneSystem.add(this.districtFillGroup)
+    this.viewportSystem.sceneSystem.add(this.subDistrictStrokeGroup)
+    this.viewportSystem.sceneSystem.add(this.subDistrictFillGroup)
 
     this.initLayerGroup()
 
@@ -120,6 +129,9 @@ class ThreeMap {
     // 更新材质属性
     updateMaterialProperties(this, 'extrude')
 
+    // 初始化文本
+    this.initPoi()
+
     // this.districtFillGroup.updateWorldMatrix(true, true)
     // const box = new THREE.Box3().setFromObject(this.districtFillGroup)
     // const size = new THREE.Vector3()
@@ -132,6 +144,10 @@ class ThreeMap {
   }
   initLayerGroup() {
     this.viewportSystem.sceneSystem.add(this.poiGroup)
+    console.log(
+      '🚀 ~ ThreeMap ~ initLayerGroup ~ this.poiGroup:',
+      this.poiGroup,
+    )
   }
   async initMap() {
     const color = new THREE.Color('#00FFFF')
@@ -360,7 +376,40 @@ class ThreeMap {
     })
     this.gis.globalOpts = p
   }
-  initPoi() {}
+  async initPoi() {
+    for (let u = 0; u < this.subDistrictInfoArr.length; u++) {
+      const t = this.subDistrictInfoArr[u]
+      const {centroid, alias} = t
+      if (!centroid) continue
+      // Vector3
+      const h = new THREE.Vector3(0, 0, 0)
+      await this.poiGroup.addText(
+        h,
+        'vertical',
+        'middle',
+        '',
+        {
+          // content: `${major.format ? major.format(alias) : alias}`,
+          content: alias,
+          props: {
+            color: 'rgba(214,242,255,0.6)',
+            enabled: true,
+            fontFamily: 'SourceHanSansCN-Normal',
+            fontSize: 12,
+            fontWeight: 'normal',
+          },
+        },
+        null,
+        0,
+        0,
+        {
+          position: [centroid[0], centroid[1], 0],
+          offsetX: 0,
+          offsetY: 0,
+        },
+      )
+    }
+  }
 }
 
 export {ThreeMap}

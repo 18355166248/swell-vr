@@ -1,8 +1,9 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
-import ChinaData from './china-parse.json'
 import {ThreeMap} from '../../../utils/3dMap'
+import ChinaData from '../../../data/map/china.json'
+import ChinaProvinceData from '../../../data/map/china-province.json'
 
 function Three() {
   const canvas = useRef<HTMLDivElement>(null)
@@ -46,6 +47,7 @@ function Three() {
         if (this.scene && this.renderer && this.camera && this.controls) {
           this.map = new ThreeMap({
             data: ChinaData,
+            subDistrictData: ChinaProvinceData,
             sceneSystem: this.scene,
             renderSystem: this.renderer,
             cameraSystem: this.camera,
