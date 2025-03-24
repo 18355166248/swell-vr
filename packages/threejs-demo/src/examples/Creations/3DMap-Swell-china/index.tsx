@@ -4,6 +4,8 @@ import ThreeBase from '../../../utils/ThreeBase'
 import ChinaData from '../../../data/map/china-parse.json'
 // import ChinaProvinceData from '../../../data/map/china-province.json'
 import {MapTools} from './MapTools'
+import {FeatureCollection} from 'geojson'
+import {districtStyle} from './districtStyle'
 
 function Three() {
   const canvas = useRef<HTMLDivElement>(null)
@@ -42,13 +44,16 @@ function Three() {
       }
       initMap() {
         if (this.scene && this.renderer && this.camera && this.controls) {
+          // 自定义地图样式配置
+
           this.mapTools = new MapTools({
             scene: this.scene,
             renderer: this.renderer,
             camera: this.camera,
             controls: this.controls,
             containerDom: canvas.current!,
-            data: ChinaData,
+            data: ChinaData as FeatureCollection,
+            style: districtStyle, // 传入自定义样式
           })
         }
       }

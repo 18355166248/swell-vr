@@ -2,7 +2,7 @@ const districtStyle = {
   enabled: true,
   heightScale: 0.6,
   fill: {
-    color: 'rgba(21,41,81,0.9)',
+    color: 'rgba(0,255,255,0.9)',
     map: '',
     normalMap:
       'https://lf-digitaltwin-cim.bytetos.com/obj/bytedcimplus/nextzen/{z}/{x}/{y}.png',
