@@ -58,6 +58,8 @@ export class MapTools {
 
     // 创建表面
     this.createSurface()
+    // 创建阴影
+    this.createInnerShadow()
   }
 
   /**
@@ -80,7 +82,25 @@ export class MapTools {
       }
     })
 
-    return geometryData
+    // 计算几何体的边界和中心点
+    const bounds = calculateBounds(this.data)
+    console.log('地图边界信息:', bounds)
+
+    // 创建一个新的位置数组，应用中心偏移
+    const centeredPositions = []
+    for (let i = 0; i < geometryData.position.length; i += 3) {
+      centeredPositions.push(
+        geometryData.position[i] - bounds.center.x,
+        geometryData.position[i + 1] - bounds.center.y,
+        geometryData.position[i + 2],
+      )
+    }
+
+    return {
+      ...geometryData,
+      purePosition: geometryData.position,
+      position: centeredPositions,
+    }
   }
 
   /**
@@ -88,28 +108,12 @@ export class MapTools {
    */
   private createSurface() {
     if (!this.geometryData) return
-    // 计算几何体的边界和中心点
-    const bounds = calculateBounds(this.data)
-    console.log('地图边界信息:', bounds)
 
-    // 创建一个新的位置数组，应用中心偏移
-    const centeredPositions = []
-    for (let i = 0; i < this.geometryData.position.length; i += 3) {
-      centeredPositions.push(
-        this.geometryData.position[i] - bounds.center.x,
-        this.geometryData.position[i + 1] - bounds.center.y,
-        this.geometryData.position[i + 2],
-      )
-    }
     // 创建BufferGeometry
-    const geometry = createBufferGeometry({
-      ...this.geometryData,
-      position: centeredPositions,
-    })
+    const geometry = createBufferGeometry(this.geometryData)
 
     // 从样式配置中获取颜色
     const fillColor = this.style.fill.color
-    console.log('🚀 ~ MapTools ~ createSurface ~ fillColor:', fillColor)
 
     // 创建材质 - 使用配置的颜色
     const material = new THREE.MeshBasicMaterial({
@@ -122,5 +126,11 @@ export class MapTools {
     const mesh = new THREE.Mesh(geometry, material)
     // 添加到场景
     this.scene.add(mesh)
+  }
+  private createInnerShadow() {
+    if (!this.geometryData) return
+    // 计算几何体的边界和中心点
+    const bounds = calculateBounds(this.data)
+    console.log('地图边界信息:', bounds)
   }
 }
