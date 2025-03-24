@@ -1,7 +1,7 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
-import {ThreeMap} from '../../../utils/3dMap'
+import {ThreeMap} from '../../../utils/3dMap-dataMind'
 import ChinaData from '../../../data/map/china.json'
 import ChinaProvinceData from '../../../data/map/china-province.json'
 
