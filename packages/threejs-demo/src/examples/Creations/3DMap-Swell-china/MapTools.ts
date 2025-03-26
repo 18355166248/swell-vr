@@ -6,6 +6,7 @@ import createBufferGeometry from './utils/createBufferGeometry'
 import {processGeometry} from './utils/processGeometry'
 import {calculateBounds} from './utils/calculateBounds'
 import {districtStyle} from './districtStyle'
+import {initInnerShadow} from './utils/createInnerShadow'
 
 export class MapTools {
   scene: THREE.Scene
@@ -37,6 +38,13 @@ export class MapTools {
     normal: number[]
     uv: number[]
   }
+  geometry?: THREE.BufferGeometry<THREE.NormalBufferAttributes>
+  extrudeInnerShadowMaterial = new THREE.MeshStandardMaterial({
+    // color: '#ff00ff',
+    transparent: true,
+    depthTest: true,
+    depthWrite: true,
+  })
   constructor(p: MapToolsProps) {
     this.scene = p.scene
     this.renderer = p.renderer
@@ -55,7 +63,8 @@ export class MapTools {
     // 初始化数据
     const geometryData = this.generateGeometryData()
     this.geometryData = geometryData
-
+    // 创建BufferGeometry
+    this.geometry = createBufferGeometry(this.geometryData)
     // 创建表面
     this.createSurface()
     // 创建阴影
@@ -109,8 +118,7 @@ export class MapTools {
   private createSurface() {
     if (!this.geometryData) return
 
-    // 创建BufferGeometry
-    const geometry = createBufferGeometry(this.geometryData)
+    const geometry = this.geometry
 
     // 从样式配置中获取颜色
     const fillColor = this.style.fill.color
@@ -129,8 +137,35 @@ export class MapTools {
   }
   private createInnerShadow() {
     if (!this.geometryData) return
-    // 计算几何体的边界和中心点
-    const bounds = calculateBounds(this.data)
-    console.log('地图边界信息:', bounds)
+    const geometry = this.geometry
+
+    const innerShadowMesh = new THREE.Mesh(
+      geometry,
+      this.extrudeInnerShadowMaterial,
+    )
+
+    innerShadowMesh.renderOrder = 10
+    innerShadowMesh.scale.z = 1.01
+    innerShadowMesh.position.z = 0
+    innerShadowMesh.userData.faceType = 'map-innerShadow'
+    innerShadowMesh.name = 'map-innerShadow'
+    innerShadowMesh.frustumCulled = false
+    this.scene.add(innerShadowMesh)
+
+    const mapCanvas = initInnerShadow({
+      drawStyle: {
+        fill: true,
+        fillColor: '#000000',
+        shadowColor: this.style.innerShadow.shadowColor,
+        shadowBlur: this.style.innerShadow.shadowBlurScale,
+        shadowBlurScale: this.style.innerShadow.shadowBlurScale,
+      },
+      canvasWidth: this.containerDom.clientWidth,
+      canvasHeight: this.containerDom.clientHeight,
+      data: this.data,
+    })
+
+    innerShadowMesh.material.map = new THREE.CanvasTexture(mapCanvas)
+    innerShadowMesh.material.map.needsUpdate = true
   }
 }
