@@ -40,7 +40,7 @@ export class MapTools {
   }
   geometry?: THREE.BufferGeometry<THREE.NormalBufferAttributes>
   extrudeInnerShadowMaterial = new THREE.MeshStandardMaterial({
-    // color: '#ff00ff',
+    color: '#ff00ff', // 紫色
     transparent: true,
     depthTest: true,
     depthWrite: true,
@@ -118,8 +118,6 @@ export class MapTools {
   private createSurface() {
     if (!this.geometryData) return
 
-    const geometry = this.geometry
-
     // 从样式配置中获取颜色
     const fillColor = this.style.fill.color
 
@@ -131,41 +129,61 @@ export class MapTools {
     })
 
     // 创建网格
-    const mesh = new THREE.Mesh(geometry, material)
+    const mesh = new THREE.Mesh(this.geometry, material)
     // 添加到场景
     this.scene.add(mesh)
   }
   private createInnerShadow() {
-    if (!this.geometryData) return
+    if (!this.geometryData || !this.style.innerShadow.enabled) return
     const geometry = this.geometry
 
-    const innerShadowMesh = new THREE.Mesh(
-      geometry,
-      this.extrudeInnerShadowMaterial,
-    )
-
-    innerShadowMesh.renderOrder = 10
-    innerShadowMesh.scale.z = 1.01
-    innerShadowMesh.position.z = 0
-    innerShadowMesh.userData.faceType = 'map-innerShadow'
-    innerShadowMesh.name = 'map-innerShadow'
-    innerShadowMesh.frustumCulled = false
-    this.scene.add(innerShadowMesh)
-
+    // 获取地图数据创建阴影纹理
     const mapCanvas = initInnerShadow({
       drawStyle: {
-        fill: true,
-        fillColor: '#000000',
+        fillColor: 'rgba(255,255,255,0.4)', // 半透明白色，更好地显示阴影
         shadowColor: this.style.innerShadow.shadowColor,
-        shadowBlur: this.style.innerShadow.shadowBlurScale,
-        shadowBlurScale: this.style.innerShadow.shadowBlurScale,
+        shadowBlur: 20, // 增加阴影模糊值
+        shadowBlurScale: this.style.innerShadow.shadowBlurScale * 2, // 增强阴影效果
       },
-      canvasWidth: this.containerDom.clientWidth,
-      canvasHeight: this.containerDom.clientHeight,
       data: this.data,
     })
 
-    innerShadowMesh.material.map = new THREE.CanvasTexture(mapCanvas)
-    innerShadowMesh.material.map.needsUpdate = true
+    console.log(
+      '内阴影纹理已创建，尺寸:',
+      mapCanvas.width,
+      'x',
+      mapCanvas.height,
+    )
+
+    // 创建纹理并设置属性
+    const shadowTexture = new THREE.CanvasTexture(mapCanvas)
+    shadowTexture.needsUpdate = true
+    shadowTexture.wrapS = THREE.ClampToEdgeWrapping
+    shadowTexture.wrapT = THREE.ClampToEdgeWrapping
+    shadowTexture.minFilter = THREE.LinearFilter
+
+    // 创建材质 - 使用更适合阴影显示的材质设置
+    const innerShadowMaterial = new THREE.MeshBasicMaterial({
+      map: shadowTexture,
+      transparent: true,
+      opacity: 1,
+      depthTest: true,
+      depthWrite: false, // 避免深度写入问题
+      blending: THREE.NormalBlending, // 使用标准混合
+    })
+
+    // 创建内阴影网格
+    const innerShadowMesh = new THREE.Mesh(geometry, innerShadowMaterial)
+
+    // 设置网格属性
+    innerShadowMesh.renderOrder = 10 // 确保在其他图层之上渲染
+    innerShadowMesh.scale.z = 1.01
+    innerShadowMesh.position.z = 0.02 // 稍微增加高度，避免Z轴冲突
+    innerShadowMesh.userData.faceType = 'map-innerShadow'
+    innerShadowMesh.name = 'map-innerShadow'
+    innerShadowMesh.frustumCulled = false
+
+    // 添加到场景
+    this.scene.add(innerShadowMesh)
   }
 }

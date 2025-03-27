@@ -1,11 +1,11 @@
 const districtStyle = {
   fill: {
-    color: 'rgba(21, 41, 81, 0.9)',
+    color: 'rgba(213, 219, 37, 0.8)', // 调整透明度，让阴影更明显
   },
   innerShadow: {
     enabled: true,
-    shadowColor: 'rgba(252, 228, 14, 1)',
-    shadowBlurScale: 0.1,
+    shadowColor: 'rgba(0, 70, 200, 0.9)', // 深蓝色，增强对比度
+    shadowBlurScale: 0.2, // 增加阴影模糊范围
   },
   sideConfig: {
     map: null,
