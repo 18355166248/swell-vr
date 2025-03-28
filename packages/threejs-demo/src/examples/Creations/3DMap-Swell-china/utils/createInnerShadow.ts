@@ -1,4 +1,4 @@
-import {FeatureCollection} from 'geojson'
+import {Feature, FeatureCollection} from 'geojson'
 import {calculateBounds} from './calculateBounds'
 import * as turf from '@turf/turf'
 import {pointToTile} from '@mapbox/tilebelt'
@@ -34,6 +34,19 @@ export function initInnerShadow({
   const mapContext = mapCanvas.getContext('2d') as CanvasRenderingContext2D
   const zoom = 10
 
+  // 计算整个地图的边界框
+  const dataBbox = turf.bbox(data)
+  const dataTopLeft = pointToTile(dataBbox[0], dataBbox[1], zoom)
+  const dataBottomRight = pointToTile(dataBbox[2], dataBbox[3], zoom)
+  
+  // 计算地图的总宽高
+  const dataWidth = Math.abs(dataTopLeft[0] - dataBottomRight[0])
+  const dataHeight = Math.abs(dataTopLeft[1] - dataBottomRight[1])
+  
+  // 在canvas开始时填充整个背景
+  mapContext.fillStyle = drawStyle.fillColor
+  mapContext.fillRect(0, 0, width, height)
+
   const flattenedGeoJson = turf.flatten(Object.assign({}, data))
 
   // 遍历省份的每个多边形区域
@@ -47,27 +60,31 @@ export function initInnerShadow({
     // 计算特征的像素尺寸
     const featureWidth = Math.abs(featureTopLeft[0] - featureBottomRight[0])
     const featureHeight = Math.abs(featureTopLeft[1] - featureBottomRight[1])
+    const scale = width / featureWidth
+
+    const featureWidthScale = featureWidth * scale
+    const featureHeightScale = featureHeight * scale
 
     // 只处理有效尺寸的特征
     if (featureWidth > 0 && featureHeight > 0) {
       // 根据特征尺寸调整阴影模糊程度
-      drawStyle.shadowBlur = Math.min(featureWidth, featureHeight) * 2
+      drawStyle.shadowBlur = Math.min(featureWidth, featureHeight) * scale
 
       // 为当前特征创建内阴影画布
       const featureCanvas = createInnerShadowCanvas({
         feature,
-        zoom,
+        zoom: scale,
         style: drawStyle,
-        width: featureWidth,
-        height: featureHeight,
+        width: featureWidthScale,
+        height: featureHeightScale,
         offset: [featureTopLeft[0], featureBottomRight[1]],
       })
 
       // 将特征画布绘制到结果画布上
       mapContext.drawImage(
         featureCanvas,
-        Math.abs(featureTopLeft[0] - featureTopLeft[0]),
-        Math.abs(featureBottomRight[1] - featureBottomRight[1]),
+        0,
+        0,
         featureCanvas.width,
         featureCanvas.height,
       )
@@ -75,101 +92,8 @@ export function initInnerShadow({
   })
 
   // 生成最终的图片数据URL
-  downloadImage(mapCanvas, 'map')
+  // downloadImage(mapCanvas, 'map')
   return mapCanvas
-}
-
-/**
- * 为单个地理区域绘制内阴影效果，并支持缩放和居中
- */
-function drawInnerShadowScaled(params: {
-  feature: number[][][] // 地理区域坐标数据
-  style: {
-    // 绘制样式
-    fillColor: string
-    shadowColor: string
-    shadowBlur: number
-    shadowBlurScale?: number // 添加可选参数
-  }
-  width: number // 画布宽度
-  height: number // 画布高度
-  offset: number[] // 坐标偏移量，为了兼容性保留此参数，但不再使用
-}) {
-  const {feature, style, width, height} = params
-
-  if (feature[0].length <= 5) {
-    return null
-  }
-
-  // 创建新的画布和上下文
-  const shadowCanvas = document.createElement('canvas')
-  const ctx = shadowCanvas.getContext('2d') as CanvasRenderingContext2D
-
-  // 设置画布尺寸
-  shadowCanvas.width = width
-  shadowCanvas.height = height
-  shadowCanvas.style.width = width + 'px'
-  shadowCanvas.style.height = height + 'px'
-
-  // 处理坐标数据
-  const polygon = turf.polygon([feature[0]])
-  const bbox = turf.bbox(polygon)
-
-  // 计算适当的缩放系数和偏移，确保图形居中显示
-  const scaleX = (width / (bbox[2] - bbox[0])) * 0.8 // 留出边距
-  const scaleY = (height / (bbox[3] - bbox[1])) * 0.8
-  const scale = Math.min(scaleX, scaleY)
-
-  const offsetX = (width - (bbox[2] - bbox[0]) * scale) / 2
-  const offsetY = (height - (bbox[3] - bbox[1]) * scale) / 2
-
-  // 转换坐标
-  const pathPoints: [number, number][] = []
-  for (let i = 0; i < feature[0].length; i++) {
-    const point = feature[0][i]
-    const x = (point[0] - bbox[0]) * scale + offsetX
-    const y = (point[1] - bbox[1]) * scale + offsetY
-    pathPoints.push([x, y])
-  }
-
-  // 创建路径
-  const createPath = (ctx: CanvasRenderingContext2D) => {
-    const path = new Path2D()
-    for (let i = 0; i < pathPoints.length; i++) {
-      const [x, y] = pathPoints[i]
-      if (i === 0) {
-        path.moveTo(x, y)
-      } else {
-        path.lineTo(x, y)
-      }
-    }
-    path.closePath()
-    return path
-  }
-
-  // 计算阴影参数
-  const shadowSize = Math.min(width, height) * (style.shadowBlurScale || 0.1)
-
-  const path = createPath(ctx)
-
-  // 内阴影设置
-  ctx.save()
-  // source-out 在不与现有画布内容重叠的地方绘制新图形,绘制会导致画布上面之前的图形都变成透明的
-  ctx.globalCompositeOperation = 'source-out'
-  ctx.shadowBlur = shadowSize
-  ctx.shadowColor = style.shadowColor
-  ctx.fillStyle = style.shadowColor
-  ctx.fill(path)
-  ctx.restore()
-
-  ctx.save()
-  // destination-over 在现有的画布内容后面绘制新的图形,绘制不会导致画布上面之前的图形都变为透明
-  ctx.globalCompositeOperation = 'destination-over'
-  ctx.fillStyle = style.fillColor
-  ctx.fill(path)
-  ctx.restore()
-
-  return shadowCanvas
 }
 
 export function downloadImage(
@@ -195,10 +119,21 @@ export function downloadImage(
  * @param {Object} config - 配置参数
  * @returns {HTMLCanvasElement} - 渲染好的画布元素
  */
-function createInnerShadowCanvas(config: any) {
+function createInnerShadowCanvas(config: {
+  feature: Feature
+  zoom: number
+  style: {
+    fillColor: string
+    shadowColor: string
+    shadowBlur: number
+  }
+  width: number
+  height: number
+  offset: number[]
+}) {
   const {
     feature: geoFeature,
-    zoom: zoomLevel,
+    zoom,
     style: styleConfig,
     width: canvasWidth,
     height: canvasHeight,
@@ -216,6 +151,8 @@ function createInnerShadowCanvas(config: any) {
   canvas.style.height = canvasHeight + 'px'
 
   // 获取地理特征的坐标
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   const coordinates = geoFeature.geometry.coordinates
   const processedCoords: number[][][] = []
   let ringIndex, pointIndex, projectedPoint
@@ -226,7 +163,7 @@ function createInnerShadowCanvas(config: any) {
   // 处理坐标点，将地理坐标转换为画布坐标
   for (let i = 0; i < coordinates[0].length; i++) {
     const point = coordinates[0][i]
-    projectedPoint = pointToTile(point[0], point[1], zoomLevel)
+    projectedPoint = pointToTile(point[0], point[1], zoom)
     const v = [
       projectedPoint[0] - canvasOffset[0],
       projectedPoint[1] - canvasOffset[1],
@@ -235,8 +172,7 @@ function createInnerShadowCanvas(config: any) {
   }
 
   // 设置合成操作并开始绘制路径
-  ctx.globalCompositeOperation = 'source-out'
-  ctx.beginPath()
+  const path2D = new Path2D()
 
   // 绘制所有环
   for (ringIndex = 0; ringIndex < processedCoords.length; ringIndex++) {
@@ -247,16 +183,34 @@ function createInnerShadowCanvas(config: any) {
     ) {
       const point = processedCoords[ringIndex][pointIndex]
       // 第一个点使用moveTo，其余点使用lineTo
-      ctx[pointIndex ? 'lineTo' : 'moveTo'](point[0], point[1])
+      path2D[pointIndex ? 'lineTo' : 'moveTo'](point[0], point[1])
     }
-    ctx.closePath()
+    path2D.closePath()
   }
 
   // 应用阴影和填充样式
+  // ctx.globalCompositeOperation = 'source-out'
+  // ctx.shadowBlur = styleConfig.shadowBlur
+  // ctx.shadowColor = styleConfig.shadowColor
+  // ctx.fillStyle = styleConfig.fillColor
+  // ctx.fill(path2D)
+
+  // 内阴影设置
+  ctx.save()
+  // source-out 在不与现有画布内容重叠的地方绘制新图形,绘制会导致画布上面之前的图形都变成透明的
+  ctx.globalCompositeOperation = 'source-out'
   ctx.shadowBlur = styleConfig.shadowBlur
   ctx.shadowColor = styleConfig.shadowColor
+  ctx.fillStyle = styleConfig.shadowColor
+  ctx.fill(path2D)
+  ctx.restore()
+
+  ctx.save()
+  // destination-over 在现有的画布内容后面绘制新的图形,绘制不会导致画布上面之前的图形都变为透明
+  ctx.globalCompositeOperation = 'destination-over'
   ctx.fillStyle = styleConfig.fillColor
-  ctx.fill()
+  ctx.fill(path2D)
+  ctx.restore()
 
   return canvas
 }
