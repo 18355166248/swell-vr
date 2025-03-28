@@ -62,6 +62,7 @@ export class MapTools {
   init() {
     // 初始化数据
     const geometryData = this.generateGeometryData()
+
     this.geometryData = geometryData
     // 创建BufferGeometry
     this.geometry = createBufferGeometry(this.geometryData)

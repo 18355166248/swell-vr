@@ -24,7 +24,7 @@ function Three() {
         this.axesHelperSize = 50000
         this.isAxesHelper = true
         this.cameraConfig.fov = 450
-        this.cameraConfig.far = 650000
+        this.cameraConfig.far = 1000000
         this.isCSS2Renderer = true
         this.isRayCaster = true
       }
