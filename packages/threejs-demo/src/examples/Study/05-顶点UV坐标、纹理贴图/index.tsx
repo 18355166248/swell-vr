@@ -2,7 +2,6 @@ import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
 import WordMap from './images/world-296692_1920.png'
-import WordMapLight from './images/world-map-sea.jpg'
 import WenLi from './images/wenli.jpg'
 import ArrowWhite from './images/arrow-white.png'
 

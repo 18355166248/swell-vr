@@ -1,7 +1,7 @@
 import {useLayoutEffect, useRef} from 'react'
 import * as THREE from 'three'
 import ThreeBase from '../../../utils/ThreeBase'
-import Iphone13ProMaxGltf from '../../../assets/gltf/iphone_13_pro_max/scene.gltf'
+import Iphone13ProMaxGltf from '../../../assets/gltf/iphone_13_pro_max/scene1.gltf'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {FontLoader} from 'three/examples/jsm/loaders/FontLoader.js'
 import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry.js'
@@ -14,6 +14,7 @@ import negy from '../../../assets/Bridge2/negy.jpg'
 import posz from '../../../assets/Bridge2/posz.jpg'
 import negz from '../../../assets/Bridge2/negz.jpg'
 import helvetiker_bold from 'three/examples/fonts/helvetiker_bold.typeface.json'
+import pointWhite from '../../../assets/images/point-white.png'
 
 function Three() {
   const canvas = useRef(null)
@@ -59,6 +60,9 @@ function Three() {
       mixer?: THREE.AnimationMixer
       clips?: THREE.AnimationClip[]
       iphoneMesh: THREE.Object3D<THREE.Object3DEventMap> | undefined
+      pointGroup = new THREE.Group()
+      pointGroupScale = 0.04
+      pointGroupScaleFlag = true // 波点缩放动画
 
       constructor() {
         super()
@@ -85,6 +89,29 @@ function Three() {
         // }
 
         this.composer?.render()
+
+        if (this.pointGroupScaleFlag) {
+          this.pointGroupScale += 0.0002
+        }
+        if (!this.pointGroupScaleFlag) {
+          this.pointGroupScale -= 0.0002
+        }
+
+        if (this.pointGroupScale >= 0.04) {
+          this.pointGroupScaleFlag = false
+        }
+
+        if (this.pointGroupScale <= 0.03) {
+          this.pointGroupScaleFlag = true
+        }
+
+        this.pointGroup.children.forEach(element => {
+          element.scale.set(
+            this.pointGroupScale,
+            this.pointGroupScale,
+            this.pointGroupScale,
+          )
+        })
         // console.log(this.camera?.position)
       }
       initLight() {
@@ -201,6 +228,14 @@ function Three() {
         textMesh.rotation.y = Math.PI
         return textMesh
       }
+      // 创建波点
+      createSpritePoint() {
+        const map = new THREE.TextureLoader().load(pointWhite)
+        const material = new THREE.SpriteMaterial({map: map, color: 0xffffff})
+        const sprite = new THREE.Sprite(material)
+        sprite.scale.set(0.04, 0.04, 0.04)
+        return sprite
+      }
       createChart() {
         if (this.scene && this.camera) {
           const background = createBackground({
@@ -260,9 +295,21 @@ function Three() {
             }
           })
 
+          const pointNames = ['相机', '喇叭']
+          pointNames.forEach(name => {
+            const meshObj = gltf.scene.getObjectByName(name)
+            if (meshObj) {
+              const point = this.createSpritePoint()
+              const position = meshObj.getWorldPosition(new THREE.Vector3())
+              point.position.copy(position)
+              this.pointGroup.add(point)
+            }
+          })
+          this.scene?.add(this.pointGroup)
+
           this.scene?.add(gltf.scene)
 
-          // animation
+          // 动画
           if (this.scene) {
             this.clips = gltf.animations
             this.mixer = new THREE.AnimationMixer(this.scene)

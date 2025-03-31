@@ -84,9 +84,9 @@ export default class ThreeBase {
     this.height = this.container?.clientHeight || 0
 
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      logarithmicDepthBuffer: false,
+      antialias: true, // 抗锯齿
+      alpha: true, // 透明度
+      logarithmicDepthBuffer: false, // 深度缓冲区
       ...this.rendererSettings,
       //想把canvas画布上内容下载到本地，需要设置为true
       // preserveDrawingBuffer:true,
@@ -301,6 +301,10 @@ export default class ThreeBase {
     if (this.renderer && this.scene && this.camera && this.needRender) {
       this.renderer.render(this.scene, this.camera)
     }
+    if (this.scene && this.camera && this.css2Renderer) {
+      this.css2Renderer.render(this.scene, this.camera)
+    }
+    this.composer?.render()
     this.animate?.()
     this.threeAnim = requestAnimationFrame(this._animate.bind(this))
   }
