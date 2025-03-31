@@ -37,13 +37,6 @@ import {
 const YE = './assets/bottom-menu-arrow-big-180b7071.svg',
   $E = './assets/bottom-menu-arrow-small-19304179.svg'
 
-// import '../split/threejs.js'
-// import '../split/1.js'
-// import '../split/lil-gui-0.17.js'
-// import './split/gsap.min.js'
-// import './split/LineSegmentsGeometry.js'
-// import './split/LineMaterial.js'
-
 const VZ = rT
 class GZ {
   constructor(t = !1) {
