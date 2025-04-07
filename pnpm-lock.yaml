@@ -130,6 +130,9 @@ importers:
       glslify:
         specifier: ^7.1.1
         version: 7.1.1
+      lil-gui:
+        specifier: ^0.20.0
+        version: 0.20.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -151,6 +154,9 @@ importers:
       three-vignette-background:
         specifier: ^1.0.3
         version: 1.0.3
+      three.interactive:
+        specifier: ^1.8.0
+        version: 1.8.0(three@0.170.0)
     devDependencies:
       '@turf/helpers':
         specifier: ^7.2.0
@@ -3410,6 +3416,9 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
+  lil-gui@0.20.0:
+    resolution: {integrity: sha512-k7Ipr0ztqslMA2XvM5z5ZaWhxQtnEOwJBfI/hmSuRh6q4iMG9L0boqqrnZSzBR1jzyJ28OMl47l65ILzRe1TdA==}
+
   lilconfig@2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
     engines: {node: '>=10'}
@@ -4709,6 +4718,11 @@ packages:
 
   three-vignette-background@1.0.3:
     resolution: {integrity: sha512-ucsO0haIl9qFucPH/r10orjx9VJr9hhcxe9Vsm4NEGlI19h2VDBb0YOtUHM9TENOyHyVqE88phlfeMZXmCuVpw==}
+
+  three.interactive@1.8.0:
+    resolution: {integrity: sha512-qnPHHE8enXYLETuVzD9RRAfL1dU55nH87sduzBbEiMUSl21HXc+OVnIaLVokYfJ/ktl2QeL6pocO4rTOHlDjGw==}
+    peerDependencies:
+      three: '>= 0.122.0'
 
   three@0.136.0:
     resolution: {integrity: sha512-+fEMX7nYLz2ZesVP/dyifli5Jf8gR3XPAnFJveQ80aMhibFduzrADnjMbARXh8+W9qLK7rshJCjAIL/6cDxC+A==}
@@ -9368,6 +9382,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  lil-gui@0.20.0: {}
+
   lilconfig@2.1.0: {}
 
   lilconfig@3.1.2: {}
@@ -10745,6 +10761,10 @@ snapshots:
       glsl-blend-soft-light: 1.0.5
       glsl-film-grain: 1.0.4
       glslify: 4.0.0
+
+  three.interactive@1.8.0(three@0.170.0):
+    dependencies:
+      three: 0.170.0
 
   three@0.136.0: {}
 

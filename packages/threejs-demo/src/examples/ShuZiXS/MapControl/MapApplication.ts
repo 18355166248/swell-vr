@@ -44,10 +44,12 @@ class Renderer {
    */
   setInstance() {
     this.instance = new THREE.WebGLRenderer({
-      alpha: !0,
-      antialias: !0,
+      alpha: true,
+      antialias: true,
       canvas: this.canvas,
     })
+    console.log(this.instance)
+
     this.instance.setSize(this.sizes.width!, this.sizes.height!)
     this.instance.setPixelRatio(this.sizes.pixelRatio)
   }

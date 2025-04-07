@@ -20,13 +20,15 @@
     "glsl-blend-soft-light": "^1.0.5",
     "glsl-film-grain": "^1.0.4",
     "glslify": "^7.1.1",
+    "lil-gui": "^0.20.0",
     "lodash-es": "^4.17.21",
     "proj4": "^2.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.18.0",
     "swell-vr": "1.2.6",
-    "three-vignette-background": "^1.0.3"
+    "three-vignette-background": "^1.0.3",
+    "three.interactive": "^1.8.0"
   },
   "devDependencies": {
     "@turf/helpers": "^7.2.0",
