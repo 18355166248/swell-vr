@@ -23,9 +23,9 @@ class ResourceManager extends EventEmitter {
   itemsTotal: number
   assets: AssetInfo[]
   loaders: LoaderObject
-  constructor({dracoPath: dracoDecoderPath}: {dracoPath?: string}) {
+  constructor({dracoPath}: {dracoPath?: string} = {}) {
     super()
-    this.dracoPath = dracoDecoderPath || './draco/gltf/'
+    this.dracoPath = dracoPath || './draco/gltf/'
     this.itemsLoaded = 0
     this.itemsTotal = 0
     this.assets = []

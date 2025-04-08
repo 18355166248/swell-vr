@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {LoaderTypeKeys} from './const/loader'
+import {LoaderTypeValues} from './const/loader'
 
 export interface MapControlOptions {
   center: [number, number] // 行政中心
@@ -7,10 +7,10 @@ export interface MapControlOptions {
 }
 
 export interface AssetInfo {
-  type: LoaderTypeKeys
+  type: LoaderTypeValues
   name: string
   path: string
-  data: any
+  data?: any
 }
 
 export type AssetList = AssetInfo[]
