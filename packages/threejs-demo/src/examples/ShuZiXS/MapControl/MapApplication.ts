@@ -4,6 +4,201 @@ import * as THREE from 'three'
 import EventEmitter from './utils/EventEmitter'
 import {geoMercator} from 'd3-geo'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
+import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js'
+import {AssetInfo, AssetList} from './types'
+import {
+  availableLoaderTypes,
+  LoaderObject,
+  LoaderTypeKeys,
+  loaderTypes,
+} from './const/loader'
+
+/**
+ * 资源管理器类，处理3D资源的加载和管理
+ */
+class ResourceManager extends EventEmitter {
+  dracoPath: string
+  itemsLoaded: number
+  itemsTotal: number
+  assets: AssetInfo[]
+  loaders: LoaderObject
+  constructor({dracoPath: dracoDecoderPath}: {dracoPath?: string}) {
+    super()
+    this.dracoPath = dracoDecoderPath || './draco/gltf/'
+    this.itemsLoaded = 0
+    this.itemsTotal = 0
+    this.assets = []
+    this.loaders = {} as Record<LoaderTypeKeys, any>
+    this.initDefaultLoader()
+  }
+
+  /**
+   * 初始化加载管理器
+   */
+  initManager() {
+    const manager = new THREE.LoadingManager()
+    manager.onProgress = (
+      url: string,
+      itemsLoaded: number,
+      itemsTotal: number,
+    ) => {
+      this.itemsLoaded = itemsLoaded
+      this.itemsTotal = itemsTotal
+      this.emit('onProgress', url, itemsLoaded, itemsTotal)
+    }
+    manager.onError = error => {
+      this.emit('onError', error)
+    }
+    return manager
+  }
+
+  /**
+   * 初始化默认加载器
+   */
+  initDefaultLoader() {
+    const loaders: {loader: any; name: LoaderTypeKeys}[] = [
+      {loader: GLTFLoader, name: 'GLTFLoader'},
+      {loader: THREE.TextureLoader, name: 'TextureLoader'},
+    ]
+    loaders.map(loaderInfo =>
+      this.addLoader(loaderInfo.loader, loaderInfo.name),
+    )
+  }
+
+  /**
+   * 初始化Draco解码器
+   */
+  initDraco(loader: any) {
+    const dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderPath(this.dracoPath),
+      dracoLoader.preload(),
+      loader.setDRACOLoader(dracoLoader)
+  }
+
+  /**
+   * 添加资源加载器
+   * @param {Function} LoaderClass 加载器类
+   * @param {string} loaderName 加载器名称
+   */
+  addLoader(LoaderClass: any, loaderName: LoaderTypeKeys) {
+    if (LoaderClass.name && loaderTypes[loaderName]) {
+      if (!this.loaders[loaderName]) {
+        // @ts-ignore
+        const loader = new LoaderClass(this.manager)
+        const typeName = loaderName
+        if (loader instanceof THREE.Loader) {
+          typeName === 'GLTFLoader' && this.initDraco(loader)
+          // @ts-ignore
+          this.loaders[loaderTypes[typeName]] = loader
+        }
+      }
+    } else throw new Error('请配置正确的加载器')
+  }
+
+  /**
+   * 加载单个资源
+   * @param {Object} assetInfo 资源信息
+   */
+  loadItem(assetInfo: AssetInfo) {
+    return new Promise((resolve, reject) => {
+      if (!this.loaders[assetInfo.type])
+        throw new Error(`资源${assetInfo.path}没有配置加载器`)
+      // @ts-ignore
+      this.loaders[assetInfo.type].load(
+        assetInfo.path,
+        // @ts-ignore
+        loadedData => {
+          this.itemsLoaded++,
+            this.emit(
+              'onProgress',
+              assetInfo.path,
+              this.itemsLoaded,
+              this.itemsTotal,
+            ),
+            resolve({...assetInfo, data: loadedData})
+        },
+        null,
+        // @ts-ignore
+        error => {
+          this.emit('onError', error), reject(error)
+        },
+      )
+    })
+  }
+
+  /**
+   * 加载所有资源
+   * @param {Array} assetList 资源列表
+   */
+  loadAll(assetList: AssetList) {
+    return (
+      (this.itemsLoaded = 0),
+      (this.itemsTotal = 0),
+      new Promise((resolve, reject) => {
+        const assets = this.matchType(assetList)
+        const promises: Promise<any>[] = []
+        this.itemsTotal = assets.length
+        assets.map(asset => {
+          const promise = this.loadItem(asset)
+          promises.push(promise)
+        }),
+          Promise.all(promises)
+            .then(loadedAssets => {
+              this.assets = loadedAssets
+              this.emit('onLoad')
+              resolve(loadedAssets)
+            })
+            .catch(error => {
+              this.emit('onError', error), reject(error)
+            })
+      })
+    )
+  }
+
+  /**
+   * 匹配资源类型
+   * @param {Array} assetList 资源列表
+   */
+  matchType(assetList: AssetList) {
+    this.assets = assetList
+      .map(asset => ({
+        // @ts-ignore
+        type: availableLoaderTypes.includes(asset.type)
+          ? (asset.type as LoaderTypeKeys)
+          : ('' as LoaderTypeKeys),
+        path: asset.path,
+        name: asset.name,
+        data: null,
+      }))
+      .filter(asset => {
+        if (!asset.type) throw new Error(`资源${asset.path},type不正确`)
+        return asset.type
+      })
+    return this.assets
+  }
+
+  /**
+   * 获取已加载的资源
+   * @param {string} assetName 资源名称
+   */
+  getResource(assetName: string) {
+    const asset = this.assets.find(item => item.name === assetName)
+    if (!asset) throw new Error(`资源${assetName}不存在`)
+    return asset.data
+  }
+
+  /**
+   * 清理资源
+   */
+  destroy() {
+    this.off('onProgress'),
+      this.off('onLoad'),
+      this.off('onError'),
+      (this.assets = [])
+  }
+}
+
 /**
  * 渲染器类，管理Three.js渲染器
  */
@@ -181,14 +376,14 @@ class CameraManager {
       scene: sceneInstance,
       canvas: canvasElement,
     }: {sizes: SizeManager; scene: THREE.Scene; canvas: HTMLCanvasElement},
-    options: {isOrthographic: boolean} = {isOrthographic: !1},
+    options: {isOrthographic: boolean} = {isOrthographic: false},
   ) {
     this.sizes = sizeManager
     this.scene = sceneInstance
     this.wWidth = 0
     this.wHeight = 0
     this.canvas = canvasElement
-    this.options = Object.assign({isOrthographic: !1}, options)
+    this.options = Object.assign({isOrthographic: false}, options)
     this.setInstance()
     // 监听键盘事件切换相机模式
     document.addEventListener('keydown', event => {
@@ -297,9 +492,10 @@ class CameraManager {
  */
 class MapApplication extends EventEmitter {
   config: {
-    geoProjectionCenter: any
-    geoProjectionScale: any
-    geoProjectionTranslate: any
+    geoProjectionCenter: [number, number]
+    geoProjectionScale: number
+    geoProjectionTranslate: [number, number]
+    isOrthographic: boolean
   }
   canvas: HTMLCanvasElement
   scene: THREE.Scene
@@ -322,10 +518,10 @@ class MapApplication extends EventEmitter {
 
     // 默认配置
     const defaultConfig = {
-      geoProjectionCenter: [0, 0],
+      geoProjectionCenter: [0, 0] as [number, number],
       geoProjectionScale: 120,
-      geoProjectionTranslate: [0, 0],
-      isOrthographic: !1,
+      geoProjectionTranslate: [0, 0] as [number, number],
+      isOrthographic: false,
     }
 
     // 合并配置
@@ -398,4 +594,5 @@ class MapApplication extends EventEmitter {
   }
 }
 
+export {ResourceManager}
 export default MapApplication
