@@ -21,6 +21,7 @@ import * as d3 from 'd3'
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import {LineGeometry} from 'three/examples/jsm/lines/LineGeometry.js'
 import {Line2} from 'three/addons/lines/Line2.js'
+import {LineMaterial} from 'three/examples/jsm/lines/LineMaterial.js'
 
 class LoadAssets {
   onLoadCallback: () => void
@@ -131,13 +132,11 @@ class GeoMapRenderer {
    * @returns {[number, number]} 投影后的平面坐标
    */
   geoProjection(e: number[]) {
-    const center = [this.config.center.x, this.config.center.y] as [
-      number,
-      number,
-    ]
-    return d3.geoMercator().center(center).scale(120).translate([0, 0])(
-      e as [number, number],
-    )
+    return d3
+      .geoMercator()
+      .center(this.config.center as unknown as [number, number])
+      .scale(120)
+      .translate([0, 0])(e as [number, number])
   }
   /**
    * 创建地图
@@ -160,11 +159,11 @@ class GeoMapRenderer {
     const r: THREE.BufferGeometry[] = []
     e.features.forEach(t => {
       const n = new THREE.Object3D()
-      const {name: i, center: u = [], centroid: m = []} = t.properties
-      this.coordinates.push({name: i, center: u, centroid: m})
-      n.userData.name = i
-      n.userData.center = u
-      n.userData.centroid = m
+      const {name, center, centroid} = t.properties
+      this.coordinates.push({name, center, centroid})
+      n.userData.name = name
+      n.userData.center = center
+      n.userData.centroid = centroid
 
       t.geometry.coordinates.forEach(d => {
         d.forEach(s => {
@@ -172,16 +171,19 @@ class GeoMapRenderer {
           for (let o = 0; o < s.length; o++) {
             if (!s[o][0] || !s[o][1]) return false
             const [p, l] = this.geoProjection(s[o])!
-            o === 0 && h.moveTo(p, -l), h.lineTo(p, -l)
+            o === 0 && h.moveTo(p, -l)
+            h.lineTo(p, -l)
           }
+
           const c = new THREE.ShapeGeometry(h)
+          c.name = 'mapShape'
           if (merge) r.push(c)
           else {
             const o = new THREE.Mesh(c, this.config.material)
             o.renderOrder = this.config.renderOrder
-            o.userData.name = i
-            o.userData.center = u
-            o.userData.centroid = m
+            o.userData.name = name
+            o.userData.center = center
+            o.userData.centroid = centroid
             n.add(o)
           }
         })
@@ -216,7 +218,7 @@ class LineRenderer {
   config: {
     visibelProvince: string
     center: [number, number]
-    data?: string
+    data: string
     material?: THREE.LineBasicMaterial
     type: string
     renderOrder: number
@@ -226,6 +228,8 @@ class LineRenderer {
       {
         visibelProvince: '',
         center: [0, 0] as [number, number],
+        data: '',
+        material: new THREE.LineBasicMaterial({color: 16777215}),
         type: 'LineLoop',
         renderOrder: 1,
       },
@@ -235,7 +239,7 @@ class LineRenderer {
     const r = this.create(a)
     this.lineGroup = r
   }
-  geoProjection(e) {
+  geoProjection(e: number[]) {
     return d3
       .geoMercator()
       .center(this.config.center)
@@ -250,39 +254,45 @@ class LineRenderer {
       const u = t[i]
       u.properties.name !== r &&
         u.geometry.coordinates.forEach(m => {
-          const d = []
+          const d: THREE.Vector3[] = []
           let s = null
-          a === 'Line2'
-            ? (m[0].forEach(h => {
-                const [c, o] = this.geoProjection(h)!
-                d.push(c, -o, 0)
-              }),
-              (s = this.createLine2(d)))
-            : m[0].forEach(h => {
-                const [c, o] = this.geoProjection(h)!
-                d.push(new THREE.Vector3(c, -o, 0))
-                s = this.createLine(d)
-              }),
-            n.add(s)
+          if (a === 'Line2') {
+            m[0].forEach(h => {
+              const [c, o] = this.geoProjection(h)!
+              d.push(c, -o, 0)
+            })
+            s = this.createLine2(d)
+          } else {
+            m[0].forEach(h => {
+              const [c, o] = this.geoProjection(h)!
+              d.push(new THREE.Vector3(c, -o, 0))
+              s = this.createLine(d)
+            })
+          }
+
+          n.add(s)
         })
     }
     return n
   }
-  createLine2(e) {
-    const {material: a, renderOrder: r} = this.config,
-      t = new LineGeometry()
+  createLine2(e: [number, number, number]) {
+    const {material, renderOrder} = this.config
+    const t = new LineGeometry()
     t.setPositions(e)
-    const n = new Line2(t, a)
-    return (
-      (n.name = 'mapLine2'), (n.renderOrder = r), n.computeLineDistances(), n
-    )
+    const n = new Line2(t, material as unknown as LineMaterial)
+    n.name = 'mapLine2'
+    n.renderOrder = renderOrder
+    n.computeLineDistances()
+    return n
   }
-  createLine(e) {
-    const {material: a, renderOrder: r, type: t} = this.config,
-      n = new THREE.BufferGeometry()
+  createLine(e: THREE.Vector3[]) {
+    const {material, renderOrder} = this.config
+    const n = new THREE.BufferGeometry()
     n.setFromPoints(e)
-    const i = new THREE.LineLoop(n, a)
-    return (i.renderOrder = r), (i.name = 'mapLine'), i
+    const i = new THREE.LineLoop(n, material)
+    i.renderOrder = renderOrder
+    i.name = 'mapLine'
+    return i
   }
   setParent(e: THREE.Group) {
     e.add(this.lineGroup)

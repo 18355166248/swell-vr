@@ -363,7 +363,7 @@ export class TimeManager extends EventEmitter {
 /**
  * 相机管理类
  */
-class CameraManager {
+export class CameraManager {
   sizes: any
   scene: any
   wWidth: number

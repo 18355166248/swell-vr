@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {MapControlOptions, PointLightOptions} from './types'
 import MapApplication from './MapApplication'
 import * as THREE from 'three'
 import {InteractionManager} from 'three.interactive'
-import {Label3D} from './components/label3d'
+import {Label3D, Label3DProps} from './components/label3d'
 import LilGui from './utils/lilGui'
 import Stats from 'three/addons/libs/stats.module.js'
 import {
@@ -21,7 +22,6 @@ import {
   createDecorationIcon,
 } from './utils/createlabel'
 import {gsap} from 'gsap'
-import {getBoxSize} from './utils/base'
 
 function SortByValue(_: any[]) {
   _.sort((t: any, a: any) => a.value - t.value)
@@ -37,15 +37,23 @@ class MapControl extends MapApplication {
   labelGroup: THREE.Group
   label3d: Label3D
   eventElement: never[]
-  defaultMaterial: null
-  defaultLightMaterial: null
+  defaultMaterial?: THREE.MeshStandardMaterial
+  defaultLightMaterial?: THREE.MeshStandardMaterial
   debug?: LilGui
   stats?: Stats
   assets: LoadAssets
   rotateBorder1?: THREE.Mesh
   rotateBorder2?: THREE.Mesh
-  otherLabel: any[] = []
-  focusMapGroup: THREE.Group<THREE.Object3DEventMap>
+  otherLabel: Label3DProps[] = []
+  focusMapGroup?: THREE.Group<THREE.Object3DEventMap>
+  focusMapTopMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
+  focusMapSideMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
+  zhejiangLineMaterial?: THREE.LineBasicMaterial
+  allBar: THREE.Mesh[] = []
+  allBarMaterial: THREE.MeshBasicMaterial[] = []
+  allGuangquan: THREE.Mesh[] = []
+  allProvinceLabel: Label3DProps[] = []
+  quanGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.pointCenter = options.centroid
@@ -71,8 +79,7 @@ class MapControl extends MapApplication {
     this.label3d = new Label3D(this)
     this.labelGroup.rotateX(-Math.PI / 2)
     this.eventElement = []
-    this.defaultMaterial = null
-    this.defaultLightMaterial = null
+
     this.scene.add(this.labelGroup)
     this.initSetting()
     this.assets = new LoadAssets(() => {
@@ -351,7 +358,7 @@ class MapControl extends MapApplication {
   }
   // 创建标签
   createLabel() {
-    const labels = []
+    const labels: Label3DProps[] = []
 
     // 创建省份标签
     ChinaProvinceInfo.map(provinceInfo => {
@@ -413,44 +420,43 @@ class MapControl extends MapApplication {
   createModel() {
     const t = new THREE.Group()
     this.focusMapGroup = new THREE.Group()
-    const {china: a, chinaTopLine: s} = this.createChina()
-    // const {zhejiang: i, zhejiangTop: r, guangdonLine: c} = this.createProvince()
-    a.setParent(t)
-    s.setParent(t)
-    // i.setParent(this.focusMapGroup)
-    // r.setParent(this.focusMapGroup)
-    // c.setParent(this.focusMapGroup)
+    const {china, chinaTopLine} = this.createChina()
+    const {zhejiang, zhejiangTop, guangdonLine} = this.createProvince()
+    china.setParent(t)
+    chinaTopLine.setParent(t)
+    zhejiang.setParent(this.focusMapGroup)
+    zhejiangTop.setParent(this.focusMapGroup)
+    guangdonLine.setParent(this.focusMapGroup)
     this.focusMapGroup.position.set(0, 0, -0.01)
     this.focusMapGroup.scale.set(1, 1, 0)
     t.add(this.focusMapGroup)
     t.rotation.x = -Math.PI / 2
     t.position.set(0, 0.2, 0)
     this.scene.add(t)
-    // this.createBar()
+    this.createBar()
   }
   createChina() {
-    if (!this.assets.instance) return false
-    const t = this.assets.instance.getResource('china'),
-      a = new GeoMapRenderer({
-        data: t,
-        center: this.pointCenter,
-        merge: !1,
-        material: new THREE.MeshLambertMaterial({
-          color: 1387591,
-          transparent: !0,
-          opacity: 1,
-        }),
-        renderOrder: 2,
+    const t = this.assets.instance!.getResource('china')
+    const china = new GeoMapRenderer({
+      data: t,
+      center: this.pointCenter,
+      merge: false,
+      material: new THREE.MeshLambertMaterial({
+        color: 1387591,
+        transparent: true,
+        opacity: 1,
       }),
-      s = new LineRenderer({
-        center: this.pointCenter,
-        visibelProvince: '广东省',
-        data: t,
-        material: new THREE.LineBasicMaterial({color: 4162253}),
-        renderOrder: 3,
-      })
-    s.lineGroup.position.z += 0.01
-    const e = new LineRenderer({
+      renderOrder: 2,
+    })
+    const chinaTopLine = new LineRenderer({
+      center: this.pointCenter,
+      visibelProvince: '广东省',
+      data: t,
+      material: new THREE.LineBasicMaterial({color: 4162253}),
+      renderOrder: 3,
+    })
+    chinaTopLine.lineGroup.position.z += 0.01
+    const chinaBottomLine = new LineRenderer({
       center: this.pointCenter,
       data: t,
       material: new THREE.LineBasicMaterial({
@@ -460,16 +466,15 @@ class MapControl extends MapApplication {
       }),
       renderOrder: 3,
     })
-    e.lineGroup.position.z -= 0.59
-    return {china: a, chinaTopLine: s, chinaBottomLine: e}
+    chinaBottomLine.lineGroup.position.z -= 0.59
+    return {china, chinaTopLine, chinaBottomLine}
   }
   createProvince() {
-    if (!this.assets.instance) return false
-    const t = this.assets.instance.getResource('zhejiang')
+    const t = this.assets.instance!.getResource('zhejiang')
     const [a, s] = this.createProvinceMaterial()
     this.focusMapTopMaterial = a
     this.focusMapSideMaterial = s
-    const e = new GeoMapRenderer({
+    const zhejiang = new GeoMapRenderer({
         center: this.pointCenter,
         position: new THREE.Vector3(0, 0, 0.11),
         data: t,
@@ -488,14 +493,14 @@ class MapControl extends MapApplication {
     this.defaultLightMaterial = this.defaultMaterial.clone()
     this.defaultLightMaterial.emissive.setHex(725293)
     this.defaultLightMaterial.emissiveIntensity = 3.5
-    const r = new GeoMapRenderer({
+    const zhejiangTop = new GeoMapRenderer({
       center: this.pointCenter,
       position: new THREE.Vector3(0, 0, 0.72),
       data: t,
       material: i,
       renderOrder: 2,
     })
-    r.mapGroup.children.map(o => {
+    zhejiangTop.mapGroup.children.map(o => {
       o.children.map(l => {
         l.type === 'Mesh' && this.eventElement.push(l)
       })
@@ -503,17 +508,17 @@ class MapControl extends MapApplication {
     this.zhejiangLineMaterial = new THREE.LineBasicMaterial({
       color: 16777215,
       opacity: 0,
-      transparent: !0,
-      fog: !1,
+      transparent: true,
+      fog: false,
     })
-    const c = new LineRenderer({
+    const guangdonLine = new LineRenderer({
       center: this.pointCenter,
       data: t,
       material: this.zhejiangLineMaterial,
       renderOrder: 3,
     })
-    c.lineGroup.position.z += 0.73
-    return {zhejiang: e, zhejiangTop: r, guangdonLine: c}
+    guangdonLine.lineGroup.position.z += 0.73
+    return {zhejiang, zhejiangTop, guangdonLine}
   }
   createProvinceMaterial() {
     const t = new THREE.MeshLambertMaterial({
@@ -644,16 +649,16 @@ class MapControl extends MapApplication {
   }
   createBar() {
     const t = this
-    const a = SortByValue(ZheJiangCityInfo).filter((o, l) => l < 7)
+    const provinceList = SortByValue(ZheJiangCityInfo).filter((o, l) => l < 7)
     const s = new THREE.Group()
     const e = 0.7
     const i = 4 * e
-    const r = a[0].value
+    const r = provinceList[0].value
     this.allBar = []
     this.allBarMaterial = []
     this.allGuangquan = []
     this.allProvinceLabel = []
-    a.map((o, l) => {
+    provinceList.map((o, l) => {
       const p = i * (o.value / r),
         n = new THREE.MeshBasicMaterial({
           color: 16777215,
@@ -736,7 +741,7 @@ class MapControl extends MapApplication {
         blending: THREE.AdditiveBlending,
       }),
       o = new THREE.Mesh(i, r)
-    l = new THREE.Mesh(i, c)
+    const l = new THREE.Mesh(i, c)
     o.renderOrder = 6
     l.renderOrder = 6
     o.rotateX(-Math.PI / 2)
