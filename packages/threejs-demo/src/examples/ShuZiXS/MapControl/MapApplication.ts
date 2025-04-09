@@ -9,9 +9,11 @@ import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js'
 import {AssetInfo, AssetList} from './types'
 import {
   availableLoaderTypes,
+  LoaderConstructor,
   LoaderObject,
   LoaderTypeKeys,
   loaderTypes,
+  LoaderTypeValues,
 } from './const/loader'
 
 /**
@@ -25,11 +27,11 @@ class ResourceManager extends EventEmitter {
   loaders: LoaderObject
   constructor({dracoPath}: {dracoPath?: string} = {}) {
     super()
-    this.dracoPath = dracoPath || './draco/gltf/'
+    this.dracoPath = dracoPath || '/draco/gltf/'
     this.itemsLoaded = 0
     this.itemsTotal = 0
     this.assets = []
-    this.loaders = {} as Record<LoaderTypeKeys, any>
+    this.loaders = {} as LoaderObject
     this.initDefaultLoader()
   }
 
@@ -71,9 +73,10 @@ class ResourceManager extends EventEmitter {
    */
   initDraco(loader: any) {
     const dracoLoader = new DRACOLoader()
-    dracoLoader.setDecoderPath(this.dracoPath),
-      dracoLoader.preload(),
-      loader.setDRACOLoader(dracoLoader)
+    const path = window.location.origin + this.dracoPath
+    dracoLoader.setDecoderPath(path)
+    dracoLoader.preload()
+    loader.setDRACOLoader(dracoLoader)
   }
 
   /**
@@ -82,15 +85,14 @@ class ResourceManager extends EventEmitter {
    * @param {string} loaderName 加载器名称
    */
   addLoader(LoaderClass: any, loaderName: LoaderTypeKeys) {
-    if (LoaderClass.name && loaderTypes[loaderName]) {
-      if (!this.loaders[loaderName]) {
+    const loaderValue = loaderTypes[loaderName]
+    if (LoaderClass.name && loaderValue) {
+      if (!this.loaders[loaderValue]) {
         // @ts-ignore
-        const loader = new LoaderClass(this.manager)
-        const typeName = loaderName
+        const loader = new LoaderClass(this.manager) as LoaderConstructor
         if (loader instanceof THREE.Loader) {
-          typeName === 'GLTFLoader' && this.initDraco(loader)
-          // @ts-ignore
-          this.loaders[loaderTypes[typeName]] = loader
+          loaderName === 'GLTFLoader' && this.initDraco(loader)
+          this.loaders[loaderValue] = loader
         }
       }
     } else throw new Error('请配置正确的加载器')
@@ -165,8 +167,8 @@ class ResourceManager extends EventEmitter {
       .map(asset => ({
         // @ts-ignore
         type: availableLoaderTypes.includes(asset.type)
-          ? (asset.type as LoaderTypeKeys)
-          : ('' as LoaderTypeKeys),
+          ? (asset.type as LoaderTypeValues)
+          : ('' as LoaderTypeValues),
         path: asset.path,
         name: asset.name,
         data: null,
@@ -277,7 +279,7 @@ class Renderer {
 /**
  * 尺寸管理类，处理画布尺寸和设备像素比
  */
-class SizeManager extends EventEmitter {
+export class SizeManager extends EventEmitter {
   canvas: any
   pixelRatio: number
   width?: number
@@ -312,7 +314,7 @@ class SizeManager extends EventEmitter {
 /**
  * 时间管理类，处理动画帧和时间计算
  */
-class TimeManager extends EventEmitter {
+export class TimeManager extends EventEmitter {
   start: number
   current: any
   elapsed: number
@@ -505,16 +507,6 @@ class MapApplication extends EventEmitter {
   renderer: Renderer
   constructor(canvasElement: HTMLCanvasElement, options = {}) {
     super()
-    Object.defineProperty(this, 'geoProjection', (coordinates: any) => {
-      const {
-        geoProjectionCenter: center,
-        geoProjectionScale: scale,
-        geoProjectionTranslate: translate,
-      } = this.config
-      return geoMercator().center(center).scale(scale).translate(translate)(
-        coordinates,
-      )
-    })
 
     // 默认配置
     const defaultConfig = {
@@ -542,6 +534,17 @@ class MapApplication extends EventEmitter {
     this.time.on('tick', () => {
       this.update()
     })
+  }
+
+  geoProjection(coordinates: any) {
+    const {
+      geoProjectionCenter: center,
+      geoProjectionScale: scale,
+      geoProjectionTranslate: translate,
+    } = this.config
+    return geoMercator().center(center).scale(scale).translate(translate)(
+      coordinates,
+    )
   }
 
   /**

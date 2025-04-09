@@ -56,33 +56,13 @@ const loaderTypes = {
 
 type LoaderTypeKeys = keyof typeof loaderTypes
 type LoaderTypeValues = (typeof loaderTypes)[LoaderTypeKeys]
-type LoaderObject = Record<LoaderTypeKeys, LoaderConstructor>
+type LoaderObject = Record<LoaderTypeValues, LoaderConstructor>
 
 const availableLoaderTypes = Object.values(loaderTypes) as LoaderTypeValues[]
-
-
-// loader类与类型的映射
-const loaderMap: LoaderObject = {
-  GLTFLoader,
-  TextureLoader,
-  FontLoader,
-  MMDLoader,
-  MTLLoader,
-  OBJLoader,
-  PCDLoader,
-  FileLoader,
-  ImageLoader,
-  ObjectLoader,
-  MaterialLoader,
-  CubeTextureLoader,
-  RGBELoader,
-  FBXLoader,
-}
 
 export {
   loaderTypes,
   availableLoaderTypes,
-  loaderMap,
   type LoaderTypeKeys,
   type LoaderTypeValues,
   type LoaderClassType,

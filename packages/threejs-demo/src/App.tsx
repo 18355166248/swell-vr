@@ -44,15 +44,14 @@ function App() {
         ref={leftMenuRef}
         className="left-menu fixed z-[1000] left-0 top-0 h-full"
       >
-        <div className="inline-menu h-full  bg-[#001529] overflow-y-auto">
+        <div className="inline-menu h-full bg-[#001529] overflow-y-auto">
           <Menu
-            mode="inline"
+            mode="vertical"
             theme="dark"
             onClick={onClick}
             defaultSelectedKeys={['1']}
             defaultOpenKeys={['sub1']}
             items={paths}
-            inlineCollapsed
             getPopupContainer={() => leftMenuRef.current as HTMLElement}
           />
           <div className="h-4"></div>

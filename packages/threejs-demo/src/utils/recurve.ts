@@ -20,6 +20,7 @@ const sep = '/'
 
 interface PathsParam {
   label: string
+  title?: string
   key: string
   children?: PathsParam[]
 }

@@ -14,3 +14,12 @@ export interface AssetInfo {
 }
 
 export type AssetList = AssetInfo[]
+
+export interface PointLightOptions {
+  color: string
+  intensity: number
+  distance: number
+  x: number
+  y: number
+  z: number
+}

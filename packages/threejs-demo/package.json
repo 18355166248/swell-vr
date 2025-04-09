@@ -20,6 +20,7 @@
     "glsl-blend-soft-light": "^1.0.5",
     "glsl-film-grain": "^1.0.4",
     "glslify": "^7.1.1",
+    "gsap": "^3.12.7",
     "lil-gui": "^0.20.0",
     "lodash-es": "^4.17.21",
     "proj4": "^2.15.0",
