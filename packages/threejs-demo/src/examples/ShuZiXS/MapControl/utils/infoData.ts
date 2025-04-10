@@ -68,7 +68,7 @@ class LoadAssets {
       {
         type: 'File',
         name: 'china',
-        path: path + 'china.json',
+        path: path + 'china-province.json',
       },
     ]
     this.instance.loadAll(list)
@@ -571,16 +571,16 @@ class LineRenderer {
       .translate([0, 0])(e)
   }
   create(e: any) {
-    const {type: a, visibelProvince: r} = this.config
+    const {type, visibelProvince} = this.config
     const t = e.features
     const n = new THREE.Group()
     for (let i = 0; i < t.length; i++) {
       const u = t[i]
-      u.properties.name !== r &&
+      u.properties.name !== visibelProvince &&
         u.geometry.coordinates.forEach(m => {
           const d: THREE.Vector3[] = []
           let s = null
-          if (a === 'Line2') {
+          if (type === 'Line2') {
             m[0].forEach(h => {
               const [c, o] = this.geoProjection(h)!
               d.push(c, -o, 0)

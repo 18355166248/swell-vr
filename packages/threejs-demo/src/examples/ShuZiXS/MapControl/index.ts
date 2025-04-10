@@ -598,7 +598,6 @@ class MapControl extends MapApplication {
     // 创建浙江省地图及其相关元素
     const {zhejiang, zhejiangTop, zhejiangLine} = this.createProvince()
 
-    console.log('🚀 ~ createModel ~ zhejiang:', zhejiang)
     // 设置地图层级关系
     china.setParent(mapRootGroup)
     chinaTopLine.setParent(mapRootGroup)
