@@ -15,7 +15,7 @@ import {
 import ChinaBlurLineImg from '../../assets/imgs/chinaBlurLine.png'
 import OceanBlueBgImg from '../../assets/imgs/ocean-blue-bg.png'
 import pathLine2Img from '../../assets/imgs/pathLine2.png'
-import {AssetList} from '../types'
+import {AssetList, FeatureCollection} from '../types'
 import {normalizeGeoJSON} from './base'
 import * as d3 from 'd3'
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -169,8 +169,8 @@ class ExtrudedGeoMapRenderer {
    * 根据GeoJSON数据生成Three.js中的几何体
    * @param {object} geoData - 标准化后的GeoJSON数据
    */
-  create(geoData: any) {
-    geoData.features.forEach((feature: any) => {
+  create(geoData: FeatureCollection) {
+    geoData.features.forEach(feature => {
       // 为每个特征创建一个对象
       const featureObject = new THREE.Object3D()
 
@@ -190,8 +190,8 @@ class ExtrudedGeoMapRenderer {
       const materials = [this.config.topFaceMaterial, this.config.sideMaterial]
 
       // 处理特征的几何坐标
-      feature.geometry.coordinates.forEach((polygon: any) => {
-        polygon.forEach((ring: any) => {
+      feature.geometry.coordinates.forEach(polygon => {
+        polygon.forEach(ring => {
           // 创建形状
           const shape = new THREE.Shape()
 
@@ -300,7 +300,7 @@ class ExtrudedGeoMapRenderer {
     }
 
     // 获取并配置侧面纹理
-    const sideTexture = this.assets.getResource('side')
+    const sideTexture = this.assets.instance!.getResource('side')
     sideTexture.wrapS = THREE.RepeatWrapping
     sideTexture.wrapT = THREE.RepeatWrapping
     sideTexture.repeat.set(1, 1.5)
@@ -466,18 +466,7 @@ class GeoMapRenderer {
    * 根据GeoJSON数据生成Three.js中的几何体
    * @param {object} e 标准化后的GeoJSON数据
    */
-  create(e: {
-    features: Array<{
-      properties: {
-        name: string
-        center: number[]
-        centroid: number[]
-      }
-      geometry: {
-        coordinates: number[][][][]
-      }
-    }>
-  }) {
+  create(e: FeatureCollection) {
     const {merge} = this.config
     const r: THREE.BufferGeometry[] = []
     e.features.forEach(t => {
@@ -537,8 +526,15 @@ class GeoMapRenderer {
   }
 }
 
+/**
+ * 线条渲染器类
+ * 用于将GeoJSON数据渲染为Three.js中的线条
+ * 支持LineLoop和Line2两种线条类型
+ */
 class LineRenderer {
+  /** 线条组，包含所有线条元素 */
   lineGroup: THREE.Group
+  /** 配置项 */
   config: {
     visibelProvince: string
     center: [number, number]
@@ -547,7 +543,11 @@ class LineRenderer {
     type: string
     renderOrder: number
   }
-  constructor(e = {}) {
+  /**
+   * 构造函数
+   * @param {Object} options - 配置参数
+   */
+  constructor(options = {}) {
     this.config = Object.assign(
       {
         visibelProvince: '',
@@ -557,69 +557,115 @@ class LineRenderer {
         type: 'LineLoop',
         renderOrder: 1,
       },
-      e,
+      options,
     )
-    const a = normalizeGeoJSON(this.config.data)
-    const r = this.create(a)
-    this.lineGroup = r
+    const geoData = normalizeGeoJSON(this.config.data)
+    const lineGroup = this.create(geoData)
+    this.lineGroup = lineGroup
   }
-  geoProjection(e: number[]) {
+  /**
+   * 地理坐标投影转换
+   * 将地理坐标转换为平面坐标用于渲染
+   * @param {number[]} coords - 地理坐标
+   * @returns {[number, number] | undefined} 投影后的平面坐标
+   */
+  geoProjection(coords: [number, number]): [number, number] {
     return d3
       .geoMercator()
       .center(this.config.center)
       .scale(120)
-      .translate([0, 0])(e)
+      .translate([0, 0])(coords) as [number, number]
   }
-  create(e: any) {
+  /**
+   * 创建线条
+   * 根据GeoJSON数据生成Three.js中的线条
+   * @param {GeoJSON} geoData - 标准化后的GeoJSON数据
+   * @returns {THREE.Group} 包含所有线条的组
+   */
+  create(geoData: FeatureCollection) {
     const {type, visibelProvince} = this.config
-    const t = e.features
-    const n = new THREE.Group()
-    for (let i = 0; i < t.length; i++) {
-      const u = t[i]
-      u.properties.name !== visibelProvince &&
-        u.geometry.coordinates.forEach(m => {
-          const d: THREE.Vector3[] = []
-          let s = null
+    const features = geoData.features
+    const linesGroup = new THREE.Group()
+
+    for (let i = 0; i < features.length; i++) {
+      const feature = features[i]
+      // 排除指定的不可见省份
+      if (feature.properties.name !== visibelProvince) {
+        feature.geometry.coordinates.forEach(polygon => {
+          const points: THREE.Vector3[] = []
+          let line: THREE.LineLoop | Line2 | null = null
+
           if (type === 'Line2') {
-            m[0].forEach(h => {
-              const [c, o] = this.geoProjection(h)!
-              d.push(c, -o, 0)
+            // 使用Line2渲染（需要平坦数组格式）
+            const positions: number[] = []
+            polygon[0].forEach(coordPair => {
+              const projCoords = this.geoProjection(coordPair)
+              if (projCoords) {
+                const [x, y] = projCoords
+                positions.push(x, -y, 0)
+              }
             })
-            s = this.createLine2(d)
+            if (positions.length > 0) {
+              line = this.createLine2(positions)
+            }
           } else {
-            m[0].forEach(h => {
-              const [c, o] = this.geoProjection(h)!
-              d.push(new THREE.Vector3(c, -o, 0))
-              s = this.createLine(d)
+            // 使用标准LineLoop渲染
+            polygon[0].forEach(coordPair => {
+              const projCoords = this.geoProjection(coordPair)
+              if (projCoords) {
+                const [x, y] = projCoords
+                points.push(new THREE.Vector3(x, -y, 0))
+              }
             })
+            if (points.length > 0) {
+              line = this.createLine(points)
+            }
           }
 
-          n.add(s)
+          if (line) {
+            linesGroup.add(line)
+          }
         })
+      }
     }
-    return n
+    return linesGroup
   }
-  createLine2(e: [number, number, number]) {
+  /**
+   * 创建Line2类型的线条
+   * 适用于需要更细致线宽控制的场景
+   * @param {number[]} positions - 位置数组（平坦格式：[x1,y1,z1,x2,y2,z2,...]）
+   * @returns {Line2} Line2类型的线条对象
+   */
+  createLine2(positions: number[]): Line2 {
     const {material, renderOrder} = this.config
-    const t = new LineGeometry()
-    t.setPositions(e)
-    const n = new Line2(t, material as unknown as LineMaterial)
-    n.name = 'mapLine2'
-    n.renderOrder = renderOrder
-    n.computeLineDistances()
-    return n
+    const geometry = new LineGeometry()
+    geometry.setPositions(positions)
+    const line = new Line2(geometry, material as unknown as LineMaterial)
+    line.name = 'mapLine2'
+    line.renderOrder = renderOrder
+    line.computeLineDistances()
+    return line
   }
-  createLine(e: THREE.Vector3[]) {
+  /**
+   * 创建标准LineLoop类型的线条
+   * @param {THREE.Vector3[]} points - 三维点数组
+   * @returns {THREE.LineLoop} LineLoop类型的线条对象
+   */
+  createLine(points: THREE.Vector3[]): THREE.LineLoop {
     const {material, renderOrder} = this.config
-    const n = new THREE.BufferGeometry()
-    n.setFromPoints(e)
-    const i = new THREE.LineLoop(n, material)
-    i.renderOrder = renderOrder
-    i.name = 'mapLine'
-    return i
+    const geometry = new THREE.BufferGeometry()
+    geometry.setFromPoints(points)
+    const line = new THREE.LineLoop(geometry, material)
+    line.renderOrder = renderOrder
+    line.name = 'mapLine'
+    return line
   }
-  setParent(e: THREE.Group) {
-    e.add(this.lineGroup)
+  /**
+   * 设置父级容器
+   * @param {THREE.Group} parent - 父级Three.js组
+   */
+  setParent(parent: THREE.Group) {
+    parent.add(this.lineGroup)
   }
 }
 
