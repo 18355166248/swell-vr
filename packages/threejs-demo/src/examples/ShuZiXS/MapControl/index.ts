@@ -461,8 +461,9 @@ class MapControl extends MapApplication {
       shapeColor: 2776970,
       pointSize: 0.1,
       pointColor: 1396093,
-      diffuse: !0,
+      diffuse: true,
       diffuseSpeed: 10,
+      diffuseColor: 3050457,
     }
     new Grid(this, options)
   }
