@@ -23,6 +23,17 @@ export interface SpecialProvinceInfo {
 }
 
 /**
+ * 城市信息接口
+ */
+export interface CityInfo {
+  name: string
+  enName: string
+  value: number
+  center: number[]
+  centroid: number[]
+}
+
+/**
  * 装饰图标信息接口
  */
 export interface DecorationIconInfo {
@@ -115,6 +126,46 @@ export function createDecorationIcon(
 
   label3d.setLabelStyle(label, 0.02, 'x')
   label.setParent(parentGroup)
+
+  return label
+}
+
+/**
+ * 创建省份柱状图上的标签
+ * @param cityInfo 城市信息
+ * @param index 索引号
+ * @param position 标签位置
+ * @param label3d 3D标签组件
+ * @param labelGroup 标签组
+ * @returns 创建的标签实例
+ */
+export function createProvinceBarLabel(
+  cityInfo: CityInfo,
+  index: number,
+  position: THREE.Vector3,
+  label3d: Label3D,
+  labelGroup: THREE.Group,
+) {
+  const label = label3d.create('', 'provinces-label', true)
+
+  label.init(
+    `<div class="provinces-label ${index > 4 ? 'yellow' : ''}">
+      <div class="provinces-label-wrap">
+        <div class="number"><span class="value">${
+          cityInfo.value
+        }</span><span class="unit">万人</span></div>
+        <div class="name">
+          <span class="zh">${cityInfo.name}</span>
+          <span class="en">${cityInfo.enName.toUpperCase()}</span>
+        </div>
+        <div class="no">${index + 1}</div>
+      </div>
+    </div>`,
+    position,
+  )
+
+  label3d.setLabelStyle(label, 0.01, 'x')
+  label.setParent(labelGroup)
 
   return label
 }

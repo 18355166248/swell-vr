@@ -1,4 +1,4 @@
-import {ResourceManager} from '../MapApplication'
+import {ResourceManager, TimeManager} from '../MapApplication'
 import * as THREE from 'three'
 import HuiGuangImg from '../../assets/imgs/huiguang.png'
 import LogoImg from '../../assets/imgs/logo.png'
@@ -72,6 +72,329 @@ class LoadAssets {
       },
     ]
     this.instance.loadAll(list)
+  }
+}
+
+/**
+ * 带有挤压效果的地图渲染器
+ * 将GeoJSON数据渲染为具有高度和材质的3D地图
+ * 支持顶面和侧面使用不同材质
+ */
+class ExtrudedGeoMapRenderer {
+  /** 地图组，包含所有地图元素 */
+  mapGroup: THREE.Group<THREE.Object3DEventMap>
+  /** 资源管理器 */
+  assets: LoadAssets
+  /** 时间管理器 */
+  time: TimeManager
+  /** 坐标数据数组，存储地图各区域的名称和中心点 */
+  coordinates: {
+    name: string
+    center: number[]
+    centroid: number[]
+  }[]
+  /** 配置项 */
+  config: {
+    position: THREE.Vector3
+    center: THREE.Vector2
+    data: string
+    renderOrder: number
+    topFaceMaterial: THREE.MeshBasicMaterial
+    sideMaterial: THREE.MeshBasicMaterial
+    depth: number
+  }
+
+  /**
+   * 构造函数
+   * @param {Object} params - 包含资源和时间管理器的参数对象
+   * @param {ResourceManager} params.assets - 资源管理器
+   * @param {TimeManager} params.time - 时间管理器
+   * @param {Object} options - 配置选项
+   */
+  constructor(
+    {assets, time}: {assets: LoadAssets; time: TimeManager},
+    options = {},
+  ) {
+    this.mapGroup = new THREE.Group()
+    this.assets = assets
+    this.time = time
+    this.coordinates = []
+
+    // 默认配置与自定义配置合并
+    this.config = Object.assign(
+      {
+        position: new THREE.Vector3(0, 0, 0),
+        center: new THREE.Vector2(0, 0),
+        data: '',
+        renderOrder: 1,
+        topFaceMaterial: new THREE.MeshBasicMaterial({
+          color: 1582651,
+          transparent: true,
+          opacity: 1,
+        }),
+        sideMaterial: new THREE.MeshBasicMaterial({
+          color: 464171,
+          transparent: true,
+          opacity: 1,
+        }),
+        depth: 0.1,
+      },
+      options,
+    )
+
+    // 设置地图组位置
+    this.mapGroup.position.copy(this.config.position)
+
+    // 标准化GeoJSON数据并创建地图
+    const geoData = normalizeGeoJSON(this.config.data)
+    this.create(geoData)
+  }
+
+  /**
+   * 地理坐标投影转换
+   * 将地理坐标转换为平面坐标用于渲染
+   * @param {[number, number]} coords - 地理坐标
+   * @returns {[number, number] | undefined} 投影后的平面坐标
+   */
+  geoProjection(coords: [number, number]) {
+    return d3
+      .geoMercator()
+      .center(this.config.center as unknown as [number, number])
+      .scale(120)
+      .translate([0, 0])(coords) as [number, number]
+  }
+
+  /**
+   * 创建地图
+   * 根据GeoJSON数据生成Three.js中的几何体
+   * @param {object} geoData - 标准化后的GeoJSON数据
+   */
+  create(geoData: any) {
+    geoData.features.forEach((feature: any) => {
+      // 为每个特征创建一个对象
+      const featureObject = new THREE.Object3D()
+
+      // 提取特征属性
+      const {name, center = [], centroid = []} = feature.properties
+      this.coordinates.push({name, center, centroid})
+
+      // 挤压几何体配置
+      const extrudeSettings = {
+        depth: this.config.depth,
+        bevelEnabled: true,
+        bevelSegments: 1,
+        bevelThickness: 0.1,
+      }
+
+      // 材质数组（顶面和侧面）
+      const materials = [this.config.topFaceMaterial, this.config.sideMaterial]
+
+      // 处理特征的几何坐标
+      feature.geometry.coordinates.forEach((polygon: any) => {
+        polygon.forEach((ring: any) => {
+          // 创建形状
+          const shape = new THREE.Shape()
+
+          // 遍历环上的点
+          for (let i = 0; i < ring.length; i++) {
+            if (!ring[i][0] || !ring[i][1]) return false
+
+            // 投影坐标
+            const [x, y] = this.geoProjection(ring[i] as [number, number])!
+
+            // 第一个点移动到，其他点连线到
+            i === 0 ? shape.moveTo(x, -y) : shape.lineTo(x, -y)
+          }
+
+          // 创建挤压几何体和网格
+          const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+          const mesh = new THREE.Mesh(geometry, materials)
+
+          // 添加到特征对象
+          featureObject.add(mesh)
+        })
+      })
+
+      // 添加特征对象到地图组
+      this.mapGroup.add(featureObject)
+    })
+  }
+
+  /**
+   * 创建自定义材质
+   * 创建带有渐变效果的Lambert材质
+   * @returns {[THREE.MeshLambertMaterial, THREE.Mesh]} 材质和网格对象
+   */
+  createMaterial(): [THREE.MeshLambertMaterial, THREE.MeshStandardMaterial] {
+    // 创建基础材质
+    const material = new THREE.MeshLambertMaterial({
+      color: 16777215,
+      transparent: true,
+      opacity: 1,
+      fog: false,
+      side: THREE.DoubleSide,
+    })
+
+    // 自定义编译着色器
+    material.onBeforeCompile = shader => {
+      // 添加自定义uniform变量
+      shader.uniforms = {
+        ...shader.uniforms,
+        uColor1: {value: new THREE.Color(2781042)},
+        uColor2: {value: new THREE.Color(860197)},
+      }
+
+      // 修改顶点着色器
+      shader.vertexShader = shader.vertexShader.replace(
+        'void main() {',
+        `
+        attribute float alpha;
+        varying vec3 vPosition;
+        varying float vAlpha;
+        void main() {
+          vAlpha = alpha;
+          vPosition = position;
+        `,
+      )
+
+      // 修改片段着色器 - 主函数
+      shader.fragmentShader = shader.fragmentShader.replace(
+        'void main() {',
+        `
+        varying vec3 vPosition;
+        varying float vAlpha;
+        uniform vec3 uColor1;
+        uniform vec3 uColor2;
+
+        void main() {
+        `,
+      )
+
+      // 修改片段着色器 - 不透明部分
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <opaque_fragment>',
+        `
+        #ifdef OPAQUE
+        diffuseColor.a = 1.0;
+        #endif
+
+        // https://github.com/mrdoob/three.js/pull/22425
+        #ifdef USE_TRANSMISSION
+        diffuseColor.a *= transmissionAlpha + 0.1;
+        #endif
+
+        // 水平方向渐变
+        vec3 gradient = mix(uColor1, uColor2, vPosition.x/15.78);
+
+        outgoingLight = outgoingLight*gradient;
+
+        // 顶部透明度控制
+        float topAlpha = 0.5;
+        if(vPosition.z>0.3){
+          diffuseColor.a *= topAlpha;
+        }
+
+        gl_FragColor = vec4(outgoingLight, diffuseColor.a);
+        `,
+      )
+    }
+
+    // 获取并配置侧面纹理
+    const sideTexture = this.assets.getResource('side')
+    sideTexture.wrapS = THREE.RepeatWrapping
+    sideTexture.wrapT = THREE.RepeatWrapping
+    sideTexture.repeat.set(1, 1.5)
+    sideTexture.offset.y += 0.065
+
+    // 创建侧面网格
+    const sideMeshStandard = new THREE.MeshStandardMaterial({
+      color: 16777215,
+      map: sideTexture,
+      fog: false,
+      opacity: 1,
+      side: THREE.DoubleSide,
+    })
+
+    // 添加纹理动画
+    this.time.on('tick', () => {
+      sideTexture.offset.y += 0.0001
+    })
+
+    // 自定义侧面网格着色器
+    sideMeshStandard.onBeforeCompile = shader => {
+      // 添加自定义uniform变量
+      shader.uniforms = {
+        ...shader.uniforms,
+        uColor1: {value: new THREE.Color(2781042)},
+        uColor2: {value: new THREE.Color(2781042)},
+      }
+
+      // 修改顶点着色器
+      shader.vertexShader = shader.vertexShader.replace(
+        'void main() {',
+        `
+        attribute float alpha;
+        varying vec3 vPosition;
+        varying float vAlpha;
+        void main() {
+          vAlpha = alpha;
+          vPosition = position;
+        `,
+      )
+
+      // 修改片段着色器 - 主函数
+      shader.fragmentShader = shader.fragmentShader.replace(
+        'void main() {',
+        `
+        varying vec3 vPosition;
+        varying float vAlpha;
+        uniform vec3 uColor1;
+        uniform vec3 uColor2;
+
+        void main() {
+        `,
+      )
+
+      // 修改片段着色器 - 不透明部分
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <opaque_fragment>',
+        `
+        #ifdef OPAQUE
+        diffuseColor.a = 1.0;
+        #endif
+
+        // https://github.com/mrdoob/three.js/pull/22425
+        #ifdef USE_TRANSMISSION
+        diffuseColor.a *= transmissionAlpha + 0.1;
+        #endif
+
+        // 垂直方向渐变
+        vec3 gradient = mix(uColor1, uColor2, vPosition.z/1.2);
+
+        outgoingLight = outgoingLight*gradient;
+
+        gl_FragColor = vec4(outgoingLight, diffuseColor.a);
+        `,
+      )
+    }
+
+    return [material, sideMeshStandard]
+  }
+
+  /**
+   * 获取坐标数据
+   * @returns {Array} 坐标数据数组
+   */
+  getCoordinates() {
+    return this.coordinates
+  }
+
+  /**
+   * 设置父级容器
+   * @param {THREE.Group} parent - 父级Three.js组
+   */
+  setParent(parent: THREE.Group) {
+    parent.add(this.mapGroup)
   }
 }
 
@@ -177,8 +500,9 @@ class GeoMapRenderer {
 
           const c = new THREE.ShapeGeometry(h)
           c.name = 'mapShape'
-          if (merge) r.push(c)
-          else {
+          if (merge) {
+            r.push(c)
+          } else {
             const o = new THREE.Mesh(c, this.config.material)
             o.renderOrder = this.config.renderOrder
             o.userData.name = name
@@ -246,7 +570,7 @@ class LineRenderer {
       .scale(120)
       .translate([0, 0])(e)
   }
-  create(e) {
+  create(e: any) {
     const {type: a, visibelProvince: r} = this.config
     const t = e.features
     const n = new THREE.Group()
@@ -638,6 +962,7 @@ export {
   LoadAssets,
   GeoMapRenderer,
   LineRenderer,
+  ExtrudedGeoMapRenderer,
   ChinaProvinceInfo,
   ZheJiangCityInfo,
   locationPoints,
