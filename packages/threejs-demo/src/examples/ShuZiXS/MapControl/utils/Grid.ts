@@ -68,7 +68,7 @@ class DiffuseController {
       diffuseSpeed: 15,
       diffuseColor: 9345950,
       diffuseWidth: 10,
-      diffuseDir: 1,
+      diffuseDir: undefined,
     }
     // 合并用户配置与默认配置
     this.options = Object.assign({}, defaultOptions, {
@@ -178,7 +178,7 @@ class DiffuseController {
               }
               gl_FragColor = vec4(outgoingLight, diffuseColor.a);
             } else {
-              gl_FragColor = vec4(outgoingLight, 0.0);
+              discard;
             }
           `,
       )
@@ -370,7 +370,8 @@ class Grid {
    * 应用扩散着色器效果
    */
   diffuseShader(material: THREE.PointsMaterial) {
-    const {gridSize, diffuseColor, diffuseSpeed, diffuseWidth} = this.options
+    const {gridSize, diffuseColor, diffuseSpeed, diffuseWidth, diffuseDir} =
+      this.options
 
     new DiffuseController({
       material,
@@ -379,6 +380,7 @@ class Grid {
       diffuseColor,
       diffuseSpeed,
       diffuseWidth,
+      diffuseDir,
     })
     return false
   }

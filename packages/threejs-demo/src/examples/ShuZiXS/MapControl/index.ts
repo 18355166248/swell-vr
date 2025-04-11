@@ -70,10 +70,10 @@ class MapControl extends MapApplication {
       39.28228164159694,
     )
     this.camera.instance.near = 1
-    this.camera.instance.far = 1e4
+    this.camera.instance.far = 10000
     this.camera.instance.updateProjectionMatrix()
     this.interactionManager = new InteractionManager(
-      this.renderer.instance,
+      this.renderer.instance!,
       this.camera.instance,
       this.canvas,
     )
@@ -98,6 +98,15 @@ class MapControl extends MapApplication {
       timeLine.addLabel('focusMap', 2)
       timeLine.addLabel('focusMapOpacity', 2.5)
       timeLine.addLabel('bar', 3.5)
+      timeLine.add(
+        gsap.to(this.camera.instance.position, {
+          duration: 2.5,
+          x: -20.460391656828197,
+          y: 19.30487264306655,
+          z: 58.37802626943616,
+          ease: 'circ.out',
+        }),
+      )
       timeLine.add(
         gsap.to(this.camera.instance.position, {
           duration: 2.5,
@@ -463,7 +472,9 @@ class MapControl extends MapApplication {
       pointColor: 1396093,
       diffuse: true,
       diffuseSpeed: 10,
+      diffuseWidth: 10,
       diffuseColor: 3050457,
+      // diffuseDir: '2.0',
     }
     new Grid(this, options)
   }
@@ -594,7 +605,7 @@ class MapControl extends MapApplication {
     this.focusMapGroup = new THREE.Group()
 
     // 创建中国地图及其轮廓线
-    const {china, chinaTopLine} = this.createChina()
+    const {china, chinaTopLine, chinaBottomLine} = this.createChina()
 
     // 创建浙江省地图及其相关元素
     const {zhejiang, zhejiangTop, zhejiangLine} = this.createProvince()
@@ -602,6 +613,7 @@ class MapControl extends MapApplication {
     // 设置地图层级关系
     china.setParent(mapRootGroup)
     chinaTopLine.setParent(mapRootGroup)
+    chinaBottomLine.setParent(mapRootGroup)
     zhejiang.setParent(this.focusMapGroup)
     zhejiangTop.setParent(this.focusMapGroup)
     zhejiangLine.setParent(this.focusMapGroup)
