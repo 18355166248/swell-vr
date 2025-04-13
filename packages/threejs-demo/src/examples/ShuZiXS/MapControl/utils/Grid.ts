@@ -178,7 +178,8 @@ class DiffuseController {
               }
               gl_FragColor = vec4(outgoingLight, diffuseColor.a);
             } else {
-              discard;
+              // discard;
+            gl_FragColor = vec4(outgoingLight, diffuseColor.a);
             }
           `,
       )
