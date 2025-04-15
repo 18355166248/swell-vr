@@ -12,7 +12,6 @@ function Three() {
       centroid: ZheJiangData.properties.centroid as [number, number],
       center: ZheJiangData.properties.center as [number, number],
     })
-    
 
     return () => {
       mapControl.destroy()

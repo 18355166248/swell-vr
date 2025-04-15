@@ -57,7 +57,9 @@ class MapControl extends MapApplication {
   allProvinceLabel: Label3DProps[] = []
   quanGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
-    super(container, options)
+    super(container, {
+      geoProjectionCenter: options.centroid,
+    })
     this.pointCenter = options.centroid
     this.flyLineCenter = options.center
     this.depth = 0.5
@@ -924,6 +926,7 @@ class MapControl extends MapApplication {
 
     // 创建柱状图组
     const barGroup = new THREE.Group()
+    barGroup.name = 'barGroup'
 
     // 设置柱状图参数
     const baseSize = 0.7
@@ -969,6 +972,7 @@ class MapControl extends MapApplication {
       // 创建柱状图网格
       const barMesh = new THREE.Mesh(barGeometry, barMaterial)
       barMesh.renderOrder = 5
+      barMesh.name = 'barMesh'
 
       // 获取城市坐标并设置位置
       const [x, y] = this.geoProjection(cityInfo.centroid)!
