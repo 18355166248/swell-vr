@@ -20,11 +20,7 @@ function Three() {
 
   return (
     <div className="relative w-full h-full">
-      <canvas
-        ref={canvas}
-        id="canvas"
-        className="w-full h-full relative z-10"
-      />
+      <canvas ref={canvas} id="canvas" className="w-full h-full relative" />
     </div>
   )
 }

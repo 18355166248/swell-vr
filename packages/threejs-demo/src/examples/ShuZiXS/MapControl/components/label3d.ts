@@ -67,7 +67,7 @@ class Label3D {
     r.className = n
     r.style.visibility = 'hidden'
     r.style.position = 'absolute'
-    if (n) {
+    if (!n) {
       r.style.padding = '10px'
       r.style.color = '#fff'
       r.style.fontSize = '12px'

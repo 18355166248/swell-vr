@@ -24,6 +24,7 @@ import {
   createProvinceBarLabel,
 } from './utils/createlabel'
 import {gsap} from 'gsap'
+import './index.css'
 
 function SortByValue(_: any[]) {
   _.sort((t: any, a: any) => a.value - t.value)
@@ -210,6 +211,7 @@ class MapControl extends MapApplication {
           'focusMapOpacity',
         )
       }
+      // 柱状图动画
       this.allBar.map((e, i) => {
         timeLine.add(
           gsap.to(e.scale, {
@@ -260,6 +262,7 @@ class MapControl extends MapApplication {
         }
         timeLine.add(p, 'bar')
       })
+      // 光圈动画
       this.allGuangquan.map((e, i) => {
         timeLine.add(
           gsap.to(e.children[0].scale, {
