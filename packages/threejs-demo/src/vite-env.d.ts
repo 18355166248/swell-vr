@@ -8,6 +8,10 @@ declare module '*.gltf' {
   export default string
 }
 
+declare module '*.mov' {
+  export default string
+}
+
 declare module '*.js'
 
 interface Window {

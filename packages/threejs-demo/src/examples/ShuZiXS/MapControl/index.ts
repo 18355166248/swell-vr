@@ -96,6 +96,7 @@ class MapControl extends MapApplication {
       this.createRotateBorder()
       this.createLabel()
       this.createModel()
+      this.createAnimateVideo()
 
       const timeLine = gsap.timeline()
       timeLine.addLabel('focusMap', 2)
@@ -1132,6 +1133,37 @@ class MapControl extends MapApplication {
 
     // 返回三个辉光平面
     return [huiguang1, huiguang2, huiguang3]
+  }
+  createAnimateVideo() {
+    this.createAnimateVideoItem('.map-gd-video1', new THREE.Vector3(11, 0.4, 1))
+    this.createAnimateVideoItem(
+      '.map-gd-video2',
+      new THREE.Vector3(-11, 0.4, 2),
+    )
+  }
+  createAnimateVideoItem(t: string, a: THREE.Vector3) {
+    const s = document.querySelector(t) as HTMLVideoElement
+    window.addEventListener('pointerdown', () => {
+      if (s) {
+        s.play()
+      }
+    })
+    const e = new THREE.VideoTexture(s as HTMLVideoElement)
+    e.colorSpace = THREE.SRGBColorSpace
+    const i = 1.2
+    const r = new THREE.PlaneGeometry(2.5 * i, 1 * i)
+    const c = new THREE.MeshBasicMaterial({
+      color: 10807286,
+      alphaMap: e,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+    })
+    const o = new THREE.Mesh(r, c)
+    o.rotateX(-Math.PI / 2)
+    o.position.copy(a)
+    o.renderOrder = 10
+    this.scene.add(o)
   }
   destroy() {
     super.destroy()

@@ -20,7 +20,7 @@ export default defineConfig({
       exclude: 'node_modules/**',
     }),
   ],
-  assetsInclude: ['**/*.gltf', '**/*.glb'],
+  assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.mov'],
   build: {
     rollupOptions: {
       output: {
