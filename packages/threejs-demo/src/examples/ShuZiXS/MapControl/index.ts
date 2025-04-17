@@ -57,6 +57,8 @@ class MapControl extends MapApplication {
   allGuangquan: THREE.Group<THREE.Object3DEventMap>[] = []
   allProvinceLabel: Label3DProps[] = []
   quanGroup?: THREE.Group<THREE.Object3DEventMap>
+  flyLineGroup?: THREE.Group<THREE.Object3DEventMap>
+  flyLineFocusGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, {
       geoProjectionCenter: options.centroid,
@@ -75,6 +77,7 @@ class MapControl extends MapApplication {
     this.camera.instance.near = 1
     this.camera.instance.far = 10000
     this.camera.instance.updateProjectionMatrix()
+    // 点击管理器
     this.interactionManager = new InteractionManager(
       this.renderer.instance!,
       this.camera.instance,
@@ -97,6 +100,8 @@ class MapControl extends MapApplication {
       this.createLabel()
       this.createModel()
       this.createAnimateVideo()
+      this.createEvent()
+      this.createFlyLine()
 
       const timeLine = gsap.timeline()
       timeLine.addLabel('focusMap', 2)
@@ -1134,6 +1139,7 @@ class MapControl extends MapApplication {
     // 返回三个辉光平面
     return [huiguang1, huiguang2, huiguang3]
   }
+  // 创建动画视频
   createAnimateVideo() {
     this.createAnimateVideoItem('.map-gd-video1', new THREE.Vector3(11, 0.4, 1))
     this.createAnimateVideoItem(
@@ -1164,6 +1170,191 @@ class MapControl extends MapApplication {
     o.position.copy(a)
     o.renderOrder = 10
     this.scene.add(o)
+  }
+  /**
+   * 创建交互事件
+   * 处理地图元素的鼠标交互事件，包括悬停、点击等
+   * 实现地图元素高亮、相机移动等交互效果
+   */
+  createEvent() {
+    // 存储当前悬停的元素集合
+    const hoveredElements: THREE.Object3D<THREE.Object3DEventMap>[] = []
+
+    // 应用默认材质的函数
+    const applyDefaultMaterial = (object: THREE.Object3D) => {
+      object.traverse((child: THREE.Object3D) => {
+        if ((child as any).isMesh) {
+          // eslint-disable-next-line no-extra-semi
+          ;(child as THREE.Mesh).material = this.defaultMaterial!
+        }
+      })
+    }
+
+    // 应用高亮材质的函数
+    const applyHighlightMaterial = (object: THREE.Object3D) => {
+      object.traverse((child: THREE.Object3D) => {
+        if ((child as any).isMesh) {
+          // eslint-disable-next-line no-extra-semi
+          ;(child as THREE.Mesh).material = this.defaultLightMaterial!
+        }
+      })
+    }
+
+    // 为每个可交互元素添加事件监听
+    this.eventElement.forEach(element => {
+      // 添加到交互管理器
+      this.interactionManager.add(element)
+
+      // 鼠标按下事件 - 移动相机到点击位置
+      const el = element as any
+      // el.addEventListener('click', (event: any) => {
+      //   if (this.clicked) return false
+      //   console.log('🚀 ~ el.addEventListener ~ event:', event.target.parent)
+      //   this.clicked = true
+      //   const targetPosition = new THREE.Vector3()
+      //   event.target.parent.getWorldPosition(targetPosition)
+
+      //   this.camera.instance.position.copy(targetPosition)
+      //   return undefined
+      // })
+
+      // 鼠标抬起事件 - 重置点击状态
+      el.addEventListener('mouseup', () => {
+        this.clicked = false
+      })
+
+      // 鼠标悬停事件 - 高亮显示元素
+      el.addEventListener('mouseover', (event: any) => {
+        const parent = event.target.parent
+        if (parent && !hoveredElements.includes(parent)) {
+          hoveredElements.push(parent)
+        }
+        document.body.style.cursor = 'pointer'
+        if (parent) {
+          applyHighlightMaterial(parent)
+        }
+      })
+
+      // 鼠标离开事件 - 恢复默认显示
+      el.addEventListener('mouseout', (event: any) => {
+        const parent = event.target.parent
+        if (parent) {
+          // 从悬停元素列表中移除当前元素
+          const filteredElements = hoveredElements.filter(
+            element => element.userData.name !== parent.userData.name,
+          )
+          // 更新悬停元素列表
+          hoveredElements.length = 0
+          filteredElements.forEach(el => hoveredElements.push(el))
+
+          // 应用默认材质
+          applyDefaultMaterial(parent)
+          document.body.style.cursor = 'default'
+        }
+      })
+    })
+  }
+  createFlyLine() {
+    this.flyLineGroup = new THREE.Group()
+    this.flyLineGroup.visible = true
+    this.scene.add(this.flyLineGroup)
+    const t = this.assets.instance!.getResource('flyLine')
+    t.colorSpace = THREE.SRGBColorSpace
+    t.wrapS = THREE.RepeatWrapping
+    t.wrapT = THREE.RepeatWrapping
+    t.repeat.set(1, 1)
+    const a = 0.03
+    const s = 32
+    const e = 8
+    const i = false
+    const [r, c] = this.geoProjection(this.flyLineCenter)!
+    const o = new THREE.Vector3(r, -c, 0)
+    const l = new THREE.MeshBasicMaterial({
+      map: t,
+      alphaMap: t,
+      color: 2781042,
+      transparent: true,
+      fog: false,
+      opacity: 1,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    })
+    this.time.on('tick', () => {
+      t.offset.x -= 0.006
+    })
+    ZheJiangCityInfo.filter((p, n) => n < 7).map(p => {
+      const [n, h] = this.geoProjection(p.centroid)!
+      const f = new THREE.Vector3(n, -h, 0)
+      const d = new THREE.Vector3()
+      d.addVectors(o, f).multiplyScalar(0.5), d.setZ(3)
+      const v = new THREE.QuadraticBezierCurve3(o, d, f)
+      const m = new THREE.TubeGeometry(v, s, a, e, i)
+      const g = new THREE.Mesh(m, l)
+      g.rotation.x = -Math.PI / 2
+      g.position.set(0, 0.94, 0)
+      g.renderOrder = 21
+      this.flyLineGroup!.add(g)
+    })
+    this.createFlyLineFocus()
+  }
+  createFlyLineFocus() {
+    this.flyLineFocusGroup = new THREE.Group()
+    this.flyLineFocusGroup.visible = false
+    this.flyLineFocusGroup.rotation.x = -Math.PI / 2
+    const [t, a] = this.geoProjection([119.476498, 29.898918])!
+    this.flyLineFocusGroup.position.set(t, 0.942, a)
+    this.scene.add(this.flyLineFocusGroup)
+    const s = this.assets.instance!.getResource('flyLineFocus')
+    const e = new THREE.PlaneGeometry(1, 1)
+    const i = new THREE.MeshBasicMaterial({
+      color: 16777215,
+      map: s,
+      alphaMap: s,
+      transparent: true,
+      fog: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    })
+    const r = new THREE.Mesh(e, i)
+    r.scale.set(0, 0, 0)
+    const c = r.clone()
+    c.material = i.clone()
+    this.flyLineFocusGroup.add(r, c)
+    gsap.to(r.material, {
+      opacity: 0,
+      repeat: -1,
+      yoyo: false,
+      duration: 1,
+    })
+    gsap.to(r.scale, {
+      x: 1.5,
+      y: 1.5,
+      z: 1.5,
+      repeat: -1,
+      yoyo: false,
+      duration: 1,
+    })
+    gsap.to(c.material, {
+      delay: 0.5,
+      opacity: 0,
+      repeat: -1,
+      yoyo: false,
+      duration: 1,
+    })
+    gsap.to(c.scale, {
+      delay: 0.5,
+      x: 1.5,
+      y: 1.5,
+      z: 1.5,
+      repeat: -1,
+      yoyo: false,
+      duration: 1,
+    })
+  }
+  update() {
+    super.update()
+    this.stats && this.stats.update()
+    this.interactionManager && this.interactionManager.update()
   }
   destroy() {
     super.destroy()

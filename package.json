@@ -6,9 +6,6 @@
   "scripts": {
     "pnpm:devPreinstall": "node scripts/preinstall.js",
     "prepare": "husky install",
-    "build:watch": "pnpm --filter vr --filter vr-core build:watch",
-    "build:threejs-demo": "pnpm --filter threejs-demo build",
-    "lint": "eslint --fix --ext .ts,.tsx src",
     "prettier": "prettier --write packages"
   },
   "commitlint": {
