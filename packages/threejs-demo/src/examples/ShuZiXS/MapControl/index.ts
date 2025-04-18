@@ -64,7 +64,8 @@ class MapControl extends MapApplication {
       geoProjectionCenter: options.centroid,
     })
     this.pointCenter = options.centroid
-    this.flyLineCenter = options.center
+    // 浙江地图的中心点
+    this.flyLineCenter = ZheJiangCityInfo[0].centroid as [number, number]
     this.depth = 0.5
     this.clicked = false
     this.scene.fog = new THREE.Fog(1058614, 1, 50)
@@ -1256,7 +1257,7 @@ class MapControl extends MapApplication {
   }
   createFlyLine() {
     this.flyLineGroup = new THREE.Group()
-    this.flyLineGroup.visible = true
+    this.flyLineGroup.visible = false
     this.scene.add(this.flyLineGroup)
     const t = this.assets.instance!.getResource('flyLine')
     t.colorSpace = THREE.SRGBColorSpace

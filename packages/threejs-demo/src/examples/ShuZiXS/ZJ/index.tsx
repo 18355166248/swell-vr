@@ -3,17 +3,19 @@ import MapControl from '../MapControl'
 import ZheJiangData from '../../../data/map/zhejiang.json'
 import Animate1 from '../assets/mov/animate.mov'
 import Animate2 from '../assets/mov/animate2.mov'
+import MapButtons from './MapButtons'
 
 function Three() {
   const canvas = useRef<HTMLCanvasElement>(null)
+  const mapRef = useRef<MapControl>()
 
   useLayoutEffect(() => {
     if (!canvas.current) return
 
     const mapControl = new MapControl(canvas.current, {
       centroid: ZheJiangData.properties.centroid as [number, number],
-      center: ZheJiangData.properties.center as [number, number],
     })
+    mapRef.current = mapControl
 
     return () => {
       mapControl.destroy()
@@ -23,6 +25,7 @@ function Three() {
   return (
     <div className="relative w-full h-full">
       <canvas ref={canvas} id="canvas" className="w-full h-full relative" />
+      <MapButtons mapRef={mapRef} />
       <video
         className="map-gd-video map-gd-video1"
         width="250"
