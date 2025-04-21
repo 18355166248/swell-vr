@@ -12,6 +12,8 @@ import {
   GeoMapRenderer,
   LineRenderer,
   LoadAssets,
+  locationPoints,
+  monitoringPoints,
   ZheJiangCityInfo,
 } from './utils/infoData'
 import {Grid} from './utils/Grid'
@@ -23,8 +25,13 @@ import {
   createDecorationIcon,
   createProvinceBarLabel,
 } from './utils/createlabel'
+import {
+  createInfoPointLabel,
+  MonitoringPointInfo,
+} from './components/InfoPointLabel'
 import {gsap} from 'gsap'
 import './index.css'
+import Particles from './utils/Particles'
 
 function SortByValue(_: any[]) {
   _.sort((t: any, a: any) => a.value - t.value)
@@ -59,6 +66,12 @@ class MapControl extends MapApplication {
   quanGroup?: THREE.Group<THREE.Object3DEventMap>
   flyLineGroup?: THREE.Group<THREE.Object3DEventMap>
   flyLineFocusGroup?: THREE.Group<THREE.Object3DEventMap>
+  particles?: Particles
+  scatterGroup?: THREE.Group<THREE.Object3DEventMap>
+  InfoPointGroup?: THREE.Group<THREE.Object3DEventMap>
+  infoPointIndex = 0
+  infoPointLabelTime?: number
+  infoLabelElement: Label3DProps[] = []
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, {
       geoProjectionCenter: options.centroid,
@@ -103,6 +116,9 @@ class MapControl extends MapApplication {
       this.createAnimateVideo()
       this.createEvent()
       this.createFlyLine()
+      this.createParticles()
+      this.createScatter()
+      this.createInfoPoint()
 
       const timeLine = gsap.timeline()
       timeLine.addLabel('focusMap', 2)
@@ -1255,6 +1271,7 @@ class MapControl extends MapApplication {
       })
     })
   }
+  // 创建飞线
   createFlyLine() {
     this.flyLineGroup = new THREE.Group()
     this.flyLineGroup.visible = false
@@ -1298,11 +1315,12 @@ class MapControl extends MapApplication {
     })
     this.createFlyLineFocus()
   }
+  // 创建飞线杭州底部聚焦效果
   createFlyLineFocus() {
     this.flyLineFocusGroup = new THREE.Group()
     this.flyLineFocusGroup.visible = false
     this.flyLineFocusGroup.rotation.x = -Math.PI / 2
-    const [t, a] = this.geoProjection([119.476498, 29.898918])!
+    const [t, a] = this.geoProjection(this.flyLineCenter)!
     this.flyLineFocusGroup.position.set(t, 0.942, a)
     this.scene.add(this.flyLineFocusGroup)
     const s = this.assets.instance!.getResource('flyLineFocus')
@@ -1351,6 +1369,200 @@ class MapControl extends MapApplication {
       yoyo: false,
       duration: 1,
     })
+  }
+  // 创建粒子特效
+  createParticles() {
+    this.particles = new Particles(this, {
+      num: 10,
+      range: 30,
+      dir: 'up',
+      speed: 0.05,
+      material: new THREE.PointsMaterial({
+        map: Particles.createTexture(),
+        size: 1,
+        color: 61166,
+        transparent: true,
+        opacity: 1,
+        depthTest: false,
+        depthWrite: false,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+      }),
+    })
+    this.particles.instance!.position.set(0, 0, 0)
+    this.particles.instance!.rotation.x = -Math.PI / 2
+    this.particles.setParent(this.scene)
+    this.particles.enable = false
+    this.particles.instance!.visible = false
+  }
+  // 创建散点
+  createScatter() {
+    this.scatterGroup = new THREE.Group()
+    this.scatterGroup.visible = false
+    this.scatterGroup.rotation.x = -Math.PI / 2
+    this.scene.add(this.scatterGroup)
+    const t = this.assets.instance!.getResource('arrow')
+    const a = new THREE.SpriteMaterial({
+      map: t,
+      color: 16776948,
+      fog: false,
+      transparent: true,
+      depthTest: false,
+    })
+    const s = SortByValue(locationPoints)
+    const e = s[0].value
+    s.map(i => {
+      const r = new THREE.Sprite(a)
+      r.renderOrder = 23
+      const c = 0.1 + (i.value / e) * 0.2
+      r.scale.set(c, c, c)
+      const [o, l] = this.geoProjection([i.lng, i.lat])!
+      r.position.set(o, -l, this.depth + 0.45)
+      r.userData.position = [o, -l, this.depth + 0.45]
+      this.scatterGroup!.add(r)
+    })
+  }
+  /**
+   * 创建重点监测点位
+   * 在地图上生成可交互的监测点，点击时展示详细信息
+   */
+  createInfoPoint() {
+    // 创建监测点组
+    this.InfoPointGroup = new THREE.Group()
+    this.InfoPointGroup.visible = false
+    this.InfoPointGroup.rotation.x = -Math.PI / 2
+    this.scene.add(this.InfoPointGroup)
+
+    // 初始化状态值
+    this.infoPointIndex = 0
+    this.infoPointLabelTime = undefined
+    this.infoLabelElement = [] as Label3DProps[]
+
+    // 获取点位纹理资源
+    const pointTexture = this.assets.instance!.getResource('point')
+
+    // 定义不同类型点位颜色
+    const pointColors = [16776948, 7863285] // 黄色和蓝色
+
+    // 获取并排序监测点数据
+    const sortedPoints = SortByValue(monitoringPoints as MonitoringPointInfo[])
+    const maxValue = sortedPoints[0].value
+
+    // 遍历所有监测点创建精灵
+    sortedPoints.map((pointData, index) => {
+      // 创建点位材质
+      const pointMaterial = new THREE.SpriteMaterial({
+        map: pointTexture,
+        color: pointColors[index % pointColors.length],
+        fog: false,
+        transparent: true,
+        depthTest: false,
+      })
+
+      // 创建点位精灵
+      const pointSprite = new THREE.Sprite(pointMaterial)
+      pointSprite.renderOrder = 23
+
+      // 根据数值大小调整点位尺寸
+      const pointScale = 0.7 + (pointData.value / maxValue) * 0.4
+      pointSprite.scale.set(pointScale, pointScale, pointScale)
+
+      // 获取点位地理坐标并转换为3D坐标
+      const [posX, posY] = this.geoProjection([pointData.lng, pointData.lat])!
+      const position = [posX, -posY, this.depth + 0.7] as [
+        number,
+        number,
+        number,
+      ]
+
+      // 设置点位位置
+      pointSprite.position.set(...position)
+
+      // 存储点位数据用于交互
+      pointSprite.userData = {
+        position: position,
+        name: pointData.name,
+        value: pointData.value,
+        level: pointData.level,
+        index: index,
+      }
+
+      // 添加点位到监测点组
+      this.InfoPointGroup!.add(pointSprite)
+
+      // 创建信息标签
+      const infoLabel = createInfoPointLabel(
+        pointData,
+        this.label3d,
+        this.InfoPointGroup!,
+        this.geoProjection.bind(this),
+      )
+
+      // 保存标签引用
+      this.infoLabelElement.push(infoLabel)
+
+      // 添加交互事件
+      this.interactionManager!.add(pointSprite)
+
+      // 点击事件 - 显示详细信息
+      pointSprite.addEventListener('mousedown' as any, (event: any) => {
+        if (this.clicked) return false
+        this.clicked = true
+        this.infoPointIndex = event.target.userData.index
+
+        // 隐藏所有标签
+        this.infoLabelElement.map(label => {
+          label.hide()
+        })
+
+        // 显示当前点位标签
+        infoLabel.show()
+
+        // 启动标签循环显示
+        this.createInfoPointLabelLoop()
+      })
+
+      // 鼠标抬起事件
+      pointSprite.addEventListener('mouseup' as any, () => {
+        this.clicked = false
+      })
+
+      // 鼠标悬停事件
+      pointSprite.addEventListener('mouseover' as any, () => {
+        document.body.style.cursor = 'pointer'
+      })
+
+      // 鼠标离开事件
+      pointSprite.addEventListener('mouseout' as any, () => {
+        document.body.style.cursor = 'default'
+      })
+    })
+  }
+
+  /**
+   * 创建监测点标签循环显示
+   * 每隔3秒自动切换显示下一个监测点的信息
+   */
+  createInfoPointLabelLoop() {
+    // 清除之前的定时器
+    this.infoPointLabelTime && clearInterval(this.infoPointLabelTime)
+
+    // 创建新的定时器，循环显示各监测点信息
+    this.infoPointLabelTime = setInterval(() => {
+      // 切换到下一个点位
+      this.infoPointIndex++
+
+      // 索引超出范围时重置为0
+      if (this.infoPointIndex >= this.infoLabelElement.length) {
+        this.infoPointIndex = 0
+      }
+
+      // 只显示当前索引对应的标签
+      this.infoLabelElement.map((label, index) => {
+        this.infoPointIndex === index ? label.show() : label.hide()
+      })
+    }, 3000) // 3秒切换一次
   }
   update() {
     super.update()

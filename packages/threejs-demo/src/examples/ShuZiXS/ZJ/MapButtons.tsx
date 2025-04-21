@@ -21,8 +21,9 @@ const MapButtons: React.FC<MapButtonsProps> = ({mapRef}) => {
       const newState = !flyLineActive
       setFlyLineActive(newState)
 
-      if (mapRef.current.flyLineGroup) {
+      if (mapRef.current.flyLineGroup && mapRef.current.flyLineFocusGroup) {
         mapRef.current.flyLineGroup.visible = newState
+        mapRef.current.flyLineFocusGroup.visible = newState
       }
     }
   }
@@ -32,8 +33,8 @@ const MapButtons: React.FC<MapButtonsProps> = ({mapRef}) => {
     if (mapRef.current) {
       // 切换按钮状态 - 仅影响散点图按钮
       setScatterPointsActive(!scatterPointsActive)
-
       // 根据状态决定是否显示散点图
+      mapRef.current.scatterGroup!.visible = !scatterPointsActive
     }
   }
 
@@ -42,14 +43,17 @@ const MapButtons: React.FC<MapButtonsProps> = ({mapRef}) => {
     if (mapRef.current) {
       // 切换按钮状态 - 仅影响重点点位按钮
       setImportantPointsActive(!importantPointsActive)
+      mapRef.current.InfoPointGroup!.visible = !importantPointsActive
     }
   }
 
   // 处理粒子特效按钮点击
   const handleParticleEffect = () => {
-    if (mapRef.current) {
+    if (mapRef.current && mapRef.current.particles) {
       // 切换按钮状态 - 仅影响粒子特效按钮
       setParticleEffectActive(!particleEffectActive)
+      mapRef.current.particles.enable = !particleEffectActive
+      mapRef.current.particles.instance!.visible = !particleEffectActive
     }
   }
 
