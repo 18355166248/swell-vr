@@ -1,9 +1,8 @@
 import {useLayoutEffect, useRef} from 'react'
-import MapControl from '../MapControl'
+import MapControl from '../MapControlStudy'
 import ZheJiangData from '../../../data/map/zhejiang.json'
 import Animate1 from '../assets/mov/animate.mov'
 import Animate2 from '../assets/mov/animate2.mov'
-import MapButtons from './MapButtons'
 
 function Three() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -25,7 +24,6 @@ function Three() {
   return (
     <div className="relative w-full h-full">
       <canvas ref={canvas} id="canvas" className="w-full h-full relative" />
-      <MapButtons mapRef={mapRef} />
       <video
         className="map-gd-video map-gd-video1"
         width="250"
