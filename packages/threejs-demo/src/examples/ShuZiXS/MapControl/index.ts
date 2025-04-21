@@ -1271,103 +1271,169 @@ class MapControl extends MapApplication {
       })
     })
   }
-  // 创建飞线
+  /**
+   * 创建飞线效果
+   * 在地图上绘制从中心点（杭州）到各城市的飞线动画
+   * 使用二次贝塞尔曲线实现弧线效果，纹理动画实现飞行效果
+   */
   createFlyLine() {
+    // 创建飞线组，初始隐藏
     this.flyLineGroup = new THREE.Group()
     this.flyLineGroup.visible = false
     this.scene.add(this.flyLineGroup)
-    const t = this.assets.instance!.getResource('flyLine')
-    t.colorSpace = THREE.SRGBColorSpace
-    t.wrapS = THREE.RepeatWrapping
-    t.wrapT = THREE.RepeatWrapping
-    t.repeat.set(1, 1)
-    const a = 0.03
-    const s = 32
-    const e = 8
-    const i = false
-    const [r, c] = this.geoProjection(this.flyLineCenter)!
-    const o = new THREE.Vector3(r, -c, 0)
-    const l = new THREE.MeshBasicMaterial({
-      map: t,
-      alphaMap: t,
-      color: 2781042,
+
+    // 获取飞线纹理并设置属性
+    const flyLineTexture = this.assets.instance!.getResource('flyLine')
+    flyLineTexture.colorSpace = THREE.SRGBColorSpace
+    flyLineTexture.wrapS = THREE.RepeatWrapping
+    flyLineTexture.wrapT = THREE.RepeatWrapping
+    flyLineTexture.repeat.set(1, 1)
+
+    // 设置飞线参数
+    const tubeRadius = 0.03 // 管道半径
+    const tubularSegments = 32 // 管道分段数
+    const radiusSegments = 8 // 管道横截面分段数
+    const isClosed = false // 是否闭合曲线
+
+    // 获取飞线起点坐标（杭州中心点）
+    const [centerX, centerY] = this.geoProjection(this.flyLineCenter)!
+    const centerPoint = new THREE.Vector3(centerX, -centerY, 0)
+
+    // 创建飞线材质
+    const flyLineMaterial = new THREE.MeshBasicMaterial({
+      map: flyLineTexture,
+      alphaMap: flyLineTexture,
+      color: 2781042, // 蓝色
       transparent: true,
       fog: false,
       opacity: 1,
       depthTest: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.AdditiveBlending, // 加法混合增强亮度
     })
+
+    // 添加纹理动画效果
     this.time.on('tick', () => {
-      t.offset.x -= 0.006
+      flyLineTexture.offset.x -= 0.006 // 纹理偏移实现流动效果
     })
-    ZheJiangCityInfo.filter((p, n) => n < 7).map(p => {
-      const [n, h] = this.geoProjection(p.centroid)!
-      const f = new THREE.Vector3(n, -h, 0)
-      const d = new THREE.Vector3()
-      d.addVectors(o, f).multiplyScalar(0.5), d.setZ(3)
-      const v = new THREE.QuadraticBezierCurve3(o, d, f)
-      const m = new THREE.TubeGeometry(v, s, a, e, i)
-      const g = new THREE.Mesh(m, l)
-      g.rotation.x = -Math.PI / 2
-      g.position.set(0, 0.94, 0)
-      g.renderOrder = 21
-      this.flyLineGroup!.add(g)
+
+    // 为前7个城市创建飞线
+    ZheJiangCityInfo.filter((cityInfo, index) => index < 7).map(cityInfo => {
+      // 获取目标城市坐标
+      const [targetX, targetY] = this.geoProjection(cityInfo.centroid)!
+      const targetPoint = new THREE.Vector3(targetX, -targetY, 0)
+
+      // 计算控制点（中点上方）
+      const controlPoint = new THREE.Vector3()
+      controlPoint.addVectors(centerPoint, targetPoint).multiplyScalar(0.5)
+      controlPoint.setZ(3) // 控制点抬高，形成弧线
+
+      // 创建二次贝塞尔曲线
+      const bezierCurve = new THREE.QuadraticBezierCurve3(
+        centerPoint,
+        controlPoint,
+        targetPoint,
+      )
+
+      // 根据曲线创建管道几何体
+      const tubeGeometry = new THREE.TubeGeometry(
+        bezierCurve,
+        tubularSegments,
+        tubeRadius,
+        radiusSegments,
+        isClosed,
+      )
+
+      // 创建飞线网格
+      const flyLineMesh = new THREE.Mesh(tubeGeometry, flyLineMaterial)
+      flyLineMesh.rotation.x = -Math.PI / 2 // 旋转到水平面
+      flyLineMesh.position.set(0, 0.94, 0) // 定位高度
+      flyLineMesh.renderOrder = 21 // 设置渲染优先级
+
+      // 添加到飞线组
+      this.flyLineGroup!.add(flyLineMesh)
     })
+
+    // 创建焦点效果（杭州中心点特效）
     this.createFlyLineFocus()
   }
-  // 创建飞线杭州底部聚焦效果
+  /**
+   * 创建飞线焦点效果
+   * 在杭州中心点位置创建脉冲扩散动画效果
+   * 包含两个交错的脉冲圆，形成连续的扩散动画
+   */
   createFlyLineFocus() {
+    // 创建焦点效果组并设置初始状态
     this.flyLineFocusGroup = new THREE.Group()
     this.flyLineFocusGroup.visible = false
-    this.flyLineFocusGroup.rotation.x = -Math.PI / 2
-    const [t, a] = this.geoProjection(this.flyLineCenter)!
-    this.flyLineFocusGroup.position.set(t, 0.942, a)
+    this.flyLineFocusGroup.rotation.x = -Math.PI / 2 // 旋转到水平面
+
+    // 获取中心点坐标（杭州）
+    const [centerX, centerY] = this.geoProjection(this.flyLineCenter)!
+    this.flyLineFocusGroup.position.set(centerX, 0.942, centerY) // 定位到杭州位置
     this.scene.add(this.flyLineFocusGroup)
-    const s = this.assets.instance!.getResource('flyLineFocus')
-    const e = new THREE.PlaneGeometry(1, 1)
-    const i = new THREE.MeshBasicMaterial({
-      color: 16777215,
-      map: s,
-      alphaMap: s,
+
+    // 获取焦点纹理
+    const focusTexture = this.assets.instance!.getResource('flyLineFocus')
+
+    // 创建平面几何体
+    const planeGeometry = new THREE.PlaneGeometry(1, 1)
+
+    // 创建第一个焦点材质
+    const focusMaterial = new THREE.MeshBasicMaterial({
+      color: 16777215, // 白色
+      map: focusTexture,
+      alphaMap: focusTexture,
       transparent: true,
       fog: false,
       depthTest: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.AdditiveBlending, // 加法混合增强亮度
     })
-    const r = new THREE.Mesh(e, i)
-    r.scale.set(0, 0, 0)
-    const c = r.clone()
-    c.material = i.clone()
-    this.flyLineFocusGroup.add(r, c)
-    gsap.to(r.material, {
-      opacity: 0,
-      repeat: -1,
-      yoyo: false,
-      duration: 1,
+
+    // 创建第一个焦点网格
+    const focusMesh1 = new THREE.Mesh(planeGeometry, focusMaterial)
+    focusMesh1.scale.set(0, 0, 0) // 初始大小为0
+
+    // 创建第二个焦点网格（克隆第一个）
+    const focusMesh2 = focusMesh1.clone()
+    focusMesh2.material = focusMaterial.clone()
+
+    // 添加到焦点组
+    this.flyLineFocusGroup.add(focusMesh1, focusMesh2)
+
+    // 为第一个焦点添加动画
+    gsap.to(focusMesh1.material, {
+      opacity: 0, // 透明度从1到0
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
     })
-    gsap.to(r.scale, {
-      x: 1.5,
+
+    gsap.to(focusMesh1.scale, {
+      x: 1.5, // 放大到1.5倍
       y: 1.5,
       z: 1.5,
-      repeat: -1,
-      yoyo: false,
-      duration: 1,
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
     })
-    gsap.to(c.material, {
-      delay: 0.5,
-      opacity: 0,
-      repeat: -1,
-      yoyo: false,
-      duration: 1,
+
+    // 为第二个焦点添加动画（延迟0.5秒，形成交错效果）
+    gsap.to(focusMesh2.material, {
+      delay: 0.5, // 延迟0.5秒
+      opacity: 0, // 透明度从1到0
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
     })
-    gsap.to(c.scale, {
-      delay: 0.5,
-      x: 1.5,
+
+    gsap.to(focusMesh2.scale, {
+      delay: 0.5, // 延迟0.5秒
+      x: 1.5, // 放大到1.5倍
       y: 1.5,
       z: 1.5,
-      repeat: -1,
-      yoyo: false,
-      duration: 1,
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
     })
   }
   // 创建粒子特效
@@ -1396,48 +1462,74 @@ class MapControl extends MapApplication {
     this.particles.enable = false
     this.particles.instance!.visible = false
   }
-  // 创建散点
+  /**
+   * 创建散点标记
+   * 在地图上根据地理坐标数据生成箭头标记，大小根据数值大小自动缩放
+   * 用于显示各区域重要点位的分布情况
+   */
   createScatter() {
+    // 创建散点组
     this.scatterGroup = new THREE.Group()
     this.scatterGroup.visible = false
-    this.scatterGroup.rotation.x = -Math.PI / 2
+    this.scatterGroup.rotation.x = -Math.PI / 2 // 旋转到水平面
     this.scene.add(this.scatterGroup)
-    const t = this.assets.instance!.getResource('arrow')
-    const a = new THREE.SpriteMaterial({
-      map: t,
-      color: 16776948,
+
+    // 获取箭头标记纹理
+    const arrowTexture = this.assets.instance!.getResource('arrow')
+
+    // 创建箭头精灵材质
+    const arrowMaterial = new THREE.SpriteMaterial({
+      map: arrowTexture,
+      color: 16776948, // 黄色
       fog: false,
       transparent: true,
       depthTest: false,
     })
-    const s = SortByValue(locationPoints)
-    const e = s[0].value
-    s.map(i => {
-      const r = new THREE.Sprite(a)
-      r.renderOrder = 23
-      const c = 0.1 + (i.value / e) * 0.2
-      r.scale.set(c, c, c)
-      const [o, l] = this.geoProjection([i.lng, i.lat])!
-      r.position.set(o, -l, this.depth + 0.45)
-      r.userData.position = [o, -l, this.depth + 0.45]
-      this.scatterGroup!.add(r)
+
+    // 获取并排序位置点数据
+    const sortedPoints = SortByValue(locationPoints)
+    const maxValue = sortedPoints[0].value // 最大值用于归一化
+
+    // 遍历所有位置点创建散点标记
+    sortedPoints.map(pointData => {
+      // 创建箭头精灵
+      const arrowSprite = new THREE.Sprite(arrowMaterial)
+      arrowSprite.renderOrder = 23 // 设置渲染优先级
+
+      // 计算缩放比例，最小0.1，最大根据数值占比再增加0.2
+      const scaleSize = 0.1 + (pointData.value / maxValue) * 0.2
+      arrowSprite.scale.set(scaleSize, scaleSize, scaleSize)
+
+      // 获取点位地理坐标并转换为3D坐标
+      const [posX, posY] = this.geoProjection([pointData.lng, pointData.lat])!
+      const positionZ = this.depth + 0.45 // 高度略高于地图表面
+
+      // 设置箭头位置
+      arrowSprite.position.set(posX, -posY, positionZ)
+
+      // 保存原始位置数据用于后续可能的动画或交互
+      arrowSprite.userData.position = [posX, -posY, positionZ]
+
+      // 添加到散点组
+      this.scatterGroup!.add(arrowSprite)
     })
   }
   /**
    * 创建重点监测点位
    * 在地图上生成可交互的监测点，点击时展示详细信息
+   * 每个点位大小基于其数值动态调整，点击后会显示相关标签信息
    */
   createInfoPoint() {
     // 创建监测点组
     this.InfoPointGroup = new THREE.Group()
     this.InfoPointGroup.visible = false
-    this.InfoPointGroup.rotation.x = -Math.PI / 2
+    this.InfoPointGroup.rotation.x = -Math.PI / 2 // 旋转到水平面
     this.scene.add(this.InfoPointGroup)
 
     // 初始化状态值
-    this.infoPointIndex = 0
-    this.infoPointLabelTime = undefined
-    this.infoLabelElement = [] as Label3DProps[]
+    this.infoPointIndex = 0 // 当前显示的点位索引
+    this.infoPointLabelTime = undefined // 标签轮播计时器
+    this.infoLabelElement = [] // 存储标签元素数组
 
     // 获取点位纹理资源
     const pointTexture = this.assets.instance!.getResource('point')
@@ -1447,14 +1539,14 @@ class MapControl extends MapApplication {
 
     // 获取并排序监测点数据
     const sortedPoints = SortByValue(monitoringPoints as MonitoringPointInfo[])
-    const maxValue = sortedPoints[0].value
+    const maxValue = sortedPoints[0].value // 最大值用于归一化
 
     // 遍历所有监测点创建精灵
     sortedPoints.map((pointData, index) => {
       // 创建点位材质
       const pointMaterial = new THREE.SpriteMaterial({
         map: pointTexture,
-        color: pointColors[index % pointColors.length],
+        color: pointColors[index % pointColors.length], // 交替使用两种颜色
         fog: false,
         transparent: true,
         depthTest: false,
@@ -1462,7 +1554,7 @@ class MapControl extends MapApplication {
 
       // 创建点位精灵
       const pointSprite = new THREE.Sprite(pointMaterial)
-      pointSprite.renderOrder = 23
+      pointSprite.renderOrder = 23 // 设置渲染优先级
 
       // 根据数值大小调整点位尺寸
       const pointScale = 0.7 + (pointData.value / maxValue) * 0.4
@@ -1507,12 +1599,12 @@ class MapControl extends MapApplication {
 
       // 点击事件 - 显示详细信息
       pointSprite.addEventListener('mousedown' as any, (event: any) => {
-        if (this.clicked) return false
+        if (this.clicked) return false // 防止重复点击
         this.clicked = true
         this.infoPointIndex = event.target.userData.index
 
         // 隐藏所有标签
-        this.infoLabelElement.map(label => {
+        this.infoLabelElement.forEach(label => {
           label.hide()
         })
 
@@ -1542,25 +1634,32 @@ class MapControl extends MapApplication {
 
   /**
    * 创建监测点标签循环显示
-   * 每隔3秒自动切换显示下一个监测点的信息
+   * 实现标签的自动轮播功能，每隔3秒切换到下一个监测点标签
+   * 当用户点击特定点位后会重置循环，从当前点位开始继续轮播
    */
   createInfoPointLabelLoop() {
-    // 清除之前的定时器
-    this.infoPointLabelTime && clearInterval(this.infoPointLabelTime)
+    // 清除之前的定时器，防止多个定时器同时运行
+    if (this.infoPointLabelTime) {
+      clearInterval(this.infoPointLabelTime)
+    }
 
     // 创建新的定时器，循环显示各监测点信息
     this.infoPointLabelTime = setInterval(() => {
       // 切换到下一个点位
       this.infoPointIndex++
 
-      // 索引超出范围时重置为0
+      // 索引超出范围时重置为0（循环展示）
       if (this.infoPointIndex >= this.infoLabelElement.length) {
         this.infoPointIndex = 0
       }
 
-      // 只显示当前索引对应的标签
-      this.infoLabelElement.map((label, index) => {
-        this.infoPointIndex === index ? label.show() : label.hide()
+      // 更新标签显示状态：显示当前索引对应的标签，隐藏其他标签
+      this.infoLabelElement.forEach((label, index) => {
+        if (this.infoPointIndex === index) {
+          label.show() // 显示当前标签
+        } else {
+          label.hide() // 隐藏其他标签
+        }
       })
     }, 3000) // 3秒切换一次
   }
