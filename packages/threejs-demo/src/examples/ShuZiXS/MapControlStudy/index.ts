@@ -1,4 +1,4 @@
-import MapApplication from './MapApplication'
+import MapApplication from './MapApplication/MapApplication'
 import {MapControlOptions} from './types'
 
 class MapControlStudy extends MapApplication {

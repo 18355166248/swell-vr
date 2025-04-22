@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as THREE from 'three'
-import EventEmitter from './utils/EventEmitter'
+import EventEmitter from '../utils/EventEmitter'
 import {geoMercator} from 'd3-geo'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -209,8 +209,8 @@ class Renderer {
   sizes: SizeManager
   scene: THREE.Scene
   camera: CameraManager
-  postprocessing: boolean
-  composer: any
+  postprocessing: boolean // 是否开启后处理
+  composer: any // 合成器
   instance?: THREE.WebGLRenderer
   constructor({
     canvas: canvasElement,
@@ -272,7 +272,8 @@ class Renderer {
    * 清理资源
    */
   destroy() {
-    this.instance?.dispose(), this.instance?.forceContextLoss()
+    this.instance?.dispose()
+    this.instance?.forceContextLoss()
   }
 }
 
@@ -392,14 +393,14 @@ export class CameraManager {
       const currentPosition = new THREE.Vector3().copy(this.instance.position)
       switch (event.keyCode) {
         case 79: // O键 - 正交相机
-          this.setCamera(),
-            this.instance.position.copy(currentPosition),
-            this.instance.updateProjectionMatrix()
+          this.setCamera(true)
+          this.instance.position.copy(currentPosition)
+          this.instance.updateProjectionMatrix()
           break
         case 80: // P键 - 透视相机
-          this.setCamera(!1),
-            this.instance.position.copy(currentPosition),
-            this.instance.updateProjectionMatrix()
+          this.setCamera(false)
+          this.instance.position.copy(currentPosition)
+          this.instance.updateProjectionMatrix()
           break
       }
     })
@@ -434,7 +435,7 @@ export class CameraManager {
    * 设置相机类型
    * @param {boolean} useOrthographic 是否使用正交相机
    */
-  setCamera(useOrthographic = !0) {
+  setCamera(useOrthographic = false) {
     const aspectRatio = this.sizes.width / this.sizes.height
     if (useOrthographic) {
       const frustumSize = 120
@@ -526,7 +527,12 @@ class MapApplication extends EventEmitter {
       isOrthographic: this.config.isOrthographic,
     })
     // @ts-ignore
-    this.renderer = new Renderer(this)
+    this.renderer = new Renderer({
+      canvas: canvasElement,
+      sizes: this.sizes,
+      scene: this.scene,
+      camera: this.camera,
+    })
     // 注册事件监听
     this.sizes.on('resize', () => {
       this.resize()
