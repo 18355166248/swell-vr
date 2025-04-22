@@ -4,7 +4,7 @@ import MapApplication from './MapApplication'
 import * as THREE from 'three'
 import {InteractionManager} from 'three.interactive'
 import {Label3D, Label3DProps} from './components/label3d'
-import LilGui from './utils/lilGui'
+import LilGui from '../utils/lilGui'
 import Stats from 'three/addons/libs/stats.module.js'
 import {
   ChinaProvinceInfo,

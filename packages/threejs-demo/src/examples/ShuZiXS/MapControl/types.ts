@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {LoaderTypeValues} from './const/loader'
+import {LoaderTypeValues} from '../const/loader'
 
 export interface MapControlOptions {
   centroid: [number, number] // 几何中心

@@ -2,7 +2,6 @@ import {LoadingManager} from 'three'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {TextureLoader} from 'three'
 import {FontLoader} from 'three/examples/jsm/loaders/FontLoader.js'
-import {MMDLoader} from 'three/examples/jsm/loaders/MMDLoader.js'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js'
 import {PCDLoader} from 'three/examples/jsm/loaders/PCDLoader.js'
@@ -20,7 +19,6 @@ type LoaderClassType =
   | GLTFLoader
   | TextureLoader
   | FontLoader
-  | MMDLoader
   | MTLLoader
   | OBJLoader
   | PCDLoader

@@ -14,7 +14,7 @@ import {
   LoaderTypeKeys,
   loaderTypes,
   LoaderTypeValues,
-} from './const/loader'
+} from '../const/loader'
 
 /**
  * 资源管理器类，处理3D资源的加载和管理
