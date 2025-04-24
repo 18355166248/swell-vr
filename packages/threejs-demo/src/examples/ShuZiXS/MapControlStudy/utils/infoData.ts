@@ -1,7 +1,11 @@
 import OceanBlueBgImg from '../../assets/imgs/ocean-blue-bg.png'
-import {ResourceManager} from '../MapApplication/'
+import {AssetList} from '../../MapControl/types'
+import ResourceManager from '../MapApplication/ResourceManager'
 
-class LoadAssets {
+/**
+ * 加载资源
+ */
+export class LoadAssets {
   onLoadCallback: () => void
   instance?: ResourceManager
   constructor(e = () => {}) {
@@ -10,6 +14,17 @@ class LoadAssets {
   }
   init() {
     this.instance = new ResourceManager()
-    this.instance.addLoader(THREE.FileLoader, 'FileLoader')
+
+    this.instance.on('onProgress', (r, t, n) => {
+      console.log('加载进度', ((t / n) * 100).toFixed(2))
+    })
+    this.instance.on('onLoad', () => {
+      this.onLoadCallback && this.onLoadCallback()
+    })
+
+    const list: AssetList = [
+      {type: 'Texture', name: 'ocean', path: OceanBlueBgImg},
+    ]
+    this.instance.loadAll(list)
   }
 }

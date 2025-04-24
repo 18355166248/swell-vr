@@ -39,7 +39,6 @@ const loaderTypes = {
   GLTFLoader: 'GLTF',
   TextureLoader: 'Texture',
   FontLoader: 'Font',
-  MMDLoader: 'MMD',
   MTLLoader: 'MTL',
   OBJLoader: 'OBJ',
   PCDLoader: 'PCD',
@@ -48,7 +47,7 @@ const loaderTypes = {
   ObjectLoader: 'Object',
   MaterialLoader: 'Material',
   CubeTextureLoader: 'CubeTexture',
-  RGBELoader: 'RGBELoader',
+  RGBELoader: 'RGBE',
   FBXLoader: 'FBX',
 } as const
 

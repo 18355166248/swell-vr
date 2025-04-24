@@ -88,8 +88,7 @@ class ResourceManager extends EventEmitter {
     const loaderValue = loaderTypes[loaderName]
     if (LoaderClass.name && loaderValue) {
       if (!this.loaders[loaderValue]) {
-        // @ts-ignore
-        const loader = new LoaderClass(this.manager) as LoaderConstructor
+        const loader = new LoaderClass() as LoaderConstructor
         if (loader instanceof THREE.Loader) {
           loaderName === 'GLTFLoader' && this.initDraco(loader)
           this.loaders[loaderValue] = loader
