@@ -81,16 +81,16 @@ class MapControl extends MapApplication {
     this.flyLineCenter = ZheJiangCityInfo[0].centroid as [number, number]
     this.depth = 0.5
     this.clicked = false
-    this.scene.fog = new THREE.Fog(1058614, 1, 50)
+    // this.scene.fog = new THREE.Fog(1058614, 1, 50)
     this.scene.background = new THREE.Color(1058614)
     this.camera.instance.position.set(
       -13.767695123014105,
       12.990152163077308,
       39.28228164159694,
     )
-    this.camera.instance.near = 1
-    this.camera.instance.far = 10000
-    this.camera.instance.updateProjectionMatrix()
+    // this.camera.instance.near = 1
+    // this.camera.instance.far = 10000
+    // this.camera.instance.updateProjectionMatrix()
     // 点击管理器
     this.interactionManager = new InteractionManager(
       this.renderer.instance!,
@@ -109,207 +109,207 @@ class MapControl extends MapApplication {
       this.initEnvironment()
       this.createFloor()
       this.createChinaBlurLine()
-      this.createGrid()
-      this.createRotateBorder()
-      this.createLabel()
-      this.createModel()
-      this.createAnimateVideo()
-      this.createEvent()
-      this.createFlyLine()
-      this.createParticles()
-      this.createScatter()
-      this.createInfoPoint()
+      // this.createGrid()
+      // this.createRotateBorder()
+      // this.createLabel()
+      // this.createModel()
+      // this.createAnimateVideo()
+      // this.createEvent()
+      // this.createFlyLine()
+      // this.createParticles()
+      // this.createScatter()
+      // this.createInfoPoint()
 
-      const timeLine = gsap.timeline()
-      timeLine.addLabel('focusMap', 2)
-      timeLine.addLabel('focusMapOpacity', 2.5)
-      timeLine.addLabel('bar', 3.5)
-      timeLine.add(
-        gsap.to(this.camera.instance.position, {
-          duration: 2.5,
-          x: -20.460391656828197,
-          y: 19.30487264306655,
-          z: 58.37802626943616,
-          ease: 'circ.out',
-        }),
-      )
-      timeLine.add(
-        gsap.to(this.camera.instance.position, {
-          duration: 2.5,
-          x: -0.2515849818960619,
-          y: 12.397744557047988,
-          z: 14.647659671139275,
-          ease: 'circ.out',
-        }),
-      )
-      if (this.focusMapGroup) {
-        timeLine.add(
-          gsap.to(this.focusMapGroup.position, {
-            duration: 1,
-            x: 0,
-            y: 0,
-            z: 0,
-          }),
-          'focusMap',
-        )
-        timeLine.add(
-          gsap.to(this.focusMapGroup.scale, {
-            duration: 1,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          }),
-          'focusMap',
-        )
-      }
+      // const timeLine = gsap.timeline()
+      // timeLine.addLabel('focusMap', 2)
+      // timeLine.addLabel('focusMapOpacity', 2.5)
+      // timeLine.addLabel('bar', 3.5)
+      // timeLine.add(
+      //   gsap.to(this.camera.instance.position, {
+      //     duration: 2.5,
+      //     x: -20.460391656828197,
+      //     y: 19.30487264306655,
+      //     z: 58.37802626943616,
+      //     ease: 'circ.out',
+      //   }),
+      // )
+      // timeLine.add(
+      //   gsap.to(this.camera.instance.position, {
+      //     duration: 2.5,
+      //     x: -0.2515849818960619,
+      //     y: 12.397744557047988,
+      //     z: 14.647659671139275,
+      //     ease: 'circ.out',
+      //   }),
+      // )
+      // if (this.focusMapGroup) {
+      //   timeLine.add(
+      //     gsap.to(this.focusMapGroup.position, {
+      //       duration: 1,
+      //       x: 0,
+      //       y: 0,
+      //       z: 0,
+      //     }),
+      //     'focusMap',
+      //   )
+      //   timeLine.add(
+      //     gsap.to(this.focusMapGroup.scale, {
+      //       duration: 1,
+      //       x: 1,
+      //       y: 1,
+      //       z: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'focusMap',
+      //   )
+      // }
 
-      if (this.focusMapTopMaterial && this.focusMapSideMaterial) {
-        timeLine.add(
-          gsap.to(this.focusMapTopMaterial, {
-            duration: 1,
-            opacity: 1,
-            ease: 'circ.out',
-          }),
-          'focusMapOpacity',
-        )
-        timeLine.add(
-          gsap.to(this.focusMapSideMaterial, {
-            duration: 1,
-            opacity: 1,
-            ease: 'circ.out',
-            onComplete: () => {
-              this.focusMapSideMaterial!.transparent = false
-            },
-          }),
-          'focusMapOpacity',
-        )
-      }
-      this.otherLabel.map((e, i) => {
-        const r = e.element.querySelector('.other-label')
-        timeLine.add(
-          gsap.to(r, {
-            duration: 1,
-            delay: 0.1 * i,
-            translateY: 0,
-            opacity: 1,
-            ease: 'circ.out',
-          }),
-          'focusMapOpacity',
-        )
-      })
-      if (this.zhejiangLineMaterial) {
-        timeLine.add(
-          gsap.to(this.zhejiangLineMaterial, {
-            duration: 0.5,
-            delay: 0.3,
-            opacity: 1,
-          }),
-          'focusMapOpacity',
-        )
-      }
-      if (this.rotateBorder1) {
-        timeLine.add(
-          gsap.to(this.rotateBorder1.scale, {
-            delay: 0.3,
-            duration: 1,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          }),
-          'focusMapOpacity',
-        )
-      }
-      if (this.rotateBorder2) {
-        timeLine.add(
-          gsap.to(this.rotateBorder2.scale, {
-            duration: 1,
-            delay: 0.5,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          }),
-          'focusMapOpacity',
-        )
-      }
-      // 柱状图动画
-      this.allBar.map((e, i) => {
-        timeLine.add(
-          gsap.to(e.scale, {
-            duration: 1,
-            delay: 0.1 * i,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          }),
-          'bar',
-        )
-      })
-      this.allBarMaterial.map((e, i) => {
-        timeLine.add(
-          gsap.to(e, {
-            duration: 1,
-            delay: 0.1 * i,
-            opacity: 1,
-            ease: 'circ.out',
-          }),
-          'bar',
-        )
-      })
-      this.allProvinceLabel.map((e, i) => {
-        const r = e.element.querySelector('.provinces-label-wrap')
-        const c = e.element.querySelector('.number .value')
-        const o = Number(c?.textContent)
-        const l = {score: 0}
-        timeLine.add(
-          gsap.to(r, {
-            duration: 1,
-            delay: 0.2 * i,
-            translateY: 0,
-            opacity: 1,
-            ease: 'circ.out',
-          }),
-          'bar',
-        )
-        const p = gsap.to(l, {
-          duration: 1,
-          delay: 0.2 * i,
-          score: o,
-          onUpdate: n,
-        })
-        function n() {
-          c!.textContent = l.score.toFixed(0)
-        }
-        timeLine.add(p, 'bar')
-      })
-      // 光圈动画
-      this.allGuangquan.map((e, i) => {
-        timeLine.add(
-          gsap.to(e.children[0].scale, {
-            duration: 1,
-            delay: 0.1 * i,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          }),
-          'bar',
-        )
-        timeLine.add(
-          gsap.to(e.children[1].scale, {
-            duration: 1,
-            delay: 0.1 * i,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          }),
-          'bar',
-        )
-      })
+      // if (this.focusMapTopMaterial && this.focusMapSideMaterial) {
+      //   timeLine.add(
+      //     gsap.to(this.focusMapTopMaterial, {
+      //       duration: 1,
+      //       opacity: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'focusMapOpacity',
+      //   )
+      //   timeLine.add(
+      //     gsap.to(this.focusMapSideMaterial, {
+      //       duration: 1,
+      //       opacity: 1,
+      //       ease: 'circ.out',
+      //       onComplete: () => {
+      //         this.focusMapSideMaterial!.transparent = false
+      //       },
+      //     }),
+      //     'focusMapOpacity',
+      //   )
+      // }
+      // this.otherLabel.map((e, i) => {
+      //   const r = e.element.querySelector('.other-label')
+      //   timeLine.add(
+      //     gsap.to(r, {
+      //       duration: 1,
+      //       delay: 0.1 * i,
+      //       translateY: 0,
+      //       opacity: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'focusMapOpacity',
+      //   )
+      // })
+      // if (this.zhejiangLineMaterial) {
+      //   timeLine.add(
+      //     gsap.to(this.zhejiangLineMaterial, {
+      //       duration: 0.5,
+      //       delay: 0.3,
+      //       opacity: 1,
+      //     }),
+      //     'focusMapOpacity',
+      //   )
+      // }
+      // if (this.rotateBorder1) {
+      //   timeLine.add(
+      //     gsap.to(this.rotateBorder1.scale, {
+      //       delay: 0.3,
+      //       duration: 1,
+      //       x: 1,
+      //       y: 1,
+      //       z: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'focusMapOpacity',
+      //   )
+      // }
+      // if (this.rotateBorder2) {
+      //   timeLine.add(
+      //     gsap.to(this.rotateBorder2.scale, {
+      //       duration: 1,
+      //       delay: 0.5,
+      //       x: 1,
+      //       y: 1,
+      //       z: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'focusMapOpacity',
+      //   )
+      // }
+      // // 柱状图动画
+      // this.allBar.map((e, i) => {
+      //   timeLine.add(
+      //     gsap.to(e.scale, {
+      //       duration: 1,
+      //       delay: 0.1 * i,
+      //       x: 1,
+      //       y: 1,
+      //       z: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'bar',
+      //   )
+      // })
+      // this.allBarMaterial.map((e, i) => {
+      //   timeLine.add(
+      //     gsap.to(e, {
+      //       duration: 1,
+      //       delay: 0.1 * i,
+      //       opacity: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'bar',
+      //   )
+      // })
+      // this.allProvinceLabel.map((e, i) => {
+      //   const r = e.element.querySelector('.provinces-label-wrap')
+      //   const c = e.element.querySelector('.number .value')
+      //   const o = Number(c?.textContent)
+      //   const l = {score: 0}
+      //   timeLine.add(
+      //     gsap.to(r, {
+      //       duration: 1,
+      //       delay: 0.2 * i,
+      //       translateY: 0,
+      //       opacity: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'bar',
+      //   )
+      //   const p = gsap.to(l, {
+      //     duration: 1,
+      //     delay: 0.2 * i,
+      //     score: o,
+      //     onUpdate: n,
+      //   })
+      //   function n() {
+      //     c!.textContent = l.score.toFixed(0)
+      //   }
+      //   timeLine.add(p, 'bar')
+      // })
+      // // 光圈动画
+      // this.allGuangquan.map((e, i) => {
+      //   timeLine.add(
+      //     gsap.to(e.children[0].scale, {
+      //       duration: 1,
+      //       delay: 0.1 * i,
+      //       x: 1,
+      //       y: 1,
+      //       z: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'bar',
+      //   )
+      //   timeLine.add(
+      //     gsap.to(e.children[1].scale, {
+      //       duration: 1,
+      //       delay: 0.1 * i,
+      //       x: 1,
+      //       y: 1,
+      //       z: 1,
+      //       ease: 'circ.out',
+      //     }),
+      //     'bar',
+      //   )
+      // })
     })
   }
   // 初始化 LilGui

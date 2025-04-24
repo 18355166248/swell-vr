@@ -1,5 +1,6 @@
 import {useLayoutEffect, useRef} from 'react'
 import MapControl from '../MapControlStudy'
+// import MapControl from '../MapControl'
 import ZheJiangData from '../../../data/map/zhejiang.json'
 import Animate1 from '../assets/mov/animate.mov'
 import Animate2 from '../assets/mov/animate2.mov'

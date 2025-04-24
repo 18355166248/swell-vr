@@ -3,6 +3,7 @@ import MapApplication from './MapApplication/MapApplication'
 import {MapControlOptions} from './types'
 import * as THREE from 'three'
 import {LoadAssets} from './utils/infoData'
+import gsap from 'gsap'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -13,6 +14,12 @@ class MapControlStudy extends MapApplication {
     super(container, options)
     this.container = container
     this.pointCenter = options.centroid
+    this.scene.background = new THREE.Color(0x102736)
+    this.camera.instance!.position.set(
+      -13.767695123014105,
+      12.990152163077308,
+      39.28228164159694,
+    )
 
     this.initLilGui()
 
@@ -20,6 +27,18 @@ class MapControlStudy extends MapApplication {
       console.log('资源初始化成功')
       this.initEnvironment()
       this.createFloor()
+      this.createChinaBlurLine()
+
+      const timeLine = gsap.timeline()
+      // timeLine.add(
+      //   gsap.to(this.camera.instance!.position, {
+      //     duration: 2,
+      //     x: -0.2515849818960619,
+      //     y: 12.397744557047988,
+      //     z: 14.647659671139275,
+      //     ease: 'circ.out',
+      //   }),
+      // )
     })
   }
 
@@ -47,9 +66,10 @@ class MapControlStudy extends MapApplication {
       // 创建一个20x20的平面几何体作为地板
       const floorGeometry = new THREE.PlaneGeometry(20, 20)
       const oceanTexture = this.assets.instance.getResource('ocean')
-
+      oceanTexture.colorSpace = THREE.SRGBColorSpace // 设置颜色空间
+      oceanTexture.wrapS = THREE.RepeatWrapping // 水平方向重复纹理
+      oceanTexture.wrapT = THREE.RepeatWrapping // 垂直方向重复纹理
       oceanTexture.repeat.set(1, 1) // 设置纹理重复次数
-
       const floorMaterial = new THREE.MeshBasicMaterial({
         map: oceanTexture,
         opacity: 1,
@@ -58,6 +78,45 @@ class MapControlStudy extends MapApplication {
       floor.rotateX(-Math.PI / 2)
       // floor.position.set(0, -0.7, 0)
       this.scene.add(floor)
+    }
+  }
+  // 创建中国模糊线
+  createChinaBlurLine() {
+    if (this.assets.instance) {
+      const chileBlurLineGeometry = new THREE.PlaneGeometry(147, 147)
+      const blurLineTexture = this.assets.instance.getResource('chinaBlurLine')
+      if (blurLineTexture) {
+        blurLineTexture.colorSpace = THREE.SRGBColorSpace // 设置颜色空间
+        blurLineTexture.wrapS = THREE.RepeatWrapping // 水平方向重复纹理
+        blurLineTexture.wrapT = THREE.RepeatWrapping // 垂直方向重复纹理
+        blurLineTexture.generateMipmaps = false // 禁用mipmap生成以提高性能
+        blurLineTexture.minFilter = THREE.NearestFilter // 设置最小化过滤器为最近点采样
+        blurLineTexture.repeat.set(1, 1) // 设置纹理重复次数
+        const chileBlurLineMaterial = new THREE.MeshBasicMaterial({
+          color: 0x3f82cd, // 设置材质颜色（浅蓝色）
+          alphaMap: blurLineTexture, // 使用纹理作为透明度贴图
+          opacity: 0.5,
+          transparent: true,
+        })
+
+        const blurLineMesh = new THREE.Mesh(
+          chileBlurLineGeometry,
+          chileBlurLineMaterial,
+        )
+        blurLineMesh.rotateX(-Math.PI / 2)
+        blurLineMesh.position.set(0, -0.5, 0)
+        this.scene.add(blurLineMesh)
+
+        // 如果处于调试模式，添加位置控制器
+        if (this.debug && this.debug.active && this.debug.instance) {
+          const blurLineFolder = this.debug.instance.addFolder('blurLine')
+
+          // 添加X、Y、Z轴位置调整控制器
+          blurLineFolder.add(blurLineMesh.position, 'x', -100, 100, 0.1)
+          blurLineFolder.add(blurLineMesh.position, 'y', -100, 100, 0.1)
+          blurLineFolder.add(blurLineMesh.position, 'z', -100, 100, 0.1)
+        }
+      }
     }
   }
   destroy() {

@@ -1,6 +1,7 @@
 import OceanBlueBgImg from '../../assets/imgs/ocean-blue-bg.png'
 import {AssetList} from '../../MapControl/types'
 import ResourceManager from '../MapApplication/ResourceManager'
+import ChinaBlurLineImg from '../../assets/imgs/chinaBlurLine.png'
 
 /**
  * 加载资源
@@ -24,6 +25,7 @@ export class LoadAssets {
 
     const list: AssetList = [
       {type: 'Texture', name: 'ocean', path: OceanBlueBgImg},
+      {type: 'Texture', name: 'chinaBlurLine', path: ChinaBlurLineImg},
     ]
     this.instance.loadAll(list)
   }
