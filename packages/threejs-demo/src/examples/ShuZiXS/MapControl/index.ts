@@ -109,7 +109,7 @@ class MapControl extends MapApplication {
       this.initEnvironment()
       this.createFloor()
       this.createChinaBlurLine()
-      // this.createGrid()
+      this.createGrid()
       // this.createRotateBorder()
       // this.createLabel()
       // this.createModel()

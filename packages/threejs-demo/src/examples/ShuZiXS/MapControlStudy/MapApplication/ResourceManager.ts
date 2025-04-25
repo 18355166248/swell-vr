@@ -147,7 +147,6 @@ class ResourceManager extends EventEmitter {
     const asset = this.assets.find(asset => {
       return asset.name === assetName
     })
-    console.log('🚀 ~ ResourceManager ~ getResource ~ asset:', asset)
     if (!asset) throw new Error(`资源${assetName}不存在`)
     return asset.data
   }

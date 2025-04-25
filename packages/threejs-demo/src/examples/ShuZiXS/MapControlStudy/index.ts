@@ -4,6 +4,7 @@ import {MapControlOptions} from './types'
 import * as THREE from 'three'
 import {LoadAssets} from './utils/infoData'
 import gsap from 'gsap'
+import Grid from './utils/Grid'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -15,10 +16,17 @@ class MapControlStudy extends MapApplication {
     this.container = container
     this.pointCenter = options.centroid
     this.scene.background = new THREE.Color(0x102736)
+    // 设置雾化
+    // this.scene.fog = new THREE.Fog(0x102736, 1, 50)
+    // this.camera.instance!.position.set(
+    //   -13.767695123014105,
+    //   12.990152163077308,
+    //   39.28228164159694,
+    // )
     this.camera.instance!.position.set(
-      -13.767695123014105,
-      12.990152163077308,
-      39.28228164159694,
+      -0.2515849818960619,
+      12.397744557047988,
+      14.647659671139275,
     )
 
     this.initLilGui()
@@ -28,6 +36,7 @@ class MapControlStudy extends MapApplication {
       this.initEnvironment()
       this.createFloor()
       this.createChinaBlurLine()
+      this.createGrid()
 
       const timeLine = gsap.timeline()
       // timeLine.add(
@@ -104,7 +113,7 @@ class MapControlStudy extends MapApplication {
           chileBlurLineMaterial,
         )
         blurLineMesh.rotateX(-Math.PI / 2)
-        blurLineMesh.position.set(0, -0.5, 0)
+        blurLineMesh.position.set(-31, 0.5, -7)
         this.scene.add(blurLineMesh)
 
         // 如果处于调试模式，添加位置控制器
@@ -118,6 +127,25 @@ class MapControlStudy extends MapApplication {
         }
       }
     }
+  }
+  // 创建网格
+  createGrid() {
+    const options = {
+      gridSize: 50,
+      gridDivision: 20,
+      gridColor: 0x1b4b70, // 深蓝
+      shapeSize: 0.5,
+      shapeColor: 0x2a5f8a, // 深蓝
+      // shapeColor: 0xf44336, // 红色
+      pointSize: 0.1,
+      pointColor: 0x154d7d, // 深蓝
+      diffuse: true,
+      diffuseSpeed: 10,
+      diffuseWidth: 10,
+      diffuseColor: 0x2e8bd9, // 蓝色
+      // diffuseDir: 1, // 扩散方向：0-圆形扩散，1-横向扩散
+    }
+    new Grid(this, options)
   }
   destroy() {
     super.destroy()
