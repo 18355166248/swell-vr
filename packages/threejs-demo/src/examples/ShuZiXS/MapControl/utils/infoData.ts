@@ -418,7 +418,7 @@ class GeoMapRenderer {
     center: THREE.Vector2
     data: string
     renderOrder: number
-    merge: boolean
+    merge: boolean // 是否合并渲染
     material: THREE.MeshBasicMaterial
   }
   /**

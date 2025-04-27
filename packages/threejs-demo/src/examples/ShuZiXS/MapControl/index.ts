@@ -110,9 +110,9 @@ class MapControl extends MapApplication {
       this.createFloor()
       this.createChinaBlurLine()
       this.createGrid()
-      // this.createRotateBorder()
-      // this.createLabel()
-      // this.createModel()
+      this.createRotateBorder()
+      this.createLabel()
+      this.createModel()
       // this.createAnimateVideo()
       // this.createEvent()
       // this.createFlyLine()
@@ -120,8 +120,8 @@ class MapControl extends MapApplication {
       // this.createScatter()
       // this.createInfoPoint()
 
-      // const timeLine = gsap.timeline()
-      // timeLine.addLabel('focusMap', 2)
+      const timeLine = gsap.timeline()
+      timeLine.addLabel('focusMap', 2)
       // timeLine.addLabel('focusMapOpacity', 2.5)
       // timeLine.addLabel('bar', 3.5)
       // timeLine.add(
@@ -185,19 +185,19 @@ class MapControl extends MapApplication {
       //     'focusMapOpacity',
       //   )
       // }
-      // this.otherLabel.map((e, i) => {
-      //   const r = e.element.querySelector('.other-label')
-      //   timeLine.add(
-      //     gsap.to(r, {
-      //       duration: 1,
-      //       delay: 0.1 * i,
-      //       translateY: 0,
-      //       opacity: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'focusMapOpacity',
-      //   )
-      // })
+      this.otherLabel.map((e, i) => {
+        const r = e.element.querySelector('.other-label')
+        timeLine.add(
+          gsap.to(r, {
+            duration: 1,
+            delay: 0.1 * i,
+            translateY: 0,
+            opacity: 1,
+            ease: 'circ.out',
+          }),
+          'focusMapOpacity',
+        )
+      })
       // if (this.zhejiangLineMaterial) {
       //   timeLine.add(
       //     gsap.to(this.zhejiangLineMaterial, {

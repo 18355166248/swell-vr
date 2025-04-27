@@ -6,6 +6,7 @@ import {LoadAssets} from './utils/infoData'
 import Grid from './utils/Grid'
 import PlaneMeshRotate from './utils/PlaneMeshRotate'
 import {initGsapTimeLine} from './gsapTimeLine'
+import GeoMapRenderer from './utils/GeoMapRenderer'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -49,6 +50,7 @@ class MapControlStudy extends MapApplication {
       this.createChinaBlurLine()
       this.createGrid()
       this.createRotateBorder()
+      this.createModel()
 
       initGsapTimeLine.call(this)
     })
@@ -216,6 +218,33 @@ class MapControlStudy extends MapApplication {
     this.rotateBorder1 = outerBorder.instance
     this.rotateBorder2 = innerBorder.instance
   }
+  /**
+   * 创建模型并组织地图层次结构
+   * 负责创建中国地图及浙江省地图模型，并设置它们的层级关系
+   */
+  createModel() {
+    const mapRootGroup = new THREE.Group()
+    // 创建中国地图及其轮廓线
+    const {china} = this.createChina()
+    china.setParent(mapRootGroup)
+    this.scene.add(mapRootGroup)
+  }
+  createChina() {
+    const chinaGeoData = this.assets.instance!.getResource('china')
+
+    const china = new GeoMapRenderer({
+      data: chinaGeoData,
+      center: new THREE.Vector2(this.pointCenter[0], this.pointCenter[1]),
+      material: new THREE.MeshLambertMaterial({
+        color: 1387591, // 深蓝色
+        transparent: true,
+        opacity: 1,
+      }),
+      renderOrder: 2,
+    })
+    return {china}
+  }
+
   destroy() {
     super.destroy()
   }
