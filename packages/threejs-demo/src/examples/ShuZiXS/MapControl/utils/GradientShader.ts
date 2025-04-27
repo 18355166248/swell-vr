@@ -22,12 +22,6 @@ class PlaneMesh {
     rotateSpeed: number
     /** 材质 */
     material: THREE.MeshBasicMaterial
-  } & {
-    width: number
-    position: THREE.Vector3
-    needRotate: boolean
-    rotateSpeed: number
-    material: THREE.MeshBasicMaterial
   }
   /** Three.js网格实例 */
   instance: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
@@ -86,11 +80,11 @@ class PlaneMesh {
    */
   setParent(o: THREE.Object3D) {
     // 添加到父对象中
-    o.add(this.instance),
-      // 监听时间管理器的tick事件
-      this.time.on('tick', () => {
-        this.update()
-      })
+    o.add(this.instance)
+    // 监听时间管理器的tick事件
+    this.time.on('tick', () => {
+      this.update()
+    })
   }
 
   /**

@@ -5,12 +5,23 @@ import * as THREE from 'three'
 import {LoadAssets} from './utils/infoData'
 import gsap from 'gsap'
 import Grid from './utils/Grid'
+import PlaneMeshRotate from './utils/PlaneMeshRotate'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
   // 地图中心点
   pointCenter: [number, number]
   assets: LoadAssets
+  rotateBorder1?: THREE.Mesh<
+    THREE.PlaneGeometry,
+    THREE.MeshBasicMaterial,
+    THREE.Object3DEventMap
+  >
+  rotateBorder2?: THREE.Mesh<
+    THREE.PlaneGeometry,
+    THREE.MeshBasicMaterial,
+    THREE.Object3DEventMap
+  >
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -37,8 +48,10 @@ class MapControlStudy extends MapApplication {
       this.createFloor()
       this.createChinaBlurLine()
       this.createGrid()
+      this.createRotateBorder()
 
       const timeLine = gsap.timeline()
+      timeLine.addLabel('focusMapOpacity', 3)
       // timeLine.add(
       //   gsap.to(this.camera.instance!.position, {
       //     duration: 2,
@@ -48,6 +61,31 @@ class MapControlStudy extends MapApplication {
       //     ease: 'circ.out',
       //   }),
       // )
+
+      if (this.rotateBorder1 && this.rotateBorder2) {
+        timeLine.to(
+          this.rotateBorder1.scale,
+          {
+            duration: 2,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          },
+          'focusMapOpacity',
+        )
+        timeLine.to(
+          this.rotateBorder2.scale,
+          {
+            duration: 2,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          },
+          'focusMapOpacity',
+        )
+      }
     })
   }
 
@@ -85,7 +123,7 @@ class MapControlStudy extends MapApplication {
       })
       const floor = new THREE.Mesh(floorGeometry, floorMaterial)
       floor.rotateX(-Math.PI / 2)
-      // floor.position.set(0, -0.7, 0)
+      floor.position.set(0, -0.7, 0)
       this.scene.add(floor)
     }
   }
@@ -113,7 +151,7 @@ class MapControlStudy extends MapApplication {
           chileBlurLineMaterial,
         )
         blurLineMesh.rotateX(-Math.PI / 2)
-        blurLineMesh.position.set(-31, 0.5, -7)
+        blurLineMesh.position.set(-31, -0.5, -7)
         this.scene.add(blurLineMesh)
 
         // 如果处于调试模式，添加位置控制器
@@ -146,6 +184,72 @@ class MapControlStudy extends MapApplication {
       // diffuseDir: 1, // 扩散方向：0-圆形扩散，1-横向扩散
     }
     new Grid(this, options)
+  }
+  // 创建旋转边框
+  createRotateBorder() {
+    // 旋转边框的尺寸大小
+    const borderSize = 5
+
+    // 获取两种不同的旋转边框纹理
+    const outerBorderTexture =
+      this.assets.instance?.getResource('rotationBorder1')
+    const innerBorderTexture =
+      this.assets.instance?.getResource('rotationBorder2')
+
+    // 创建外层旋转边框
+    const outerBorder = new PlaneMeshRotate(
+      {
+        time: this.time,
+      },
+      {
+        name: 'rotationBorder1-mesh',
+        width: borderSize * 1.178, // 外层边框稍大
+        needRotate: true,
+        rotateSpeed: 0.001, // 外层旋转速度较慢
+        material: new THREE.MeshBasicMaterial({
+          alphaMap: outerBorderTexture,
+          color: 4763647, // 蓝色调
+          transparent: true,
+          opacity: 0.2, // 外层透明度较低
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        }),
+        position: new THREE.Vector3(0, 0.2, 0),
+      },
+    )
+    outerBorder.instance.renderOrder = 6
+    outerBorder.instance.scale.set(0, 0, 0)
+    outerBorder.setParent(this.scene)
+
+    // 创建内层旋转边框
+    const innerBorder = new PlaneMeshRotate(
+      {
+        time: this.time,
+      },
+      {
+        name: 'rotationBorder1-mesh',
+        width: borderSize * 1.116, // 内层边框稍小
+        needRotate: true,
+        rotateSpeed: -0.004, // 内层旋转速度较快，方向相反
+        material: new THREE.MeshBasicMaterial({
+          alphaMap: innerBorderTexture,
+          color: 0x48afff, // 蓝色调
+          transparent: true,
+          opacity: 0.4, // 内层透明度较低
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        }),
+        position: new THREE.Vector3(0, 0.2, 0),
+      },
+    )
+    innerBorder.instance.renderOrder = 6
+    innerBorder.instance.scale.set(0, 0, 0)
+    innerBorder.setParent(this.scene)
+
+    this.rotateBorder1 = outerBorder.instance
+    this.rotateBorder2 = innerBorder.instance
   }
   destroy() {
     super.destroy()
