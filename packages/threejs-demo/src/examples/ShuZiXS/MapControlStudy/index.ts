@@ -118,7 +118,7 @@ class MapControlStudy extends MapApplication {
           chileBlurLineMaterial,
         )
         blurLineMesh.rotateX(-Math.PI / 2)
-        blurLineMesh.position.set(-31, -0.5, -7)
+        blurLineMesh.position.set(-33.2, -0.5, -5.2)
         this.scene.add(blurLineMesh)
 
         // 如果处于调试模式，添加位置控制器
@@ -227,6 +227,8 @@ class MapControlStudy extends MapApplication {
     // 创建中国地图及其轮廓线
     const {china} = this.createChina()
     china.setParent(mapRootGroup)
+    mapRootGroup.rotateX(-Math.PI / 2)
+    mapRootGroup.position.set(0, 0.2, 0)
     this.scene.add(mapRootGroup)
   }
   createChina() {
@@ -236,7 +238,7 @@ class MapControlStudy extends MapApplication {
       data: chinaGeoData,
       center: new THREE.Vector2(this.pointCenter[0], this.pointCenter[1]),
       material: new THREE.MeshLambertMaterial({
-        color: 1387591, // 深蓝色
+        color: 0x152c47, // 深蓝色
         transparent: true,
         opacity: 1,
       }),

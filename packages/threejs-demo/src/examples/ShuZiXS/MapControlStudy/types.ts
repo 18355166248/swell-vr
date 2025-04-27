@@ -14,7 +14,8 @@ export interface AssetInfo {
   type: LoaderTypeValues
   name: string
   path: string
-  data?: FeatureCollection
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any
 }
 
 export interface FeatureCollection {
