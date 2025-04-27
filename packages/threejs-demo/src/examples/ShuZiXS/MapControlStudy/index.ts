@@ -3,9 +3,9 @@ import MapApplication from './MapApplication/MapApplication'
 import {MapControlOptions} from './types'
 import * as THREE from 'three'
 import {LoadAssets} from './utils/infoData'
-import gsap from 'gsap'
 import Grid from './utils/Grid'
 import PlaneMeshRotate from './utils/PlaneMeshRotate'
+import {initGsapTimeLine} from './gsapTimeLine'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -50,42 +50,7 @@ class MapControlStudy extends MapApplication {
       this.createGrid()
       this.createRotateBorder()
 
-      const timeLine = gsap.timeline()
-      timeLine.addLabel('focusMapOpacity', 3)
-      // timeLine.add(
-      //   gsap.to(this.camera.instance!.position, {
-      //     duration: 2,
-      //     x: -0.2515849818960619,
-      //     y: 12.397744557047988,
-      //     z: 14.647659671139275,
-      //     ease: 'circ.out',
-      //   }),
-      // )
-
-      if (this.rotateBorder1 && this.rotateBorder2) {
-        timeLine.to(
-          this.rotateBorder1.scale,
-          {
-            duration: 2,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          },
-          'focusMapOpacity',
-        )
-        timeLine.to(
-          this.rotateBorder2.scale,
-          {
-            duration: 2,
-            x: 1,
-            y: 1,
-            z: 1,
-            ease: 'circ.out',
-          },
-          'focusMapOpacity',
-        )
-      }
+      initGsapTimeLine.call(this)
     })
   }
 
