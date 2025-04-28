@@ -1,10 +1,12 @@
+import {FeatureCollection} from '../types'
+
 /**
  * 标准化GeoJSON数据格式
  * 将Polygon类型的几何体转换为MultiPolygon兼容格式
  * @param jsonString GeoJSON格式的字符串
  * @returns 处理后的GeoJSON对象
  */
-export const normalizeGeoJSON = (jsonString: string) => {
+export const normalizeGeoJSON = (jsonString: string): FeatureCollection => {
   const geoJsonData = JSON.parse(jsonString)
   const features = geoJsonData.features
 

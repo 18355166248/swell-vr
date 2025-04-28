@@ -37,8 +37,13 @@ export class LoadAssets {
       {type: 'Texture', name: 'rotationBorder2', path: RotationBorder2Img},
       {
         type: 'File',
-        name: 'china',
+        name: 'china-province',
         path: path + 'china-province.json',
+      },
+      {
+        type: 'File',
+        name: 'china',
+        path: path + 'china.json',
       },
     ]
     this.instance.loadAll(list)

@@ -7,6 +7,7 @@ import Grid from './utils/Grid'
 import PlaneMeshRotate from './utils/PlaneMeshRotate'
 import {initGsapTimeLine} from './gsapTimeLine'
 import GeoMapRenderer from './utils/GeoMapRenderer'
+import LineRenderer from './utils/LineRenderer'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -182,7 +183,7 @@ class MapControlStudy extends MapApplication {
           depthWrite: false,
           blending: THREE.AdditiveBlending,
         }),
-        position: new THREE.Vector3(0, 0.2, 0),
+        position: new THREE.Vector3(0, 0.21, 0),
       },
     )
     outerBorder.instance.renderOrder = 6
@@ -208,7 +209,7 @@ class MapControlStudy extends MapApplication {
           depthWrite: false,
           blending: THREE.AdditiveBlending,
         }),
-        position: new THREE.Vector3(0, 0.2, 0),
+        position: new THREE.Vector3(0, 0.21, 0),
       },
     )
     innerBorder.instance.renderOrder = 6
@@ -224,19 +225,30 @@ class MapControlStudy extends MapApplication {
    */
   createModel() {
     const mapRootGroup = new THREE.Group()
+    const bottomLineGroup = new THREE.Group()
     // 创建中国地图及其轮廓线
-    const {china} = this.createChina()
+    const {china, chinaLine, chinaBottomLine} = this.createChina()
     china.setParent(mapRootGroup)
+    chinaLine.setParent(mapRootGroup)
+    chinaBottomLine.setParent(bottomLineGroup)
+
     mapRootGroup.rotateX(-Math.PI / 2)
     mapRootGroup.position.set(0, 0.2, 0)
+
+    bottomLineGroup.rotateX(-Math.PI / 2)
+    bottomLineGroup.position.set(0, -0.04, 0)
+
     this.scene.add(mapRootGroup)
+    this.scene.add(bottomLineGroup)
   }
   createChina() {
+    const chinaProvinceGeoData =
+      this.assets.instance!.getResource('china-province')
     const chinaGeoData = this.assets.instance!.getResource('china')
 
     const china = new GeoMapRenderer({
-      data: chinaGeoData,
-      center: new THREE.Vector2(this.pointCenter[0], this.pointCenter[1]),
+      data: chinaProvinceGeoData,
+      center: this.pointCenter,
       material: new THREE.MeshLambertMaterial({
         color: 0x152c47, // 深蓝色
         transparent: true,
@@ -244,7 +256,31 @@ class MapControlStudy extends MapApplication {
       }),
       renderOrder: 2,
     })
-    return {china}
+
+    const chinaLine = new LineRenderer({
+      center: this.pointCenter,
+      data: chinaProvinceGeoData,
+      material: new THREE.LineBasicMaterial({
+        color: 0x3f82cd, // 蓝色
+        transparent: true,
+        opacity: 0.6, // 不透明度
+        blending: THREE.AdditiveBlending, // 加法混合
+      }),
+      renderOrder: 3,
+    })
+
+    const chinaBottomLine = new LineRenderer({
+      center: this.pointCenter,
+      data: chinaGeoData,
+      material: new THREE.LineBasicMaterial({
+        color: 0x3f82cd, // 蓝色
+        transparent: true,
+        opacity: 0.4, // 更低的不透明度
+      }),
+      renderOrder: 3, // 低于主线条
+    })
+
+    return {china, chinaLine, chinaBottomLine}
   }
 
   destroy() {

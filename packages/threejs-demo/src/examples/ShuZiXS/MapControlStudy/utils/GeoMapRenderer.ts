@@ -11,7 +11,7 @@ interface GeoMapRendererOptions {
   /** GeoJSON格式的地理数据字符串 */
   data: string
   /** 地图投影中心点 */
-  center: THREE.Vector2
+  center: [number, number]
   /** 地图组在场景中的位置 */
   position: THREE.Vector3
   /** 地图渲染材质 */
@@ -59,7 +59,7 @@ class GeoMapRenderer {
     this.config = {
       // 默认配置
       data: '',
-      center: new THREE.Vector2(0, 0),
+      center: [0, 0] as [number, number],
       position: new THREE.Vector3(0, 0, 0),
       material: new THREE.MeshBasicMaterial({
         color: 0x18263b, // 深蓝色
@@ -173,7 +173,7 @@ class GeoMapRenderer {
   geoProjection(coords: [number, number]): [number, number] {
     return d3
       .geoMercator() // 使用墨卡托投影
-      .center([this.config.center.x, this.config.center.y]) // 设置投影中心
+      .center(this.config.center) // 设置投影中心
       .scale(120) // 设置投影比例
       .translate([0, 0])(coords) as [number, number] // 应用投影并转换坐标
   }
