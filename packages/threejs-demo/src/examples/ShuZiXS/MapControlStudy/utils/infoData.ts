@@ -45,6 +45,11 @@ export class LoadAssets {
         name: 'china',
         path: path + 'china.json',
       },
+      {
+        type: 'File',
+        name: 'zhejiang-city',
+        path: path + 'zhejiang-city.json',
+      },
     ]
     this.instance.loadAll(list)
   }

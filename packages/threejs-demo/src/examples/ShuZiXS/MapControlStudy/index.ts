@@ -8,6 +8,7 @@ import PlaneMeshRotate from './utils/PlaneMeshRotate'
 import {initGsapTimeLine} from './gsapTimeLine'
 import GeoMapRenderer from './utils/GeoMapRenderer'
 import LineRenderer from './utils/LineRenderer'
+import {createProvinceMaterial} from './utils/material'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -24,6 +25,8 @@ class MapControlStudy extends MapApplication {
     THREE.MeshBasicMaterial,
     THREE.Object3DEventMap
   >
+  focusMapTopMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
+  focusMapSideMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -48,7 +51,6 @@ class MapControlStudy extends MapApplication {
       console.log('资源初始化成功')
       this.initEnvironment()
       this.createFloor()
-      this.createChinaBlurLine()
       this.createGrid()
       this.createRotateBorder()
       this.createModel()
@@ -93,45 +95,6 @@ class MapControlStudy extends MapApplication {
       floor.rotateX(-Math.PI / 2)
       floor.position.set(0, -0.7, 0)
       this.scene.add(floor)
-    }
-  }
-  // 创建中国模糊线
-  createChinaBlurLine() {
-    if (this.assets.instance) {
-      const chileBlurLineGeometry = new THREE.PlaneGeometry(147, 147)
-      const blurLineTexture = this.assets.instance.getResource('chinaBlurLine')
-      if (blurLineTexture) {
-        blurLineTexture.colorSpace = THREE.SRGBColorSpace // 设置颜色空间
-        blurLineTexture.wrapS = THREE.RepeatWrapping // 水平方向重复纹理
-        blurLineTexture.wrapT = THREE.RepeatWrapping // 垂直方向重复纹理
-        blurLineTexture.generateMipmaps = false // 禁用mipmap生成以提高性能
-        blurLineTexture.minFilter = THREE.NearestFilter // 设置最小化过滤器为最近点采样
-        blurLineTexture.repeat.set(1, 1) // 设置纹理重复次数
-        const chileBlurLineMaterial = new THREE.MeshBasicMaterial({
-          color: 0x3f82cd, // 设置材质颜色（浅蓝色）
-          alphaMap: blurLineTexture, // 使用纹理作为透明度贴图
-          opacity: 0.5,
-          transparent: true,
-        })
-
-        const blurLineMesh = new THREE.Mesh(
-          chileBlurLineGeometry,
-          chileBlurLineMaterial,
-        )
-        blurLineMesh.rotateX(-Math.PI / 2)
-        blurLineMesh.position.set(-33.2, -0.5, -5.2)
-        this.scene.add(blurLineMesh)
-
-        // 如果处于调试模式，添加位置控制器
-        if (this.debug && this.debug.active && this.debug.instance) {
-          const blurLineFolder = this.debug.instance.addFolder('blurLine')
-
-          // 添加X、Y、Z轴位置调整控制器
-          blurLineFolder.add(blurLineMesh.position, 'x', -100, 100, 0.1)
-          blurLineFolder.add(blurLineMesh.position, 'y', -100, 100, 0.1)
-          blurLineFolder.add(blurLineMesh.position, 'z', -100, 100, 0.1)
-        }
-      }
     }
   }
   // 创建网格
@@ -281,6 +244,15 @@ class MapControlStudy extends MapApplication {
     })
 
     return {china, chinaLine, chinaBottomLine}
+  }
+  createZheJiang() {
+    const zhejiangGeoData = this.assets.instance!.getResource('zhejiang-city')
+    const [topFaceMaterial, sideMaterial] = createProvinceMaterial({
+      assets: this.assets,
+      time: this.time,
+    })
+    this.focusMapTopMaterial = topFaceMaterial
+    this.focusMapSideMaterial = sideMaterial
   }
 
   destroy() {
