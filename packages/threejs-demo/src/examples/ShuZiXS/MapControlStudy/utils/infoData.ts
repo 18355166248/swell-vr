@@ -4,7 +4,9 @@ import ResourceManager from '../MapApplication/ResourceManager'
 import ChinaBlurLineImg from '../../assets/imgs/chinaBlurLine.png'
 import RotationBorder1Img from '../../assets/imgs/rotationBorder1.png'
 import RotationBorder2Img from '../../assets/imgs/rotationBorder2.png'
+import {sideImg} from '../base64'
 import * as THREE from 'three'
+
 /**
  * 加载资源
  */
@@ -50,6 +52,7 @@ export class LoadAssets {
         name: 'zhejiang-city',
         path: path + 'zhejiang-city.json',
       },
+      {type: 'Texture', name: 'side', path: sideImg},
     ]
     this.instance.loadAll(list)
   }

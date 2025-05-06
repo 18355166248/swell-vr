@@ -9,6 +9,8 @@ import {initGsapTimeLine} from './gsapTimeLine'
 import GeoMapRenderer from './utils/GeoMapRenderer'
 import LineRenderer from './utils/LineRenderer'
 import {createProvinceMaterial} from './utils/material'
+import GradientShader from './utils/GradientShader'
+import ExtrudedGeoMapRenderer from './utils/ExtrudedGeoMapRenderer'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -195,6 +197,10 @@ class MapControlStudy extends MapApplication {
     chinaLine.setParent(mapRootGroup)
     chinaBottomLine.setParent(bottomLineGroup)
 
+    // 创建浙江省地图及其相关元素
+    const {zhejiangTop} = this.createZheJiang()
+    zhejiangTop.setParent(mapRootGroup)
+
     mapRootGroup.rotateX(-Math.PI / 2)
     mapRootGroup.position.set(0, 0.2, 0)
 
@@ -253,6 +259,42 @@ class MapControlStudy extends MapApplication {
     })
     this.focusMapTopMaterial = topFaceMaterial
     this.focusMapSideMaterial = sideMaterial
+
+    // 创建浙江省主体地图（带深度的3D效果）
+    const zhejiang = new ExtrudedGeoMapRenderer(
+      {
+        assets: this.assets,
+        time: this.time,
+      },
+      {
+        center: this.pointCenter,
+        position: new THREE.Vector3(0, 0, 0.11),
+        data: zhejiangGeoData,
+        depth: 0.5,
+        topFaceMaterial: topFaceMaterial,
+        sideMaterial: sideMaterial,
+        renderOrder: 9,
+      },
+    )
+
+    const topMapMaterial = new THREE.MeshStandardMaterial({
+      color: 16777215, // 白色
+      transparent: true,
+      opacity: 0.5,
+    })
+    // 应用渐变着色器
+    new GradientShader(topMapMaterial, {uColor1: 0x2a6e92, uColor2: 0x102736})
+
+    // 创建浙江省顶部地图（平面）
+    const zhejiangTop = new GeoMapRenderer({
+      center: this.pointCenter,
+      position: new THREE.Vector3(0, 0, 0.72),
+      data: zhejiangGeoData,
+      material: topMapMaterial,
+      renderOrder: 3,
+    })
+
+    return {zhejiang, zhejiangTop}
   }
 
   destroy() {

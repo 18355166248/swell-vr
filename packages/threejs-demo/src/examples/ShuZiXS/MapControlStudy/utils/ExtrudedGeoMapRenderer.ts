@@ -1,13 +1,15 @@
 import * as THREE from 'three'
 import * as d3 from 'd3'
+import {LoadAssets} from './infoData'
+import TimeManager from '../MapApplication/TimeManager'
 
 type ExtrudedGeoMapRendererConfig = {
   position: THREE.Vector3
-  center: THREE.Vector2
+  center: [number, number]
   data: string
   renderOrder: number
-  topFaceMaterial: THREE.MeshBasicMaterial
-  sideMaterial: THREE.MeshBasicMaterial
+  topFaceMaterial: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
+  sideMaterial: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
   depth: number
 }
 /**
@@ -18,9 +20,23 @@ type ExtrudedGeoMapRendererConfig = {
 export class ExtrudedGeoMapRenderer {
   mapGroup: THREE.Group<THREE.Object3DEventMap>
   config: ExtrudedGeoMapRendererConfig
-  constructor(config: ExtrudedGeoMapRendererConfig) {
+  /** 资源管理器 */
+  assets: LoadAssets
+  /** 时间管理器 */
+  time: TimeManager
+  coordinates: {
+    name: string
+    center: number[]
+    centroid: number[]
+  }[] = []
+  constructor(
+    {assets, time}: {assets: LoadAssets; time: TimeManager},
+    config: ExtrudedGeoMapRendererConfig,
+  ) {
     this.mapGroup = new THREE.Group()
     this.config = config
+    this.assets = assets
+    this.time = time
   }
   /**
    * 地理坐标投影转换
