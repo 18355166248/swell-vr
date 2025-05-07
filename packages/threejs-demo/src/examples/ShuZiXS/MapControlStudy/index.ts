@@ -37,17 +37,18 @@ class MapControlStudy extends MapApplication {
     this.pointCenter = options.centroid
     this.scene.background = new THREE.Color(0x102736)
     // 设置雾化
-    // this.scene.fog = new THREE.Fog(0x102736, 1, 50)
-    // this.camera.instance!.position.set(
-    //   -13.767695123014105,
-    //   12.990152163077308,
-    //   39.28228164159694,
-    // )
-    this.camera.instance!.position.set(
-      -0.2515849818960619,
-      12.397744557047988,
-      14.647659671139275,
-    )
+    this.scene.fog = new THREE.Fog(0x102736, 1, 50)
+    if (this.camera.instance) {
+      this.camera.instance.position.set(
+        -13.767695123014105,
+        12.990152163077308,
+        39.28228164159694,
+      )
+
+      this.camera.instance.near = 1
+      this.camera.instance.far = 10000
+      this.camera.instance.updateProjectionMatrix()
+    }
 
     this.initLilGui()
 
@@ -123,7 +124,7 @@ class MapControlStudy extends MapApplication {
   // 创建旋转边框
   createRotateBorder() {
     // 旋转边框的尺寸大小
-    const borderSize = 5
+    const borderSize = 12
 
     // 获取两种不同的旋转边框纹理
     const outerBorderTexture =
@@ -143,7 +144,7 @@ class MapControlStudy extends MapApplication {
         rotateSpeed: 0.001, // 外层旋转速度较慢
         material: new THREE.MeshBasicMaterial({
           alphaMap: outerBorderTexture,
-          color: 4763647, // 蓝色调
+          color: 0x48afff, // 蓝色调
           transparent: true,
           opacity: 0.2, // 外层透明度较低
           side: THREE.DoubleSide,
@@ -241,9 +242,6 @@ class MapControlStudy extends MapApplication {
       data: chinaProvinceGeoData,
       material: new THREE.LineBasicMaterial({
         color: 0x3f82cd, // 蓝色
-        transparent: true,
-        opacity: 0.6, // 不透明度
-        blending: THREE.AdditiveBlending, // 加法混合
       }),
       renderOrder: 3,
     })

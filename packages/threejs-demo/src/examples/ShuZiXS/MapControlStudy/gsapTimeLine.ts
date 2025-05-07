@@ -3,21 +3,33 @@ import MapControlStudy from '.'
 
 export function initGsapTimeLine(this: MapControlStudy) {
   const timeLine = gsap.timeline()
-  timeLine.addLabel('focusMapOpacity', 3)
-  // timeLine.add(
-  //   gsap.to(this.camera.instance!.position, {
-  //     duration: 2,
-  //     x: -0.2515849818960619,
-  //     y: 12.397744557047988,
-  //     z: 14.647659671139275,
-  //     ease: 'circ.out',
-  //   }),
-  // )
+  timeLine.addLabel('focusMap', 2)
+  timeLine.addLabel('focusMapOpacity', 2.5)
+  timeLine.addLabel('bar', 3.5)
+  timeLine.add(
+    gsap.to(this.camera.instance!.position, {
+      duration: 2.5,
+      x: -20.460391656828197,
+      y: 19.30487264306655,
+      z: 58.37802626943616,
+      ease: 'circ.out',
+    }),
+  )
+  timeLine.add(
+    gsap.to(this.camera.instance!.position, {
+      duration: 2.5,
+      x: -0.2515849818960619,
+      y: 12.397744557047988,
+      z: 14.647659671139275,
+      ease: 'circ.out',
+    }),
+  )
 
   if (this.rotateBorder1 && this.rotateBorder2) {
     timeLine.to(
       this.rotateBorder1.scale,
       {
+        delay: 0.3,
         duration: 2,
         x: 1,
         y: 1,

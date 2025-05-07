@@ -81,16 +81,16 @@ class MapControl extends MapApplication {
     this.flyLineCenter = ZheJiangCityInfo[0].centroid as [number, number]
     this.depth = 0.5
     this.clicked = false
-    // this.scene.fog = new THREE.Fog(1058614, 1, 50)
+    this.scene.fog = new THREE.Fog(1058614, 1, 50)
     this.scene.background = new THREE.Color(1058614)
     this.camera.instance.position.set(
       -13.767695123014105,
       12.990152163077308,
       39.28228164159694,
     )
-    // this.camera.instance.near = 1
-    // this.camera.instance.far = 10000
-    // this.camera.instance.updateProjectionMatrix()
+    this.camera.instance.near = 1
+    this.camera.instance.far = 10000
+    this.camera.instance.updateProjectionMatrix()
     // 点击管理器
     this.interactionManager = new InteractionManager(
       this.renderer.instance!,
@@ -122,8 +122,8 @@ class MapControl extends MapApplication {
 
       const timeLine = gsap.timeline()
       timeLine.addLabel('focusMap', 2)
-      // timeLine.addLabel('focusMapOpacity', 2.5)
-      // timeLine.addLabel('bar', 3.5)
+      timeLine.addLabel('focusMapOpacity', 2.5)
+      timeLine.addLabel('bar', 3.5)
       // timeLine.add(
       //   gsap.to(this.camera.instance.position, {
       //     duration: 2.5,
@@ -723,7 +723,7 @@ class MapControl extends MapApplication {
       {
         assets: this.assets,
         time: this.time,
-      },  
+      },
       {
         center: this.pointCenter,
         position: new THREE.Vector3(0, 0, 0.11),
