@@ -124,67 +124,67 @@ class MapControl extends MapApplication {
       timeLine.addLabel('focusMap', 2)
       timeLine.addLabel('focusMapOpacity', 2.5)
       timeLine.addLabel('bar', 3.5)
-      // timeLine.add(
-      //   gsap.to(this.camera.instance.position, {
-      //     duration: 2.5,
-      //     x: -20.460391656828197,
-      //     y: 19.30487264306655,
-      //     z: 58.37802626943616,
-      //     ease: 'circ.out',
-      //   }),
-      // )
-      // timeLine.add(
-      //   gsap.to(this.camera.instance.position, {
-      //     duration: 2.5,
-      //     x: -0.2515849818960619,
-      //     y: 12.397744557047988,
-      //     z: 14.647659671139275,
-      //     ease: 'circ.out',
-      //   }),
-      // )
-      // if (this.focusMapGroup) {
-      //   timeLine.add(
-      //     gsap.to(this.focusMapGroup.position, {
-      //       duration: 1,
-      //       x: 0,
-      //       y: 0,
-      //       z: 0,
-      //     }),
-      //     'focusMap',
-      //   )
-      //   timeLine.add(
-      //     gsap.to(this.focusMapGroup.scale, {
-      //       duration: 1,
-      //       x: 1,
-      //       y: 1,
-      //       z: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'focusMap',
-      //   )
-      // }
+      timeLine.add(
+        gsap.to(this.camera.instance.position, {
+          duration: 2.5,
+          x: -20.460391656828197,
+          y: 19.30487264306655,
+          z: 58.37802626943616,
+          ease: 'circ.out',
+        }),
+      )
+      timeLine.add(
+        gsap.to(this.camera.instance.position, {
+          duration: 2.5,
+          x: -0.2515849818960619,
+          y: 12.397744557047988,
+          z: 14.647659671139275,
+          ease: 'circ.out',
+        }),
+      )
+      if (this.focusMapGroup) {
+        timeLine.add(
+          gsap.to(this.focusMapGroup.position, {
+            duration: 1,
+            x: 0,
+            y: 0,
+            z: 0,
+          }),
+          'focusMap',
+        )
+        timeLine.add(
+          gsap.to(this.focusMapGroup.scale, {
+            duration: 1,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          }),
+          'focusMap',
+        )
+      }
 
-      // if (this.focusMapTopMaterial && this.focusMapSideMaterial) {
-      //   timeLine.add(
-      //     gsap.to(this.focusMapTopMaterial, {
-      //       duration: 1,
-      //       opacity: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'focusMapOpacity',
-      //   )
-      //   timeLine.add(
-      //     gsap.to(this.focusMapSideMaterial, {
-      //       duration: 1,
-      //       opacity: 1,
-      //       ease: 'circ.out',
-      //       onComplete: () => {
-      //         this.focusMapSideMaterial!.transparent = false
-      //       },
-      //     }),
-      //     'focusMapOpacity',
-      //   )
-      // }
+      if (this.focusMapTopMaterial && this.focusMapSideMaterial) {
+        timeLine.add(
+          gsap.to(this.focusMapTopMaterial, {
+            duration: 1,
+            opacity: 1,
+            ease: 'circ.out',
+          }),
+          'focusMapOpacity',
+        )
+        timeLine.add(
+          gsap.to(this.focusMapSideMaterial, {
+            duration: 1,
+            opacity: 1,
+            ease: 'circ.out',
+            onComplete: () => {
+              this.focusMapSideMaterial!.transparent = false
+            },
+          }),
+          'focusMapOpacity',
+        )
+      }
       this.otherLabel.map((e, i) => {
         const r = e.element.querySelector('.other-label')
         timeLine.add(
@@ -198,42 +198,42 @@ class MapControl extends MapApplication {
           'focusMapOpacity',
         )
       })
-      // if (this.zhejiangLineMaterial) {
-      //   timeLine.add(
-      //     gsap.to(this.zhejiangLineMaterial, {
-      //       duration: 0.5,
-      //       delay: 0.3,
-      //       opacity: 1,
-      //     }),
-      //     'focusMapOpacity',
-      //   )
-      // }
-      // if (this.rotateBorder1) {
-      //   timeLine.add(
-      //     gsap.to(this.rotateBorder1.scale, {
-      //       delay: 0.3,
-      //       duration: 1,
-      //       x: 1,
-      //       y: 1,
-      //       z: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'focusMapOpacity',
-      //   )
-      // }
-      // if (this.rotateBorder2) {
-      //   timeLine.add(
-      //     gsap.to(this.rotateBorder2.scale, {
-      //       duration: 1,
-      //       delay: 0.5,
-      //       x: 1,
-      //       y: 1,
-      //       z: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'focusMapOpacity',
-      //   )
-      // }
+      if (this.zhejiangLineMaterial) {
+        timeLine.add(
+          gsap.to(this.zhejiangLineMaterial, {
+            duration: 0.5,
+            delay: 0.3,
+            opacity: 1,
+          }),
+          'focusMapOpacity',
+        )
+      }
+      if (this.rotateBorder1) {
+        timeLine.add(
+          gsap.to(this.rotateBorder1.scale, {
+            delay: 0.3,
+            duration: 1,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          }),
+          'focusMapOpacity',
+        )
+      }
+      if (this.rotateBorder2) {
+        timeLine.add(
+          gsap.to(this.rotateBorder2.scale, {
+            duration: 1,
+            delay: 0.5,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          }),
+          'focusMapOpacity',
+        )
+      }
       // // 柱状图动画
       // this.allBar.map((e, i) => {
       //   timeLine.add(
