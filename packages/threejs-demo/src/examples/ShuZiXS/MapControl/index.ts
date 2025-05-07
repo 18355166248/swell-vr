@@ -113,7 +113,7 @@ class MapControl extends MapApplication {
       this.createRotateBorder()
       this.createLabel()
       this.createModel()
-      // this.createAnimateVideo()
+      this.createAnimateVideo()
       // this.createEvent()
       // this.createFlyLine()
       // this.createParticles()

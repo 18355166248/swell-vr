@@ -11,6 +11,8 @@ import LineRenderer from './utils/LineRenderer'
 import {createProvinceMaterial} from './utils/material'
 import GradientShader from './utils/GradientShader'
 import ExtrudedGeoMapRenderer from './utils/ExtrudedGeoMapRenderer'
+import createAnimateVideoItem from './utils/animateVideoItem'
+import {InteractionManager} from 'three.interactive'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -31,6 +33,11 @@ class MapControlStudy extends MapApplication {
   focusMapSideMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
   zhejiangLineMaterial?: THREE.LineBasicMaterial
   focusMapGroup?: THREE.Group<THREE.Object3DEventMap>
+  clicked = false // 点击控制
+  eventElement: THREE.Object3D<THREE.Object3DEventMap>[] = []
+  interactionManager: InteractionManager
+  defaultMaterial?: THREE.MeshStandardMaterial
+  defaultLightMaterial?: THREE.MeshStandardMaterial
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -49,6 +56,12 @@ class MapControlStudy extends MapApplication {
       this.camera.instance.far = 10000
       this.camera.instance.updateProjectionMatrix()
     }
+    // 点击管理器
+    this.interactionManager = new InteractionManager(
+      this.render.instance,
+      this.camera.instance,
+      this.canvas,
+    )
 
     this.initLilGui()
 
@@ -59,6 +72,8 @@ class MapControlStudy extends MapApplication {
       this.createGrid()
       this.createRotateBorder()
       this.createModel()
+      this.createAnimateVideo()
+      this.createEvent()
 
       initGsapTimeLine.call(this)
     })
@@ -221,6 +236,11 @@ class MapControlStudy extends MapApplication {
     this.scene.add(mapRootGroup)
     this.scene.add(bottomLineGroup)
   }
+  /**
+   * 创建中国地图及其相关元素
+   * 负责创建中国地图及其相关元素，包括中国地图、中国轮廓线等
+   * @returns 包含中国地图、中国轮廓线和底部线条的对象
+   */
   createChina() {
     const chinaProvinceGeoData =
       this.assets.instance!.getResource('china-province')
@@ -259,6 +279,11 @@ class MapControlStudy extends MapApplication {
 
     return {china, chinaLine, chinaBottomLine}
   }
+  /**
+   * 创建浙江省地图及其相关元素
+   * 负责创建浙江省地图及其相关元素，包括顶部地图、轮廓线等
+   * @returns 包含浙江省地图、顶部地图和轮廓线的对象
+   */
   createZheJiang() {
     const zhejiangGeoData = this.assets.instance!.getResource('zhejiang-city')
     const [topFaceMaterial, sideMaterial] = createProvinceMaterial({
@@ -293,6 +318,12 @@ class MapControlStudy extends MapApplication {
     // 应用渐变着色器
     new GradientShader(topMapMaterial, {uColor1: 0x2a6e92, uColor2: 0x102736})
 
+    this.defaultMaterial = topMapMaterial
+    // 创建发光材质（克隆自默认材质）
+    this.defaultLightMaterial = this.defaultMaterial.clone()
+    this.defaultLightMaterial.emissive.setHex(0xb112d) // 蓝绿色
+    // this.defaultLightMaterial.emissiveIntensity = 3.5
+
     // 创建浙江省顶部地图（平面）
     const zhejiangTop = new GeoMapRenderer({
       center: this.pointCenter,
@@ -300,6 +331,13 @@ class MapControlStudy extends MapApplication {
       data: zhejiangGeoData,
       material: topMapMaterial,
       renderOrder: 3,
+    })
+
+    // 将网格添加到可交互元素列表
+    zhejiangTop.mapGroup.children.map(provinceGroup => {
+      provinceGroup.children.map(child => {
+        child.type === 'Mesh' && this.eventElement.push(child)
+      })
     })
 
     // 创建浙江省轮廓线材质
@@ -319,6 +357,91 @@ class MapControlStudy extends MapApplication {
     zhejiangLine.lineGroup.position.z += 0.73
 
     return {zhejiang, zhejiangTop, zhejiangLine}
+  }
+  // 创建动画视频
+  createAnimateVideo() {
+    const video1 = createAnimateVideoItem(
+      '.map-gd-video1',
+      new THREE.Vector3(11, 0.4, 1),
+    )
+    const video2 = createAnimateVideoItem(
+      '.map-gd-video2',
+      new THREE.Vector3(-11, 0.4, 2),
+    )
+    const videoGroup = new THREE.Group()
+    if (video1) videoGroup.add(video1)
+    if (video2) videoGroup.add(video2)
+    this.scene.add(videoGroup)
+  }
+  /**
+   * 创建交互事件
+   * 处理地图元素的鼠标交互事件，包括悬停、点击等
+   * 实现地图元素高亮、相机移动等交互效果
+   */
+  createEvent() {
+    // 存储当前悬停的元素集合
+    const hoveredElements: THREE.Object3D<THREE.Object3DEventMap>[] = []
+
+    // 应用默认材质的函数
+    const applyDefaultMaterial = (object: THREE.Object3D) => {
+      object.traverse((child: THREE.Object3D) => {
+        if ((child as any).isMesh) {
+          // eslint-disable-next-line no-extra-semi
+          ;(child as THREE.Mesh).material = this.defaultMaterial!
+        }
+      })
+    }
+
+    // 应用高亮材质的函数
+    const applyHighlightMaterial = (object: THREE.Object3D) => {
+      object.traverse((child: THREE.Object3D) => {
+        if (child instanceof THREE.Mesh) {
+          // eslint-disable-next-line no-extra-semi
+          ;(child as THREE.Mesh).material = this.defaultLightMaterial!
+        }
+      })
+    }
+
+    // 为每个可交互元素添加事件监听
+    this.eventElement.forEach(element => {
+      // 添加到交互管理器
+      this.interactionManager.add(element)
+
+      // 鼠标按下事件 - 移动相机到点击位置
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const el = element as any
+
+      // 鼠标悬停事件 - 高亮显示元素
+      el.addEventListener('mouseover', (event: any) => {
+        const parent = event.target.parent
+
+        if (parent && !hoveredElements.includes(parent)) {
+          hoveredElements.push(parent)
+        }
+        document.body.style.cursor = 'pointer'
+        if (parent) {
+          applyHighlightMaterial(parent)
+        }
+      })
+
+      // 鼠标离开点击事件 - 恢复默认显示
+      el.addEventListener('mouseout', (event: any) => {
+        const parent = event.target.parent
+        if (parent) {
+          // 从悬停元素列表中移除当前元素
+          const filteredElements = hoveredElements.filter(
+            element => element.userData.name !== parent.userData.name,
+          )
+          // 更新悬停元素列表
+          hoveredElements.length = 0
+          filteredElements.forEach(el => hoveredElements.push(el))
+
+          // 应用默认材质
+          applyDefaultMaterial(parent)
+          document.body.style.cursor = 'default'
+        }
+      })
+    })
   }
 
   destroy() {
