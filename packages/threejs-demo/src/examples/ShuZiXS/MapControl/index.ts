@@ -723,7 +723,7 @@ class MapControl extends MapApplication {
       {
         assets: this.assets,
         time: this.time,
-      },
+      },  
       {
         center: this.pointCenter,
         position: new THREE.Vector3(0, 0, 0.11),

@@ -38,4 +38,51 @@ export function initGsapTimeLine(this: MapControlStudy) {
       'focusMapOpacity',
     )
   }
+
+  if (this.focusMapGroup) {
+    timeLine.to(
+      this.focusMapGroup.position,
+      {
+        duration: 2,
+        x: 0,
+        y: 0,
+        z: 0,
+        ease: 'circ.out',
+      },
+      'focusMapOpacity',
+    )
+    timeLine.to(
+      this.focusMapGroup.scale,
+      {
+        duration: 2,
+        x: 1,
+        y: 1,
+        z: 1,
+        ease: 'circ.out',
+      },
+      'focusMapOpacity',
+    )
+  }
+
+  if (this.focusMapTopMaterial) {
+    timeLine.to(
+      this.focusMapTopMaterial,
+      {
+        duration: 2,
+        opacity: 1,
+      },
+      'focusMapOpacity',
+    )
+  }
+
+  if (this.zhejiangLineMaterial) {
+    timeLine.to(
+      this.zhejiangLineMaterial,
+      {
+        duration: 2,
+        opacity: 1,
+      },
+      'focusMapOpacity',
+    )
+  }
 }

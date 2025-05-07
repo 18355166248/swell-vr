@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import * as d3 from 'd3'
 import {LoadAssets} from './infoData'
 import TimeManager from '../MapApplication/TimeManager'
+import {normalizeGeoJSON} from './base'
+import {FeatureCollection} from '../types'
 
 type ExtrudedGeoMapRendererConfig = {
   position: THREE.Vector3
@@ -24,19 +26,79 @@ export class ExtrudedGeoMapRenderer {
   assets: LoadAssets
   /** 时间管理器 */
   time: TimeManager
-  coordinates: {
-    name: string
-    center: number[]
-    centroid: number[]
-  }[] = []
   constructor(
     {assets, time}: {assets: LoadAssets; time: TimeManager},
     config: ExtrudedGeoMapRendererConfig,
   ) {
     this.mapGroup = new THREE.Group()
-    this.config = config
+    this.config = {
+      ...{
+        position: new THREE.Vector3(0, 0, 0),
+        center: [0, 0],
+        data: '',
+        renderOrder: 1,
+        topFaceMaterial: new THREE.MeshLambertMaterial({
+          color: 0x18263b,
+          transparent: true,
+          opacity: 1,
+        }),
+        sideMaterial: new THREE.MeshLambertMaterial({
+          color: 0x7152b,
+          transparent: true,
+          opacity: 1,
+        }),
+        depth: 0,
+      },
+      ...config,
+    }
     this.assets = assets
     this.time = time
+
+    this.mapGroup.position.copy(this.config.position)
+
+    const geoData = normalizeGeoJSON(this.config.data)
+    this.create(geoData)
+  }
+  /**
+   * 创建地图
+   * 根据GeoJSON数据生成Three.js中的几何体
+   * @param {object} geoData - 标准化后的GeoJSON数据
+   */
+  create(geoData: FeatureCollection) {
+    geoData.features.forEach(feature => {
+      // 为每个特征创建一个对象
+      const featureObject = new THREE.Object3D()
+
+      // 挤压几何体配置
+      const extrudeSettings = {
+        depth: this.config.depth,
+        bevelEnabled: true,
+        bevelSegments: 1,
+        bevelThickness: 0.1,
+      }
+
+      feature.geometry.coordinates.forEach(polygon => {
+        polygon.forEach(ring => {
+          // 创建形状
+          const shape = new THREE.Shape()
+
+          for (let i = 0; i < ring.length; i++) {
+            if (!ring[i][0] || !ring[i][1]) return false
+            const [x, y] = this.geoProjection(ring[i])
+            i === 0 ? shape.moveTo(x, -y) : shape.lineTo(x, -y)
+          }
+
+          const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+          const mesh = new THREE.Mesh(geometry, [
+            this.config.topFaceMaterial,
+            this.config.sideMaterial,
+          ])
+          featureObject.add(mesh)
+        })
+      })
+
+      this.mapGroup.add(featureObject)
+    })
   }
   /**
    * 地理坐标投影转换

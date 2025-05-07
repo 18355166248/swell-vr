@@ -29,6 +29,8 @@ class MapControlStudy extends MapApplication {
   >
   focusMapTopMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
   focusMapSideMaterial?: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
+  zhejiangLineMaterial?: THREE.LineBasicMaterial
+  focusMapGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -190,6 +192,7 @@ class MapControlStudy extends MapApplication {
    */
   createModel() {
     const mapRootGroup = new THREE.Group()
+    this.focusMapGroup = new THREE.Group()
     const bottomLineGroup = new THREE.Group()
     // 创建中国地图及其轮廓线
     const {china, chinaLine, chinaBottomLine} = this.createChina()
@@ -198,14 +201,21 @@ class MapControlStudy extends MapApplication {
     chinaBottomLine.setParent(bottomLineGroup)
 
     // 创建浙江省地图及其相关元素
-    const {zhejiangTop} = this.createZheJiang()
-    zhejiangTop.setParent(mapRootGroup)
+    const {zhejiang, zhejiangTop, zhejiangLine} = this.createZheJiang()
+    zhejiang.setParent(this.focusMapGroup)
+    zhejiangTop.setParent(this.focusMapGroup)
+    zhejiangLine.setParent(this.focusMapGroup)
+
+    this.focusMapGroup.position.set(0, 0, -0.11)
+    this.focusMapGroup.scale.set(0, 0, 0)
 
     mapRootGroup.rotateX(-Math.PI / 2)
     mapRootGroup.position.set(0, 0.2, 0)
 
     bottomLineGroup.rotateX(-Math.PI / 2)
     bottomLineGroup.position.set(0, -0.04, 0)
+
+    mapRootGroup.add(this.focusMapGroup)
 
     this.scene.add(mapRootGroup)
     this.scene.add(bottomLineGroup)
@@ -258,7 +268,7 @@ class MapControlStudy extends MapApplication {
       time: this.time,
     })
     this.focusMapTopMaterial = topFaceMaterial
-    this.focusMapSideMaterial = sideMaterial
+    // this.focusMapSideMaterial = sideMaterial
 
     // 创建浙江省主体地图（带深度的3D效果）
     const zhejiang = new ExtrudedGeoMapRenderer(
@@ -294,7 +304,23 @@ class MapControlStudy extends MapApplication {
       renderOrder: 3,
     })
 
-    return {zhejiang, zhejiangTop}
+    // 创建浙江省轮廓线材质
+    this.zhejiangLineMaterial = new THREE.LineBasicMaterial({
+      color: 0xffffff, // 白色
+      transparent: true,
+      opacity: 0, // 不透明度
+      fog: false, // 不受雾化影响
+    })
+    // 创建浙江省轮廓线
+    const zhejiangLine = new LineRenderer({
+      center: this.pointCenter,
+      data: zhejiangGeoData,
+      material: this.zhejiangLineMaterial,
+      renderOrder: 3,
+    })
+    zhejiangLine.lineGroup.position.z += 0.73
+
+    return {zhejiang, zhejiangTop, zhejiangLine}
   }
 
   destroy() {
