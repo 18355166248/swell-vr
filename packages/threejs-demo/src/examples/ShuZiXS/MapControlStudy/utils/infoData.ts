@@ -4,7 +4,7 @@ import ResourceManager from '../MapApplication/ResourceManager'
 import ChinaBlurLineImg from '../../assets/imgs/chinaBlurLine.png'
 import RotationBorder1Img from '../../assets/imgs/rotationBorder1.png'
 import RotationBorder2Img from '../../assets/imgs/rotationBorder2.png'
-import {sideImg, FlyLineImg} from '../base64'
+import {sideImg, FlyLineImg, circleWhiteBreak} from '../base64'
 import * as THREE from 'three'
 
 /**
@@ -54,6 +54,7 @@ export class LoadAssets {
       },
       {type: 'Texture', name: 'side', path: sideImg},
       {type: 'Texture', name: 'flyLine', path: FlyLineImg},
+      {type: 'Texture', name: 'flyLineFocus', path: circleWhiteBreak},
     ]
     this.instance.loadAll(list)
   }

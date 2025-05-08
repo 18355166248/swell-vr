@@ -13,6 +13,7 @@ import GradientShader from './utils/GradientShader'
 import ExtrudedGeoMapRenderer from './utils/ExtrudedGeoMapRenderer'
 import createAnimateVideoItem from './utils/animateVideoItem'
 import {InteractionManager} from 'three.interactive'
+import gsap from 'gsap'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -40,6 +41,7 @@ class MapControlStudy extends MapApplication {
   defaultMaterial?: THREE.MeshStandardMaterial
   defaultLightMaterial?: THREE.MeshStandardMaterial
   flyLineGroup?: THREE.Group<THREE.Object3DEventMap>
+  flyLineFocusGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -457,7 +459,7 @@ class MapControlStudy extends MapApplication {
   createFlyLine() {
     this.flyLineGroup = new THREE.Group()
     this.flyLineGroup.name = 'flyLineGroup'
-    this.flyLineGroup.visible = true
+    this.flyLineGroup.visible = false
     this.scene.add(this.flyLineGroup)
 
     // 获取飞线纹理并设置属性
@@ -474,10 +476,22 @@ class MapControlStudy extends MapApplication {
     const isClosed = false // 是否闭合曲线
 
     const [centerX, centerY] = this.geoProjection(this.flyLineCenter)!
-
     const centerPoint = new THREE.Vector3(centerX, -centerY, 0)
 
-    ZheJiangCityInfo.filter(v => v.value > 30).map(cityInfo => {
+    const flyLineMaterial = new THREE.MeshBasicMaterial({
+      map: flyLineTexture,
+      alphaMap: flyLineTexture,
+      color: 0x2a6f72, // 蓝色
+      transparent: true,
+      fog: false,
+      blending: THREE.AdditiveBlending, // 加法混合增强亮度
+    })
+
+    this.time.on('tick', () => {
+      flyLineTexture.offset.x -= 0.006 // 纹理偏移实现流动效果
+    })
+
+    ZheJiangCityInfo.filter(v => v.value > 40).map(cityInfo => {
       const [targetX, targetY] = this.geoProjection(
         cityInfo.centroid as [number, number],
       )!
@@ -502,16 +516,86 @@ class MapControlStudy extends MapApplication {
         isClosed,
       )
 
-      const flyLineMesh = new THREE.Mesh(tubeGeometry, flyLineTexture)
+      const flyLineMesh = new THREE.Mesh(tubeGeometry, flyLineMaterial)
       flyLineMesh.rotation.x = -Math.PI / 2 // 旋转到水平面
       flyLineMesh.position.set(0, 0.94, 0) // 定位高度
       flyLineMesh.renderOrder = 21 // 设置渲染优先级
 
       this.flyLineGroup!.add(flyLineMesh)
     })
-    console.log(this.scene)
+    // 创建焦点效果（杭州中心点特效）
+    this.createFlyLineFocus()
   }
+  /**
+   * 创建飞线焦点效果
+   * 在地图上绘制从中心点（杭州）到各城市的飞线动画
+   * 使用二次贝塞尔曲线实现弧线效果，纹理动画实现飞行效果
+   */
+  createFlyLineFocus() {
+    this.flyLineFocusGroup = new THREE.Group()
+    this.flyLineFocusGroup.name = 'flyLineFocusGroup'
+    this.flyLineFocusGroup.visible = false
+    this.flyLineFocusGroup.rotation.x = -Math.PI / 2 // 旋转到水平面
+    this.scene.add(this.flyLineFocusGroup)
 
+    const [centerX, centerY] = this.geoProjection(this.flyLineCenter)!
+    this.flyLineFocusGroup.position.set(centerX, 0.942, centerY)
+
+    const focusTexture = this.assets.instance!.getResource('flyLineFocus')
+    const focusMaterial = new THREE.MeshBasicMaterial({
+      map: focusTexture,
+      alphaMap: focusTexture,
+      color: 16777215, // 白色
+      transparent: true,
+      blending: THREE.AdditiveBlending, // 加法混合增强亮度
+      fog: false,
+      depthTest: false,
+    })
+
+    const focusMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.3, 1.3),
+      focusMaterial,
+    )
+    focusMesh.scale.set(0, 0, 0) // 初始大小为0
+
+    const focusMesh2 = focusMesh.clone()
+    focusMesh2.material = focusMaterial.clone()
+
+    this.flyLineFocusGroup.add(focusMesh, focusMesh2)
+
+    gsap.to(focusMesh.material, {
+      opacity: 0, // 透明度从1到0
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
+    })
+
+    gsap.to(focusMesh.scale, {
+      x: 1.5,
+      y: 1.5,
+      z: 1.5,
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
+    })
+
+    gsap.to(focusMesh2.material, {
+      delay: 0.5, // 延迟0.5秒
+      opacity: 0, // 透明度从1到0
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
+    })
+    gsap.to(focusMesh2.scale, {
+      delay: 0.5, // 延迟0.5秒
+      x: 1.5,
+      y: 1.5,
+      z: 1.5,
+      repeat: -1, // 无限循环
+      yoyo: false, // 不往返
+      duration: 1, // 1秒周期
+    })
+  }
   destroy() {
     super.destroy()
   }

@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import MapControl from '../MapControl'
+import MapControl from '../MapControlStudy'
 
 // 定义按钮组的属性类型
 interface MapButtonsProps {

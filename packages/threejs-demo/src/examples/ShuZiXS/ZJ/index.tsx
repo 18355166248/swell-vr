@@ -4,6 +4,7 @@ import MapControl from '../MapControlStudy'
 import ZheJiangData from '../../../data/map/zhejiang.json'
 import Animate1 from '../assets/mov/animate.mov'
 import Animate2 from '../assets/mov/animate2.mov'
+import MapButtons from './MapButtons'
 
 function Three() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -47,6 +48,7 @@ function Three() {
       >
         <source src={Animate2} />
       </video>
+      <MapButtons mapRef={mapRef} />
     </div>
   )
 }
