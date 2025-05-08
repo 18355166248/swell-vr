@@ -2,7 +2,7 @@ import LilGui from '../utils/lilGui'
 import MapApplication from './MapApplication/MapApplication'
 import {MapControlOptions} from './types'
 import * as THREE from 'three'
-import {LoadAssets} from './utils/infoData'
+import {LoadAssets, ZheJiangCityInfo} from './utils/infoData'
 import Grid from './utils/Grid'
 import PlaneMeshRotate from './utils/PlaneMeshRotate'
 import {initGsapTimeLine} from './gsapTimeLine'
@@ -18,6 +18,7 @@ class MapControlStudy extends MapApplication {
   debug?: LilGui
   // 地图中心点
   pointCenter: [number, number]
+  flyLineCenter: [number, number]
   assets: LoadAssets
   rotateBorder1?: THREE.Mesh<
     THREE.PlaneGeometry,
@@ -38,10 +39,12 @@ class MapControlStudy extends MapApplication {
   interactionManager: InteractionManager
   defaultMaterial?: THREE.MeshStandardMaterial
   defaultLightMaterial?: THREE.MeshStandardMaterial
+  flyLineGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
     this.pointCenter = options.centroid
+    this.flyLineCenter = ZheJiangCityInfo[0].centroid as [number, number]
     this.scene.background = new THREE.Color(0x102736)
     // 设置雾化
     this.scene.fog = new THREE.Fog(0x102736, 1, 50)
@@ -74,6 +77,7 @@ class MapControlStudy extends MapApplication {
       this.createModel()
       this.createAnimateVideo()
       this.createEvent()
+      this.createFlyLine()
 
       initGsapTimeLine.call(this)
     })
@@ -385,7 +389,7 @@ class MapControlStudy extends MapApplication {
     // 应用默认材质的函数
     const applyDefaultMaterial = (object: THREE.Object3D) => {
       object.traverse((child: THREE.Object3D) => {
-        if ((child as any).isMesh) {
+        if (child instanceof THREE.Mesh) {
           // eslint-disable-next-line no-extra-semi
           ;(child as THREE.Mesh).material = this.defaultMaterial!
         }
@@ -412,6 +416,7 @@ class MapControlStudy extends MapApplication {
       const el = element as any
 
       // 鼠标悬停事件 - 高亮显示元素
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       el.addEventListener('mouseover', (event: any) => {
         const parent = event.target.parent
 
@@ -425,6 +430,7 @@ class MapControlStudy extends MapApplication {
       })
 
       // 鼠标离开点击事件 - 恢复默认显示
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       el.addEventListener('mouseout', (event: any) => {
         const parent = event.target.parent
         if (parent) {
@@ -442,6 +448,68 @@ class MapControlStudy extends MapApplication {
         }
       })
     })
+  }
+  /**
+   * 创建飞线效果
+   * 在地图上绘制从中心点（杭州）到各城市的飞线动画
+   * 使用二次贝塞尔曲线实现弧线效果，纹理动画实现飞行效果
+   */
+  createFlyLine() {
+    this.flyLineGroup = new THREE.Group()
+    this.flyLineGroup.name = 'flyLineGroup'
+    this.flyLineGroup.visible = true
+    this.scene.add(this.flyLineGroup)
+
+    // 获取飞线纹理并设置属性
+    const flyLineTexture = this.assets.instance!.getResource('flyLine')
+    flyLineTexture.colorSpace = THREE.SRGBColorSpace
+    flyLineTexture.wrapS = THREE.RepeatWrapping
+    flyLineTexture.wrapT = THREE.RepeatWrapping
+    flyLineTexture.repeat.set(1, 1)
+
+    // 设置飞线参数
+    const tubeRadius = 0.03 // 管道半径
+    const tubularSegments = 32 // 管道分段数
+    const radiusSegments = 8 // 管道横截面分段数
+    const isClosed = false // 是否闭合曲线
+
+    const [centerX, centerY] = this.geoProjection(this.flyLineCenter)!
+
+    const centerPoint = new THREE.Vector3(centerX, -centerY, 0)
+
+    ZheJiangCityInfo.filter(v => v.value > 30).map(cityInfo => {
+      const [targetX, targetY] = this.geoProjection(
+        cityInfo.centroid as [number, number],
+      )!
+      const targetPoint = new THREE.Vector3(targetX, -targetY, 0)
+
+      // 计算中间一个位置顶点
+      const middlePoint = new THREE.Vector3()
+      // 计算中间点
+      middlePoint.addVectors(centerPoint, targetPoint).multiplyScalar(0.5)
+      middlePoint.setZ(3)
+      const bezierCurve = new THREE.QuadraticBezierCurve3(
+        centerPoint,
+        middlePoint,
+        targetPoint,
+      )
+
+      const tubeGeometry = new THREE.TubeGeometry(
+        bezierCurve,
+        tubularSegments,
+        tubeRadius,
+        radiusSegments,
+        isClosed,
+      )
+
+      const flyLineMesh = new THREE.Mesh(tubeGeometry, flyLineTexture)
+      flyLineMesh.rotation.x = -Math.PI / 2 // 旋转到水平面
+      flyLineMesh.position.set(0, 0.94, 0) // 定位高度
+      flyLineMesh.renderOrder = 21 // 设置渲染优先级
+
+      this.flyLineGroup!.add(flyLineMesh)
+    })
+    console.log(this.scene)
   }
 
   destroy() {
