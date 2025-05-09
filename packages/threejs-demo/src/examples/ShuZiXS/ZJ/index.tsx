@@ -5,6 +5,7 @@ import ZheJiangData from '../../../data/map/zhejiang.json'
 import Animate1 from '../assets/mov/animate.mov'
 import Animate2 from '../assets/mov/animate2.mov'
 import MapButtons from './MapButtons'
+import './index.less'
 
 function Three() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -24,7 +25,7 @@ function Three() {
   }, [])
 
   return (
-    <div className="relative w-full h-full">
+    <div className="zj-map relative w-full h-full">
       <canvas ref={canvas} id="canvas" className="w-full h-full relative" />
       <video
         className="map-gd-video map-gd-video1"

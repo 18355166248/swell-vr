@@ -97,4 +97,19 @@ export function initGsapTimeLine(this: MapControlStudy) {
       'focusMapOpacity',
     )
   }
+
+  if (this.labelGroup) {
+    setTimeout(() => {
+      this.labelGroup!.visible = true
+    }, 4000)
+    timeLine.to(
+      this.labelGroup.position,
+      {
+        delay: 3,
+        duration: 2,
+        y: 0.4,
+      },
+      'focusMapOpacity',
+    )
+  }
 }

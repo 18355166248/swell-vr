@@ -2,7 +2,7 @@ import LilGui from '../utils/lilGui'
 import MapApplication from './MapApplication/MapApplication'
 import {MapControlOptions} from './types'
 import * as THREE from 'three'
-import {LoadAssets, ZheJiangCityInfo} from './utils/infoData'
+import {ChinaProvinceInfo, LoadAssets, ZheJiangCityInfo} from './utils/infoData'
 import Grid from './utils/Grid'
 import PlaneMeshRotate from './utils/PlaneMeshRotate'
 import {initGsapTimeLine} from './gsapTimeLine'
@@ -14,6 +14,11 @@ import ExtrudedGeoMapRenderer from './utils/ExtrudedGeoMapRenderer'
 import createAnimateVideoItem from './utils/animateVideoItem'
 import {InteractionManager} from 'three.interactive'
 import gsap from 'gsap'
+import {Label3D, Label3DProps} from './utils/label3d'
+import {
+  createProvinceLabel,
+  createSpecialProvinceLabel,
+} from './utils/createLabels'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -42,6 +47,9 @@ class MapControlStudy extends MapApplication {
   defaultLightMaterial?: THREE.MeshStandardMaterial
   flyLineGroup?: THREE.Group<THREE.Object3DEventMap>
   flyLineFocusGroup?: THREE.Group<THREE.Object3DEventMap>
+  label3d: Label3D
+  labelGroup?: THREE.Group<THREE.Object3DEventMap>
+  labels: Label3DProps[] = []
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -68,6 +76,8 @@ class MapControlStudy extends MapApplication {
       this.canvas,
     )
 
+    this.label3d = new Label3D(this)
+
     this.initLilGui()
 
     this.assets = new LoadAssets(() => {
@@ -76,6 +86,7 @@ class MapControlStudy extends MapApplication {
       this.createFloor()
       this.createGrid()
       this.createRotateBorder()
+      this.createLabel()
       this.createModel()
       this.createAnimateVideo()
       this.createEvent()
@@ -207,6 +218,40 @@ class MapControlStudy extends MapApplication {
 
     this.rotateBorder1 = outerBorder.instance
     this.rotateBorder2 = innerBorder.instance
+  }
+  // 创建标签
+  createLabel() {
+    this.labelGroup = new THREE.Group()
+    this.labelGroup.name = 'labelGroup'
+    this.labelGroup.visible = false
+    this.labelGroup.rotateX(-Math.PI / 2)
+    this.labelGroup.position.set(0, 0, 0)
+    this.scene.add(this.labelGroup)
+
+    // 创建中国省份标签
+    ChinaProvinceInfo.map(provinceInfo => {
+      if (provinceInfo.hide) return
+      const provinceLabel = createProvinceLabel({
+        provinceInfo,
+        label3d: this.label3d,
+        parentGroup: this.labelGroup!,
+        geoProjection: this.geoProjection.bind(this),
+      })
+      this.labels.push(provinceLabel)
+    })
+
+    // 创建浙江省标签
+    const zhejiangLabel = createSpecialProvinceLabel({
+      provinceInfo: {
+        name: '浙江省',
+        enName: 'ZHEJIANG PROVINCE',
+        center: [120.109913, 26.881466],
+      },
+      label3d: this.label3d,
+      parentGroup: this.labelGroup!,
+      geoProjection: this.geoProjection.bind(this),
+    })
+    this.labels.push(zhejiangLabel)
   }
   /**
    * 创建模型并组织地图层次结构
@@ -545,7 +590,7 @@ class MapControlStudy extends MapApplication {
     const focusMaterial = new THREE.MeshBasicMaterial({
       map: focusTexture,
       alphaMap: focusTexture,
-      color: 16777215, // 白色
+      color: 0xffffff, // 白色
       transparent: true,
       blending: THREE.AdditiveBlending, // 加法混合增强亮度
       fog: false,

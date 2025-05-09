@@ -34,7 +34,7 @@ interface Geometry {
   coordinates: [number, number][][][]
 }
 
-interface Properties {
+export interface Properties {
   adcode: number
   name: string
   center: [number, number]
@@ -48,4 +48,15 @@ interface Properties {
 
 interface Parent {
   adcode: number
+}
+
+/**
+ * 省份信息接口
+ */
+export interface ProvinceInfo {
+  name: string
+  center: [number, number]
+  centroid?: [number, number]
+  hide?: boolean
+  blur?: boolean
 }
