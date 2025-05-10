@@ -223,9 +223,8 @@ class MapControlStudy extends MapApplication {
   createLabel() {
     this.labelGroup = new THREE.Group()
     this.labelGroup.name = 'labelGroup'
-    this.labelGroup.visible = false
     this.labelGroup.rotateX(-Math.PI / 2)
-    this.labelGroup.position.set(0, 0, 0)
+    this.labelGroup.position.set(0, 0.4, 0)
     this.scene.add(this.labelGroup)
 
     // 创建中国省份标签

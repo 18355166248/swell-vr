@@ -98,18 +98,20 @@ export function initGsapTimeLine(this: MapControlStudy) {
     )
   }
 
-  if (this.labelGroup) {
-    setTimeout(() => {
-      this.labelGroup!.visible = true
-    }, 4000)
-    timeLine.to(
-      this.labelGroup.position,
-      {
-        delay: 3,
-        duration: 2,
-        y: 0.4,
-      },
-      'focusMapOpacity',
-    )
+  if (this.labels) {
+    this.labels.map((e, i) => {
+      const r = e.element.querySelector('.other-label')
+      timeLine.to(
+        r,
+        {
+          duration: 1,
+          delay: 0.1 * i,
+          translateY: 0,
+          opacity: 1,
+          ease: 'circ.out',
+        },
+        'focusMapOpacity',
+      )
+    })
   }
 }

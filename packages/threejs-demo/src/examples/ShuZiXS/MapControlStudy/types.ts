@@ -56,7 +56,7 @@ interface Parent {
 export interface ProvinceInfo {
   name: string
   center: [number, number]
-  centroid?: [number, number]
+  centroid: [number, number]
   hide?: boolean
   blur?: boolean
 }

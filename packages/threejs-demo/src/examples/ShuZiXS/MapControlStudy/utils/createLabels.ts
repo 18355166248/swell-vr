@@ -16,7 +16,7 @@ export function createProvinceLabel({
 }) {
   const labelClass = `china-label ${provinceInfo.blur ? ' blur' : ''}`
   const label = label3d.create('', labelClass, false)
-  const [x, y] = geoProjection(provinceInfo.center)!
+  const [x, y] = geoProjection(provinceInfo.centroid)!
   label.init(
     `<div class="other-label"><img class="label-icon" src="${SquareIcon}">${provinceInfo.name}</div>`,
     new THREE.Vector3(x, -y, 0),
