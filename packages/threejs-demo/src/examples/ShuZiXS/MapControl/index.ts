@@ -116,9 +116,9 @@ class MapControl extends MapApplication {
       this.createAnimateVideo()
       this.createEvent()
       this.createFlyLine()
-      // this.createParticles()
-      // this.createScatter()
-      // this.createInfoPoint()
+      this.createParticles()
+      this.createScatter()
+      this.createInfoPoint()
 
       const timeLine = gsap.timeline()
       timeLine.addLabel('focusMap', 2)
@@ -234,82 +234,82 @@ class MapControl extends MapApplication {
           'focusMapOpacity',
         )
       }
-      // // 柱状图动画
-      // this.allBar.map((e, i) => {
-      //   timeLine.add(
-      //     gsap.to(e.scale, {
-      //       duration: 1,
-      //       delay: 0.1 * i,
-      //       x: 1,
-      //       y: 1,
-      //       z: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'bar',
-      //   )
-      // })
-      // this.allBarMaterial.map((e, i) => {
-      //   timeLine.add(
-      //     gsap.to(e, {
-      //       duration: 1,
-      //       delay: 0.1 * i,
-      //       opacity: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'bar',
-      //   )
-      // })
-      // this.allProvinceLabel.map((e, i) => {
-      //   const r = e.element.querySelector('.provinces-label-wrap')
-      //   const c = e.element.querySelector('.number .value')
-      //   const o = Number(c?.textContent)
-      //   const l = {score: 0}
-      //   timeLine.add(
-      //     gsap.to(r, {
-      //       duration: 1,
-      //       delay: 0.2 * i,
-      //       translateY: 0,
-      //       opacity: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'bar',
-      //   )
-      //   const p = gsap.to(l, {
-      //     duration: 1,
-      //     delay: 0.2 * i,
-      //     score: o,
-      //     onUpdate: n,
-      //   })
-      //   function n() {
-      //     c!.textContent = l.score.toFixed(0)
-      //   }
-      //   timeLine.add(p, 'bar')
-      // })
-      // // 光圈动画
-      // this.allGuangquan.map((e, i) => {
-      //   timeLine.add(
-      //     gsap.to(e.children[0].scale, {
-      //       duration: 1,
-      //       delay: 0.1 * i,
-      //       x: 1,
-      //       y: 1,
-      //       z: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'bar',
-      //   )
-      //   timeLine.add(
-      //     gsap.to(e.children[1].scale, {
-      //       duration: 1,
-      //       delay: 0.1 * i,
-      //       x: 1,
-      //       y: 1,
-      //       z: 1,
-      //       ease: 'circ.out',
-      //     }),
-      //     'bar',
-      //   )
-      // })
+      // 柱状图动画
+      this.allBar.map((e, i) => {
+        timeLine.add(
+          gsap.to(e.scale, {
+            duration: 1,
+            delay: 0.1 * i,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          }),
+          'bar',
+        )
+      })
+      this.allBarMaterial.map((e, i) => {
+        timeLine.add(
+          gsap.to(e, {
+            duration: 1,
+            delay: 0.1 * i,
+            opacity: 1,
+            ease: 'circ.out',
+          }),
+          'bar',
+        )
+      })
+      this.allProvinceLabel.map((e, i) => {
+        const r = e.element.querySelector('.provinces-label-wrap')
+        const c = e.element.querySelector('.number .value')
+        const o = Number(c?.textContent)
+        const l = {score: 0}
+        timeLine.add(
+          gsap.to(r, {
+            duration: 1,
+            delay: 0.2 * i,
+            translateY: 0,
+            opacity: 1,
+            ease: 'circ.out',
+          }),
+          'bar',
+        )
+        const p = gsap.to(l, {
+          duration: 1,
+          delay: 0.2 * i,
+          score: o,
+          onUpdate: n,
+        })
+        function n() {
+          c!.textContent = l.score.toFixed(0)
+        }
+        timeLine.add(p, 'bar')
+      })
+      // 光圈动画
+      this.allGuangquan.map((e, i) => {
+        timeLine.add(
+          gsap.to(e.children[0].scale, {
+            duration: 1,
+            delay: 0.1 * i,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          }),
+          'bar',
+        )
+        timeLine.add(
+          gsap.to(e.children[1].scale, {
+            duration: 1,
+            delay: 0.1 * i,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'circ.out',
+          }),
+          'bar',
+        )
+      })
     })
   }
   // 初始化 LilGui

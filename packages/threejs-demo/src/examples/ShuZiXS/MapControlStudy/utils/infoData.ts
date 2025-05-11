@@ -4,9 +4,10 @@ import ResourceManager from '../MapApplication/ResourceManager'
 import ChinaBlurLineImg from '../../assets/imgs/chinaBlurLine.png'
 import RotationBorder1Img from '../../assets/imgs/rotationBorder1.png'
 import RotationBorder2Img from '../../assets/imgs/rotationBorder2.png'
-import {sideImg, FlyLineImg, circleWhiteBreak} from '../base64'
+import {sideImg, FlyLineImg, circleWhiteBreak, circleWhite} from '../base64'
 import * as THREE from 'three'
 import {ProvinceInfo} from '../types'
+import HuiGuangImg from '../../assets/imgs/huiguang.png'
 
 /**
  * 加载资源
@@ -56,6 +57,9 @@ export class LoadAssets {
       {type: 'Texture', name: 'side', path: sideImg},
       {type: 'Texture', name: 'flyLine', path: FlyLineImg},
       {type: 'Texture', name: 'flyLineFocus', path: circleWhiteBreak},
+      {type: 'Texture', name: 'huiguang', path: HuiGuangImg},
+      {type: 'Texture', name: 'guangquan1', path: circleWhiteBreak},
+      {type: 'Texture', name: 'guangquan2', path: circleWhite},
     ]
     this.instance.loadAll(list)
   }
@@ -348,4 +352,25 @@ export const ChinaProvinceInfo: ProvinceInfo[] = [
     centroid: [113.566988, 22.159307],
     hide: true,
   },
+]
+
+export const locationPoints = [
+  {value: 166, lng: 119.00838863314104, lat: 29.70446787438727},
+  {value: 196, lng: 121.95888480416225, lat: 29.804570962222094},
+  {value: 145, lng: 121.1763690119717, lat: 29.943827249850777},
+  {value: 101, lng: 121.56920938135673, lat: 29.85263574108389},
+  {value: 199, lng: 120.9772766279951, lat: 28.330342193214033},
+  {value: 167, lng: 120.33101898043361, lat: 30.565600410098323},
+  {value: 169, lng: 120.36095289685078, lat: 30.739761809104824},
+  {value: 101, lng: 119.983185482632, lat: 31.03706617454779},
+  {value: 121, lng: 121.20282810334723, lat: 29.45300711212515},
+  {value: 132, lng: 120.04632515461387, lat: 29.535586166289217},
+  {value: 132, lng: 119.88396764642604, lat: 29.24289373808931},
+  {value: 119, lng: 118.20295164180662, lat: 28.97847155167772},
+  {value: 138, lng: 119.30239039019484, lat: 28.963362607831762},
+  {value: 183, lng: 122.11925213943688, lat: 30.09279983271788},
+  {value: 103, lng: 122.0641872449813, lat: 30.624331727210976},
+  {value: 110, lng: 121.24428726916929, lat: 28.29819603626963},
+  {value: 171, lng: 120.83475957600818, lat: 29.104535097251688},
+  {value: 174, lng: 119.70182146944745, lat: 28.267110085326326},
 ]

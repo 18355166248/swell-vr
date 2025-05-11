@@ -10,8 +10,6 @@ interface MapButtonsProps {
 const MapButtons: React.FC<MapButtonsProps> = ({mapRef}) => {
   // 使用独立的state跟踪每个按钮的选中状态，而不是一个对象
   const [flyLineActive, setFlyLineActive] = useState(false)
-  const [scatterPointsActive, setScatterPointsActive] = useState(false)
-  const [importantPointsActive, setImportantPointsActive] = useState(false)
   const [particleEffectActive, setParticleEffectActive] = useState(false)
 
   // 处理飞线按钮点击
@@ -25,25 +23,6 @@ const MapButtons: React.FC<MapButtonsProps> = ({mapRef}) => {
         mapRef.current.flyLineGroup.visible = newState
         mapRef.current.flyLineFocusGroup.visible = newState
       }
-    }
-  }
-
-  // 处理散点图按钮点击
-  const handleScatterPoints = () => {
-    if (mapRef.current) {
-      // 切换按钮状态 - 仅影响散点图按钮
-      setScatterPointsActive(!scatterPointsActive)
-      // 根据状态决定是否显示散点图
-      mapRef.current.scatterGroup!.visible = !scatterPointsActive
-    }
-  }
-
-  // 处理重点点位按钮点击
-  const handleImportantPoints = () => {
-    if (mapRef.current) {
-      // 切换按钮状态 - 仅影响重点点位按钮
-      setImportantPointsActive(!importantPointsActive)
-      mapRef.current.InfoPointGroup!.visible = !importantPointsActive
     }
   }
 
@@ -74,28 +53,6 @@ const MapButtons: React.FC<MapButtonsProps> = ({mapRef}) => {
         title="飞线"
       >
         飞线
-      </button>
-
-      {/* 散点图按钮 */}
-      <button
-        onClick={handleScatterPoints}
-        className={
-          scatterPointsActive ? activeButtonClass : inactiveButtonClass
-        }
-        title="散点图"
-      >
-        散点图
-      </button>
-
-      {/* 重点点位按钮 */}
-      <button
-        onClick={handleImportantPoints}
-        className={
-          importantPointsActive ? activeButtonClass : inactiveButtonClass
-        }
-        title="重点点位"
-      >
-        重点点位
       </button>
 
       {/* 粒子特效按钮 */}

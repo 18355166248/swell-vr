@@ -16,9 +16,13 @@ import {InteractionManager} from 'three.interactive'
 import gsap from 'gsap'
 import {Label3D, Label3DProps} from './utils/label3d'
 import {
+  createDecorationIcon,
+  createProvinceBarLabel,
   createProvinceLabel,
   createSpecialProvinceLabel,
 } from './utils/createLabels'
+import {SquareIcon} from './base64'
+import Particles from './utils/Particles'
 
 class MapControlStudy extends MapApplication {
   debug?: LilGui
@@ -50,6 +54,12 @@ class MapControlStudy extends MapApplication {
   label3d: Label3D
   labelGroup?: THREE.Group<THREE.Object3DEventMap>
   labels: Label3DProps[] = []
+  particles?: Particles
+  allBar: THREE.Mesh[] = []
+  allBarMaterial: THREE.MeshBasicMaterial[] = []
+  allGuangquan: THREE.Group<THREE.Object3DEventMap>[] = []
+  allProvinceLabel: Label3DProps[] = []
+  quanGroup?: THREE.Group<THREE.Object3DEventMap>
   constructor(container: HTMLCanvasElement, options: MapControlOptions) {
     super(container, options)
     this.container = container
@@ -91,6 +101,8 @@ class MapControlStudy extends MapApplication {
       this.createAnimateVideo()
       this.createEvent()
       this.createFlyLine()
+      this.createParticles()
+      this.createBar()
 
       initGsapTimeLine.call(this)
     })
@@ -251,6 +263,36 @@ class MapControlStudy extends MapApplication {
       geoProjection: this.geoProjection.bind(this),
     })
     this.labels.push(zhejiangLabel)
+
+    // 创建装饰图标
+    const decorationIcon = createDecorationIcon({
+      iconInfo: {
+        icon: SquareIcon,
+        center: [125.109913, 26.881466],
+        width: '40px',
+        height: '40px',
+        reflect: true,
+      },
+      label3d: this.label3d,
+      parentGroup: this.labelGroup!,
+      geoProjection: this.geoProjection.bind(this),
+    })
+    // 创建小尺寸装饰图标
+    const smallDecorationIcon = createDecorationIcon({
+      iconInfo: {
+        icon: SquareIcon,
+        center: [116.109913, 26.881466],
+        width: '20px',
+        height: '20px',
+        reflect: false,
+      },
+      label3d: this.label3d,
+      parentGroup: this.labelGroup!,
+      geoProjection: this.geoProjection.bind(this),
+    })
+
+    this.labels.push(decorationIcon)
+    this.labels.push(smallDecorationIcon)
   }
   /**
    * 创建模型并组织地图层次结构
@@ -639,6 +681,228 @@ class MapControlStudy extends MapApplication {
       yoyo: false, // 不往返
       duration: 1, // 1秒周期
     })
+  }
+  // 创建粒子特效
+  createParticles() {
+    this.particles = new Particles(this, {
+      num: 10,
+      range: 30,
+      dir: 'up',
+      speed: 0.05,
+      material: new THREE.PointsMaterial({
+        map: Particles.createTexture(),
+        size: 1,
+        color: 61166,
+        transparent: true,
+        opacity: 1,
+        depthTest: false,
+        depthWrite: false,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+      }),
+    })
+    this.particles.instance!.position.set(0, 0, 0)
+    this.particles.instance!.rotation.x = -Math.PI / 2
+    this.particles.setParent(this.scene)
+    this.particles.enable = false
+    this.particles.instance!.visible = false
+  }
+  // 创建柱状图
+  createBar() {
+    const cityList = ZheJiangCityInfo.filter(v => v.value > 40)
+    const barGroup = new THREE.Group()
+    barGroup.name = 'barGroup'
+    this.scene.add(barGroup)
+
+    const baseSize = 0.7
+    const maxHeight = 2.8
+    const maxValue = cityList[0].value
+
+    // 为每个城市创建柱状图
+    cityList.map((cityInfo, index) => {
+      // 计算柱高（根据数值归一化）
+      const barHeight = maxHeight * (cityInfo.value / maxValue)
+
+      // 创建柱状图材质（带渐变）
+      const barMaterial = new THREE.MeshBasicMaterial({
+        color: 16777215, // 白色
+        transparent: true,
+        opacity: 0,
+        depthTest: false,
+        fog: false,
+      })
+
+      // 应用不同颜色渐变（前4名和后3名使用不同颜色）
+      new GradientShader(barMaterial, {
+        uColor1: index > 3 ? 16506760 : 5291006, // 黄色 : 蓝色
+        uColor2: index > 3 ? 16776948 : 7863285, // 浅黄色 : 浅蓝色
+        size: barHeight,
+        dir: 'y',
+      })
+
+      // 创建柱状图几何体
+      const barGeometry = new THREE.BoxGeometry(
+        0.1 * baseSize,
+        0.1 * baseSize,
+        barHeight,
+      )
+      barGeometry.translate(0, 0, barHeight / 2) // 上移几何体，使底部对齐
+
+      // 创建柱状图网格
+      const barMesh = new THREE.Mesh(barGeometry, barMaterial)
+      barMesh.renderOrder = 5
+      barMesh.name = 'barMesh'
+
+      // 获取城市坐标并设置位置
+      const [x, y] = this.geoProjection(cityInfo.centroid as [number, number])!
+      barMesh.position.set(x, -y, 0.95) // 将柱状图放置在地图上方
+      barMesh.scale.set(1, 1, 0) // 初始缩放为0，待动画展示
+
+      // 创建柱状图底部光环
+      const guangquan = this.createQuan(new THREE.Vector3(x, 0.94, y))
+
+      // 创建柱状图辉光效果
+      const huiguang = this.createHUIGUANG(
+        barHeight,
+        index > 3 ? 16776948 : 7863285, // 黄色 : 蓝色
+      )
+      barMesh.add(...huiguang)
+
+      // 添加到柱状图组
+      barGroup.add(barMesh)
+
+      // 设置组旋转
+      barGroup.rotation.x = -Math.PI / 2
+
+      // 创建城市标签
+      const cityLabel = createProvinceBarLabel(
+        cityInfo,
+        index,
+        new THREE.Vector3(x, -y, 1.6 + barHeight), // 将标签放置在柱状图顶部
+        this.label3d,
+        this.labelGroup!,
+      )
+
+      // 保存引用用于动画
+      this.allBar.push(barMesh)
+      this.allBarMaterial.push(barMaterial)
+      this.allGuangquan.push(guangquan)
+      this.allProvinceLabel.push(cityLabel)
+    })
+
+    // 添加柱状图组到场景
+    this.scene.add(barGroup)
+  }
+  createQuan(position: THREE.Vector3) {
+    // 获取光环纹理
+    const texture1 = this.assets.instance!.getResource('guangquan1')
+    const texture2 = this.assets.instance!.getResource('guangquan2')
+
+    // 创建光环几何体
+    const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5)
+
+    // 创建外层光环材质
+    const outerRingMaterial = new THREE.MeshBasicMaterial({
+      color: 16777215, // 白色
+      map: texture1,
+      alphaMap: texture1,
+      opacity: 1,
+      transparent: true,
+      depthTest: false,
+      fog: false,
+      blending: THREE.AdditiveBlending, // 加法混合，增强亮度
+    })
+
+    // 创建内层光环材质
+    const innerRingMaterial = new THREE.MeshBasicMaterial({
+      color: 16777215, // 白色
+      map: texture2,
+      alphaMap: texture2,
+      opacity: 1,
+      transparent: true,
+      depthTest: false,
+      fog: false,
+      blending: THREE.AdditiveBlending, // 加法混合，增强亮度
+    })
+
+    // 创建外层和内层光环网格
+    const outerRing = new THREE.Mesh(planeGeometry, outerRingMaterial)
+    const innerRing = new THREE.Mesh(planeGeometry, innerRingMaterial)
+
+    // 设置渲染顺序，确保透明度正确
+    outerRing.renderOrder = 6
+    innerRing.renderOrder = 6
+
+    // 旋转到水平位置
+    outerRing.rotateX(-Math.PI / 2)
+    innerRing.rotateX(-Math.PI / 2)
+
+    // 设置位置
+    outerRing.position.copy(position)
+    innerRing.position.copy(position)
+    innerRing.position.y -= 0.001 // 内层微微下移，防止z-fighting
+
+    // 初始缩放为0，待动画展示
+    outerRing.scale.set(0, 0, 0)
+    innerRing.scale.set(0, 0, 0)
+
+    // 创建光环组并添加两个环
+    this.quanGroup = new THREE.Group()
+    this.quanGroup.add(outerRing, innerRing)
+    this.scene.add(this.quanGroup)
+
+    // 添加旋转动画
+    this.time.on('tick', () => {
+      outerRing.rotation.z += 0.05 // 外层光环旋转
+    })
+
+    return this.quanGroup
+  }
+  /**
+   * 创建辉光效果
+   * 在柱状图周围创建三个平面，形成辉光效果
+   * @param height 辉光高度
+   * @param color 辉光颜色
+   * @returns 辉光网格数组
+   */
+  createHUIGUANG(height: number, color: number) {
+    // 创建辉光几何体
+    const huiguangGeometry = new THREE.PlaneGeometry(0.35, height)
+    huiguangGeometry.translate(0, height / 2, 0) // 上移几何体，使底部对齐
+
+    // 获取辉光纹理
+    const huiguangTexture = this.assets.instance!.getResource('huiguang')
+    huiguangTexture.colorSpace = THREE.SRGBColorSpace
+    huiguangTexture.wrapS = THREE.RepeatWrapping
+    huiguangTexture.wrapT = THREE.RepeatWrapping
+
+    // 创建辉光材质
+    const huiguangMaterial = new THREE.MeshBasicMaterial({
+      color: color,
+      map: huiguangTexture,
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending, // 加法混合，增强亮度
+    })
+
+    // 创建第一个辉光平面
+    const huiguang1 = new THREE.Mesh(huiguangGeometry, huiguangMaterial)
+    huiguang1.renderOrder = 10
+    huiguang1.rotateX(Math.PI / 2)
+
+    // 复制并旋转创建第二个和第三个辉光平面
+    const huiguang2 = huiguang1.clone()
+    const huiguang3 = huiguang1.clone()
+
+    // 旋转第二个和第三个平面，形成三角形分布
+    huiguang2.rotateY((Math.PI / 180) * 60) // 旋转60度
+    huiguang3.rotateY((Math.PI / 180) * 120) // 旋转120度
+
+    // 返回三个辉光平面
+    return [huiguang1, huiguang2, huiguang3]
   }
   destroy() {
     super.destroy()
