@@ -947,7 +947,7 @@ class MapControl extends MapApplication {
   createBar() {
     // 筛选出浙江省前7个市（按数值排序）
     const cityList = SortByValue(ZheJiangCityInfo).filter(
-      (city, index) => index < 7,
+      (_, index) => index < 7,
     )
 
     // 创建柱状图组
@@ -1317,7 +1317,7 @@ class MapControl extends MapApplication {
     })
 
     // 为前7个城市创建飞线
-    ZheJiangCityInfo.filter((cityInfo, index) => index < 7).map(cityInfo => {
+    ZheJiangCityInfo.filter((_, index) => index < 7).map(cityInfo => {
       // 获取目标城市坐标
       const [targetX, targetY] = this.geoProjection(cityInfo.centroid)!
       const targetPoint = new THREE.Vector3(targetX, -targetY, 0)

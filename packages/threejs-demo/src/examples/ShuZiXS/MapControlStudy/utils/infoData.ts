@@ -23,7 +23,7 @@ export class LoadAssets {
     this.instance = new ResourceManager()
 
     this.instance.addLoader(THREE.FileLoader, 'FileLoader')
-    this.instance.on('onProgress', (r, t, n) => {
+    this.instance.on('onProgress', (_, t, n) => {
       console.log('加载进度', ((t / n) * 100).toFixed(2))
     })
     this.instance.on('onLoad', () => {

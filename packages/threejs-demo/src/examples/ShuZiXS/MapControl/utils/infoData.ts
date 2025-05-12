@@ -33,7 +33,7 @@ class LoadAssets {
   init() {
     this.instance = new ResourceManager()
     this.instance.addLoader(THREE.FileLoader, 'FileLoader')
-    this.instance.on('onProgress', (r, t, n) => {
+    this.instance.on('onProgress', (_, t, n) => {
       // eslint-disable-next-line no-extra-semi
       ;((t / n) * 100).toFixed(2) + ''
     })

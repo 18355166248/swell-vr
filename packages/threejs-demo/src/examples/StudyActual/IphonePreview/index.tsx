@@ -204,7 +204,7 @@ function Three() {
         const textGeometry = new TextGeometry('720°', {
           font: font,
           size: 0.1,
-          height: 0.01,
+          // height: 0.01,
           curveSegments: 12,
         })
 

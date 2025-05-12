@@ -110,7 +110,7 @@ class Label3D {
     }
 
     // 根据isSprite参数决定创建的标签类型
-    let label: LabelElement | null = null
+    let label: LabelElement
 
     isSprite
       ? (label = new CSS3DSprite(element))

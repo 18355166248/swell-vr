@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as THREE from 'three'
 
 /**
@@ -69,7 +70,7 @@ export const normalizeGeoJSON = (jsonString: string) => {
  * @param e 需要计算包围盒的对象
  * @returns 包含包围盒信息的对象
  */
-export function getBoxSize(e) {
+export function getBoxSize(e: any) {
   const i = new THREE.Vector3()
   const n = new THREE.Box3()
   n.expandByObject(e)

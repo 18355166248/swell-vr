@@ -93,10 +93,10 @@ function Three() {
           // composer.addPass(unrealBloomPass)
 
           // 轻量级的抗锯齿算法,性能损耗较小。
-          const pixelRatio = this.renderer.getPixelRatio()
+          // const pixelRatio = this.renderer.getPixelRatio()
           const smaaPass = new SMAAPass(
-            this.width * pixelRatio,
-            this.height * pixelRatio,
+            // this.width * pixelRatio,
+            // this.height * pixelRatio,
           )
           composer.addPass(smaaPass)
 
